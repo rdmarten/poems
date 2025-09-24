@@ -139,7 +139,31 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.querySelector('.pi-tufte');
-  if (!root || typeof gsap === 'undefined') return;
+  if (!root) return;
+  
+  // Wait for GSAP to load
+  const waitForGSAP = () => {
+    return new Promise((resolve) => {
+      if (typeof gsap !== 'undefined') {
+        resolve();
+      } else {
+        const checkGSAP = () => {
+          if (typeof gsap !== 'undefined') {
+            resolve();
+          } else {
+            setTimeout(checkGSAP, 50);
+          }
+        };
+        checkGSAP();
+      }
+    });
+  };
+  
+  waitForGSAP().then(() => {
+    initAnimations();
+  });
+  
+  function initAnimations() {
 
   // Respect user setting; set to false temporarily if you need to test animations
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -147,6 +171,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Split only the lines we animate
   if (typeof Splitting === 'function') {
     Splitting({ target: root.querySelectorAll('.gsap-bloom, .pi-line-50'), by: 'chars' });
+  } else {
+    // Wait for Splitting to load
+    const waitForSplitting = () => {
+      if (typeof Splitting === 'function') {
+        Splitting({ target: root.querySelectorAll('.gsap-bloom, .pi-line-50'), by: 'chars' });
+      } else {
+        setTimeout(waitForSplitting, 50);
+      }
+    };
+    waitForSplitting();
   }
 
   // Bloom (lines 6–9)
@@ -154,11 +188,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (reduce) return;
     const chars = line.querySelectorAll('.char');
     if (!chars.length) return;
+    
+    gsap.killTweensOf(chars);
     gsap.fromTo(chars,
       { scale: 1 },
-      { scale: 1.14, duration: 0.45, yoyo: true, repeat: 1, ease: 'power1.inOut', stagger: { each: 0.035 } }
+      { 
+        scale: 1.14, 
+        duration: 0.45, 
+        yoyo: true, 
+        repeat: 1, 
+        ease: 'power1.inOut', 
+        stagger: { each: 0.035 } 
+      }
     );
   }
+  
   root.querySelectorAll('.gsap-bloom').forEach(p => {
     p.tabIndex = 0;
     p.addEventListener('mouseenter', () => bloom(p));
@@ -167,44 +211,68 @@ document.addEventListener('DOMContentLoaded', () => {
     p.addEventListener('blur', () => gsap.killTweensOf(p.querySelectorAll('.char')));
   });
 
-  // Line 50: slower wave + diagonal drift on hover
+  // Line 50: enhanced wave animation with drift and fade
   const l50 = root.querySelector('.pi-line-50');
   if (l50) {
+    let waveAnimation = null;
+    
     l50.addEventListener('mouseenter', () => {
       if (reduce) return;
+      if (waveAnimation) waveAnimation.kill();
+      
       gsap.killTweensOf(l50);
       gsap.killTweensOf(l50.querySelectorAll('.char'));
 
       const w = window.innerWidth;
       const h = window.innerHeight;
 
-      const tl = gsap.timeline();
+      waveAnimation = gsap.timeline({
+        onComplete: () => {
+          // Fade out audio when animation completes
+          if (playing) {
+            fadeTo(0, 2, () => {
+              if (player && ready) player.pauseVideo();
+              playing = false;
+              trigger.setAttribute('aria-pressed','false');
+            });
+          }
+        }
+      });
 
-      // gentle per-character wave
-      tl.to(l50.querySelectorAll('.char'), {
-        y: -6,
-        duration: 0.3,
+      // Enhanced wave motion - slower and more fluid
+      waveAnimation.to(l50.querySelectorAll('.char'), {
+        y: -12,
+        duration: 0.8,
         yoyo: true,
-        repeat: 10,
+        repeat: 15,
         ease: 'sine.inOut',
-        stagger: 0.05
+        stagger: 0.08
       }, 0);
 
-      // slow drift to bottom-right
-      tl.to(l50, {
-        x: w * 0.9,
-        y: h * 0.4,
-        opacity: 0.9,
-        duration: 12,
+      // Slower drift to bottom-right with fade to invisible
+      waveAnimation.to(l50, {
+        x: w * 1.2,
+        y: h * 0.6,
+        opacity: 0,
+        duration: 18,
         ease: 'power1.inOut'
       }, 0);
 
-      // subtle rocking to suggest swell
-      tl.to(l50, {
-        rotation: 3,
-        duration: 1.4,
+      // Enhanced rocking motion
+      waveAnimation.to(l50, {
+        rotation: 5,
+        duration: 2.2,
         yoyo: true,
-        repeat: 8,
+        repeat: 12,
+        ease: 'sine.inOut'
+      }, 0);
+      
+      // Additional floating motion for more wave-like effect
+      waveAnimation.to(l50, {
+        scaleY: 0.95,
+        duration: 1.8,
+        yoyo: true,
+        repeat: 14,
         ease: 'sine.inOut'
       }, 0);
     });
@@ -222,22 +290,25 @@ document.addEventListener('DOMContentLoaded', () => {
         onComplete: () => done && done()
       });
     };
+    
     const play = () => {
       if (!ready) return;
       player.setVolume(0);
       player.playVideo();
       trigger.setAttribute('aria-pressed','true');
       playing = true;
-      fadeTo(70, 0.8);
+      fadeTo(50, 1.2);
     };
+    
     const pause = () => {
       if (!ready) return;
-      fadeTo(0, 0.6, () => {
+      fadeTo(0, 1, () => {
         player.pauseVideo();
         trigger.setAttribute('aria-pressed','false');
         playing = false;
       });
     };
+    
     const toggle = () => (playing ? pause() : play());
 
     trigger.addEventListener('click', e => { e.preventDefault(); toggle(); });
@@ -253,11 +324,22 @@ document.addEventListener('DOMContentLoaded', () => {
         height: '1', width: '1',
         videoId: 'aeIzNh35VBA',
         playerVars: { controls: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
-        events: { onReady: () => { ready = true; player.setVolume(0); } }
+        events: { 
+          onReady: () => { 
+            ready = true; 
+            player.setVolume(0);
+            // Auto-play and fade in when page loads
+            setTimeout(() => {
+              play();
+            }, 1000);
+          } 
+        }
       });
     };
     if (window.YT && YT.Player) window.onYouTubeIframeAPIReady();
   }
+  
+  } // end initAnimations
 });
 </script>
 
