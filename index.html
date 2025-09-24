@@ -26,10 +26,9 @@
     .pi-audio[aria-pressed="true"] { text-decoration: underline dotted; }
   </style>
 
-  <!-- GSAP + Splitting (pinned, deferred) -->
+  <!-- Libraries (defer = parse after HTML; DOMContentLoaded guards init) -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/splitting/1.0.6/splitting.min.js"></script>
-  <!-- YouTube IFrame API -->
+  <script defer src="https://cdn.jsdelivr.net/npm/splitting@1.0.6/dist/splitting.min.js"></script>
   <script async src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
@@ -141,9 +140,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.querySelector('.pi-tufte');
   if (!root || typeof gsap === 'undefined') return;
+
+  // Respect user setting; set to false temporarily if you need to test animations
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Split only the lines we animate (requires .char display inline-block)
+  // Split only the lines we animate
   if (typeof Splitting === 'function') {
     Splitting({ target: root.querySelectorAll('.gsap-bloom, .pi-line-50'), by: 'chars' });
   }
@@ -152,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function bloom(line) {
     if (reduce) return;
     const chars = line.querySelectorAll('.char');
+    if (!chars.length) return;
     gsap.fromTo(chars,
       { scale: 1 },
       { scale: 1.14, duration: 0.45, yoyo: true, repeat: 1, ease: 'power1.inOut', stagger: { each: 0.035 } }
@@ -165,17 +167,46 @@ document.addEventListener('DOMContentLoaded', () => {
     p.addEventListener('blur', () => gsap.killTweensOf(p.querySelectorAll('.char')));
   });
 
-  // Line 50: wave + drift right on hover
+  // Line 50: slower wave + diagonal drift on hover
   const l50 = root.querySelector('.pi-line-50');
   if (l50) {
     l50.addEventListener('mouseenter', () => {
       if (reduce) return;
       gsap.killTweensOf(l50);
       gsap.killTweensOf(l50.querySelectorAll('.char'));
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
       const tl = gsap.timeline();
-      tl.to(l50.querySelectorAll('.char'),
-            { y: -6, duration: 0.26, yoyo: true, repeat: 3, ease: 'sine.inOut', stagger: { each: 0.04 } }, 0)
-        .to(l50, { x: window.innerWidth * 1.3, opacity: 0.85, duration: 4.8, ease: 'power1.inOut' }, 0);
+
+      // gentle per-character wave
+      tl.to(l50.querySelectorAll('.char'), {
+        y: -6,
+        duration: 0.3,
+        yoyo: true,
+        repeat: 10,
+        ease: 'sine.inOut',
+        stagger: 0.05
+      }, 0);
+
+      // slow drift to bottom-right
+      tl.to(l50, {
+        x: w * 0.9,
+        y: h * 0.4,
+        opacity: 0.9,
+        duration: 12,
+        ease: 'power1.inOut'
+      }, 0);
+
+      // subtle rocking to suggest swell
+      tl.to(l50, {
+        rotation: 3,
+        duration: 1.4,
+        yoyo: true,
+        repeat: 8,
+        ease: 'sine.inOut'
+      }, 0);
     });
   }
 
@@ -214,14 +245,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
     });
 
-    // YT API hook (tolerant if other scripts also set this)
+    // YT API hook with origin + playsinline
     const prev = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = function() {
       if (typeof prev === 'function') try { prev(); } catch(e) {}
       player = new YT.Player('yt-audio-holder', {
         height: '1', width: '1',
         videoId: 'aeIzNh35VBA',
-        playerVars: { controls: 0, modestbranding: 1 },
+        playerVars: { controls: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
         events: { onReady: () => { ready = true; player.setVolume(0); } }
       });
     };
