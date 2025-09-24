@@ -15,7 +15,7 @@
     .pi-tufte .poem p { margin: 0.15rem 0; }
 
     /* Per-character animation */
-    .char { display: inline-block; will-change: transform; }
+    .char { display: inline-block; will-change: transform, color; }
 
     /* Italic helper */
     .pi-ital { font-style: italic; }
@@ -30,141 +30,169 @@
     /* Title layout */
     .pi-title { font-size: 2.5rem; margin: 0 0 0.8rem; font-style: normal; }
     .pi-subtitle { font-size: 1.75rem; margin: -0.2rem 0 1.0rem; color: #666; font-style: italic; }
-    
-    /* Scroll reveal initial state (JS removes these on reveal) */
+
+    /* Scroll reveal initial state */
     .reveal { opacity: 0; transform: translateY(12px); }
+
+    /* ===== Scroll-fill (overlay clone with growing height) ===== */
+    .poem-wrap { position: relative; }
+    .poem-base { color: #9a9a9a; }
+    .poem-fill-clip {
+      position: absolute; inset: 0;
+      overflow: hidden;               /* the “mask” */
+      height: 0%;                     /* JS sets 0–100% */
+      pointer-events: none;           /* clicks go to base layer */
+    }
+    .poem-fill { color: #fff; }
+    /* Don’t render sidenote UI in the overlay copy */
+    .poem-fill .sidenote,
+    .poem-fill .margin-toggle,
+    .poem-fill input[type="checkbox"] { display: none !important; }
   </style>
 
   <!-- Libraries -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/splitting@1.0.6/dist/splitting.min.js"></script>
   <script async src="https://www.youtube.com/iframe_api"></script>
-  
 </head>
 <body>
 
 <article class="pi-tufte">
-  <h2 class="pi-title"><i>Ostende bonsoir</i></h1>
-  <label for="sn-0" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-0" class="margin-toggle" />
-      <span class="sidenote">Vrij naar Hugo Claus' <i>Zeezucht</i></span>
-    <p class="pi-subtitle"><i>- Palais des Thermes -</i>—</p>
-  <div class="poem">
+  <h2 class="pi-title"><i>Ostende bonsoir</i></h2>
 
-   <!-- 1–4 (note on 1–3; 4 italic) -->
-    <p class="reveal">les galeries vénitiennes</p>
-    <p class="reveal">garde une jardin Japonais</p>
-    <p class="reveal">devant un puits artésien,
-      <label for="sn-1" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-1" class="margin-toggle" />
-      <span class="sidenote">the Venetian galleries<br>hide a Japanese garden<br>in front of an artesian well</span>
-    </p>
-    <p class="pi-ital reveal">Palais des Thermes:</p>
+  <!-- Subtitle with image in a sidenote -->
+  <p class="pi-subtitle">
+    <i>- Palais des Thermes -</i> —
+    <label for="sn-0" class="margin-toggle sidenote-number"></label>
+    <input type="checkbox" id="sn-0" class="margin-toggle" />
+    <span class="sidenote">
+      Vrij naar Hugo Claus’ <i>Zeezucht</i><br><br>
+      <!-- update the filename if needed -->
+      <img src="./COLLEGE-PETRUS-EN-PAULUS-HISTORIEK-vetsigingsplaatsen.jpeg"
+           alt="Historic plan/map"
+           style="max-width:260px;height:auto;display:block;opacity:.95;">
+    </span>
+  </p>
 
-    <br><br>
+  <!-- ===== SCROLL-FILL WRAPPER ===== -->
+  <div class="poem-wrap" id="poemWrap">
+    <!-- Base (interactive) layer -->
+    <div class="poem poem-base" id="poemBase">
 
-    <!-- 5–10 (only 6–9 bloom) -->
-    <p class="pi-ital reveal">~</p>
-    <p class="gsap-bloom reveal">the gods are vulnerable</p>
-    <p class="gsap-bloom reveal">still so fertile, so soft</p>
-    <p class="gsap-bloom reveal">yet they’re dying out</p>
-    <p class="gsap-bloom reveal">in front of our eyes</p>
-    <p class="pi-ital reveal">~</p>
+      <!-- 1–4 (note on 1–3; 4 italic) -->
+      <p class="reveal">les galeries vénitiennes</p>
+      <p class="reveal">garde une jardin Japonais</p>
+      <p class="reveal">devant un puits artésien,
+        <label for="sn-1" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-1" class="margin-toggle" />
+        <span class="sidenote">the Venetian galleries<br>hide a Japanese garden<br>in front of an artesian well</span>
+      </p>
+      <p class="pi-ital reveal">Palais des Thermes:</p>
 
-    <br><br>
+      <br><br>
 
-    <!-- 11–18 (shared sidenote) -->
-    <p class="reveal">art-deco exuberante</p>
-    <p class="reveal">frescos, des styles</p>
-    <p class="reveal">architecturaux</p>
-    <p class="reveal">classiques conservatrices</p>
-    <p class="reveal">culminant dans une</p>
-    <p class="reveal">forme éclectique</p>
-    <p class="reveal">avec des accents</p>
-    <p class="reveal">néo-Louis XV
-      <label for="sn-2" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-2" class="margin-toggle" />
-      <span class="sidenote">exuberant art deco<br>frescoes, with styles so<br>architecturally<br>classical conservative<br>culminating in an<br>eclectic form<br>with neo-accents<br>of Louis XV</span>
-    </p>
+      <!-- 5–10 (only 6–9 bloom) -->
+      <p class="pi-ital reveal">~</p>
+      <p class="gsap-bloom reveal">the gods are vulnerable</p>
+      <p class="gsap-bloom reveal">still so fertile, so soft</p>
+      <p class="gsap-bloom reveal">yet they’re dying out</p>
+      <p class="gsap-bloom reveal">in front of our eyes</p>
+      <p class="pi-ital reveal">~</p>
 
-    <br><br>
+      <br><br>
 
-    <!-- 19–26 (shared sidenote; 21 italic) -->
-    <p class="reveal">mes pours les mecs</p>
-    <p class="reveal">locales, c’était</p>
-    <p class="pi-ital reveal">de witten ooljefant</p>
-    <p class="reveal">chère, une modalité</p>
-    <p class="reveal">pour les riches</p>
-    <p class="reveal">les bourgeouis,</p>
-    <p class="reveal">pas nous, le peuple</p>
-    <p class="reveal">ordinaire, les marchants
-      <label for="sn-3" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-3" class="margin-toggle" />
-      <span class="sidenote">but for the lads,<br>the locals, it was<br>“the White Elephant”<br>expensive, a luxury<br>for the rich,<br>the bourgeoisie,<br>not us, the people,<br>the merchants</span>
-    </p>
+      <!-- 11–18 (shared sidenote) -->
+      <p class="reveal">art-deco exuberante</p>
+      <p class="reveal">frescos, des styles</p>
+      <p class="reveal">architecturaux</p>
+      <p class="reveal">classiques conservatrices</p>
+      <p class="reveal">culminant dans une</p>
+      <p class="reveal">forme éclectique</p>
+      <p class="reveal">avec des accents</p>
+      <p class="reveal">néo-Louis XV
+        <label for="sn-2" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-2" class="margin-toggle" />
+        <span class="sidenote">exuberant art deco<br>frescoes, with styles so<br>architecturally<br>classical conservative<br>culminating in an<br>eclectic form<br>with neo-accents<br>of Louis XV</span>
+      </p>
 
-    <br><br>
+      <br><br>
 
-    <!-- 27–34 (shared sidenote; 29–32 italic) -->
-    <p class="reveal">ma ècole, une palais</p>
-    <p class="reveal">napoleonique</p>
-    <p class="pi-ital reveal">althans dat is wat</p>
-    <p class="pi-ital reveal">ze ons hadden</p>
-    <p class="pi-ital reveal">verteld, al lijkt daar</p>
-    <p class="pi-ital reveal">weinig echt van aan</p>
-    <p class="reveal">avec des anciens</p>
-    <p class="reveal">comme Ensor
-      <label for="sn-4" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-4" class="margin-toggle" />
-      <span class="sidenote">my school, a palace<br>in Napoleon-style<br>at least that's what<br>they told us,<br>although there seems to be<br>little truth in it<br>with alumni<br>like James Ensor (the painter)<br><img src="./COLLEGE-PETRUS-EN-PAULUS-HISTORIEK-vetsigingsplaatsen.jpeg"
-       alt="Historic plan/map"
-       style="max-width:200px;height:auto;display:block;opacity:.80;"></span>
-    </p>
+      <!-- 19–26 (shared sidenote; 21 italic) -->
+      <p class="reveal">mes pours les mecs</p>
+      <p class="reveal">locales, c’était</p>
+      <p class="pi-ital reveal">de witten ooljefant</p>
+      <p class="reveal">chère, une modalité</p>
+      <p class="reveal">pour les riches</p>
+      <p class="reveal">les bourgeouis,</p>
+      <p class="reveal">pas nous, le peuple</p>
+      <p class="reveal">ordinaire, les marchants
+        <label for="sn-3" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-3" class="margin-toggle" />
+        <span class="sidenote">but for the lads,<br>the locals, it was<br>“the White Elephant”<br>expensive, a luxury<br>for the rich,<br>the bourgeoisie,<br>not us, the people,<br>the merchants</span>
+      </p>
 
-    <br><br>
+      <br><br>
 
-    <!-- 35–40 (all italic; 36–39 bloom) -->
-    <p class="pi-ital reveal">~</p>
-    <p class="gsap-bloom reveal">left with only memories</p>
-    <p class="gsap-bloom reveal">of roses, his beard, the scent</p>
-    <p class="gsap-bloom reveal">of lilacs, wild raspberries,</p>
-    <p class="gsap-bloom reveal">rumour of a long-eared owl</p>
-    <p class="pi-ital reveal">~</p>
+      <!-- 27–34 (shared sidenote; 29–32 italic) -->
+      <p class="reveal">ma ècole, une palais</p>
+      <p class="reveal">napoleonique</p>
+      <p class="pi-ital reveal">althans dat is wat</p>
+      <p class="pi-ital reveal">ze ons hadden</p>
+      <p class="pi-ital reveal">verteld, al lijkt daar</p>
+      <p class="pi-ital reveal">weinig echt van aan</p>
+      <p class="reveal">avec des anciens</p>
+      <p class="reveal">comme Ensor
+        <label for="sn-4" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-4" class="margin-toggle" />
+        <span class="sidenote">my school, a palace<br>in Napoleon-style<br>at least that's what<br>they told us,<br>although there seems to be<br>little truth in it<br>with alumni<br>like James Ensor (the painter)</span>
+      </p>
 
-    <br><br>
+      <br><br>
 
-    <!-- 41–45 (shared sidenote; 44–45 italic) -->
-    <p class="reveal">(en fait il n'y est</p>
-    <p class="reveal">resté que deux ans)</p>
-    <p class="reveal">comme Spilliaert</p>
-    <p class="reveal"><i>excentrieke ziener van</i></p>
-    <p class="reveal"><i>een vreemde realiteit</i>
-      <label for="sn-5" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-5" class="margin-toggle" />
-      <span class="sidenote">(in fact, he only stayed there<br>for two years)<br>like Léon Spilliaert (another painter)<br>eccentric seer of<br>a strange reality</span>
-    </p>
+      <!-- 35–40 (all italic; 36–39 bloom) -->
+      <p class="pi-ital reveal">~</p>
+      <p class="gsap-bloom reveal">left with only memories</p>
+      <p class="gsap-bloom reveal">of roses, his beard, the scent</p>
+      <p class="gsap-bloom reveal">of lilacs, wild raspberries,</p>
+      <p class="gsap-bloom reveal">rumour of a long-eared owl</p>
+      <p class="pi-ital reveal">~</p>
 
-    <br><br>
+      <br><br>
 
-    <!-- 46–49 (shared sidenote) -->
-    <p class="reveal">fort militaire polygonal</p>
-    <p class="reveal">au bord de la mer</p>
-    <p class="reveal">à l'infini</p>
-    <p class="reveal">avant qu'il ne soit fini
-      <label for="sn-6" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-6" class="margin-toggle" />
-      <span class="sidenote">polygonal military fort<br>by the sea<br>into infinity<br>before it is all gone</span>
-    </p>
+      <!-- 41–45 (shared sidenote; 44–45 italic) -->
+      <p class="reveal">(en fait il n'y est</p>
+      <p class="reveal">resté que deux ans)</p>
+      <p class="reveal">comme Spilliaert</p>
+      <p class="reveal"><i>excentrieke ziener van</i></p>
+      <p class="reveal"><i>een vreemde realiteit</i>
+        <label for="sn-5" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-5" class="margin-toggle" />
+        <span class="sidenote">(in fact, he only stayed there<br>for two years)<br>like Léon Spilliaert (another painter)<br>eccentric seer of<br>a strange reality</span>
+      </p>
 
-    <!-- Eight breaks before final line -->
-    <br><br><br><br><br><br><br><br>
+      <br><br>
 
-    <!-- 50 (italic, wave + audio) -->
-    <p class="pi-ital pi-line-50 reveal" tabindex="0">
-      sehnsucht? <span id="pi-zeezucht" class="pi-audio" role="button" aria-pressed="false" tabindex="0">zeezucht</span>
-    </p>
+      <!-- 46–49 (shared sidenote) -->
+      <p class="reveal">fort militaire polygonal</p>
+      <p class="reveal">au bord de la mer</p>
+      <p class="reveal">à l'infini</p>
+      <p class="reveal">avant qu'il ne soit fini
+        <label for="sn-6" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-6" class="margin-toggle" />
+        <span class="sidenote">polygonal military fort<br>by the sea<br>into infinity<br>before it is all gone</span>
+      </p>
 
-  </div>
+      <!-- Eight breaks before final line -->
+      <br><br><br><br><br><br><br><br>
+
+      <!-- 50 (italic, wave + audio) -->
+      <p class="pi-ital pi-line-50 reveal" tabindex="0">
+        sehnsucht? <span id="pi-zeezucht" class="pi-audio" role="button" aria-pressed="false" tabindex="0">zeezucht</span>
+      </p>
+
+    </div><!-- /.poem-base -->
+    <!-- JS inserts the overlay here -->
+  </div><!-- /.poem-wrap -->
 
   <!-- Hidden YouTube player target -->
   <div id="yt-audio-holder" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;"></div>
@@ -172,11 +200,41 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const root = document.querySelector('.pi-tufte');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasGSAP = typeof gsap !== 'undefined';
 
-  /* ---------- tiny inline character splitter (no external deps) ---------- */
+  /* ---------- SCROLL-FILL overlay clone (Safari-safe) ---------- */
+  const wrap = document.getElementById('poemWrap');
+  const base = document.getElementById('poemBase');
+
+  // Create overlay clip container and clone
+  const clip = document.createElement('div');
+  clip.className = 'poem-fill-clip';
+  const fill = base.cloneNode(true);
+  fill.classList.remove('poem-base');
+  fill.classList.add('poem', 'poem-fill');
+  fill.removeAttribute('id');
+  // remove duplicate IDs + sidenote UI in overlay
+  fill.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+  fill.querySelectorAll('.sidenote, .margin-toggle, input[type="checkbox"]').forEach(el => el.remove());
+  clip.appendChild(fill);
+  wrap.appendChild(clip);
+
+  // Progress function: set clip height directly (0–100%)
+  function clamp(v, a, b){ return Math.min(b, Math.max(a, v)); }
+  function updateFill() {
+    if (reduce) { clip.style.height = '100%'; return; }
+    const r = wrap.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    const total = r.height + vh;                   // enter → leave
+    const p = clamp((vh - r.top) / total, 0, 1);   // 0..1
+    clip.style.height = (p * 100).toFixed(2) + '%';
+  }
+  updateFill();
+  addEventListener('scroll', updateFill, { passive: true });
+  addEventListener('resize', updateFill);
+
+  /* ---------- tiny inline character splitter ---------- */
   function splitCharsIn(el) {
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
       acceptNode(n) { return /\S/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
@@ -196,9 +254,11 @@ document.addEventListener('DOMContentLoaded', () => {
       node.parentNode.replaceChild(frag, node);
     });
   }
-  root.querySelectorAll('.gsap-bloom, .pi-line-50').forEach(splitCharsIn);
+  // Split chars for bloom targets + final line in BOTH layers
+  base.querySelectorAll('.gsap-bloom, .pi-line-50').forEach(splitCharsIn);
+  fill.querySelectorAll('.gsap-bloom, .pi-line-50').forEach(splitCharsIn);
 
-  /* ------------------------ scroll reveal (mobile/desktop) ------------------------ */
+  /* ------------------------ scroll reveal ------------------------ */
   const revealEls = Array.from(document.querySelectorAll('.reveal'));
   if (!reduce && 'IntersectionObserver' in window && hasGSAP) {
     const io = new IntersectionObserver((entries) => {
@@ -211,17 +271,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }, {root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1});
     revealEls.forEach(el => io.observe(el));
   } else {
-    // fallback: reveal immediately
     revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
   }
 
-  if (!hasGSAP) return; // animations below require GSAP
+  if (!hasGSAP) return;
 
   /* ------------------------------ bloom interaction ------------------------------ */
+  const baseBlooms = Array.from(base.querySelectorAll('.gsap-bloom'));
+  const fillBlooms = Array.from(fill.querySelectorAll('.gsap-bloom'));
+
   function bloom(line) {
     if (reduce) return;
     const chars = line.querySelectorAll('.char');
     if (!chars.length) return;
+
     gsap.killTweensOf(chars);
     gsap.to(chars, {
       scale: 1.24,
@@ -232,66 +295,57 @@ document.addEventListener('DOMContentLoaded', () => {
       ease: 'power1.inOut',
       stagger: 0.04
     });
+
+    // sync overlay (scale only)
+    const idx = baseBlooms.indexOf(line);
+    if (idx > -1) {
+      const o = fillBlooms[idx]?.querySelectorAll('.char') || [];
+      gsap.killTweensOf(o);
+      gsap.to(o, {
+        scale: 1.24,
+        duration: 0.6,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power1.inOut',
+        stagger: 0.04
+      });
+    }
   }
-  document.querySelectorAll('.gsap-bloom').forEach(p => {
+  baseBlooms.forEach(p => {
     p.tabIndex = 0;
-    p.addEventListener('pointerenter', () => bloom(p));  // desktop
-    p.addEventListener('click', () => bloom(p));         // mobile tap / click
-    p.addEventListener('focus', () => bloom(p));         // keyboard
+    p.addEventListener('pointerenter', () => bloom(p));
+    p.addEventListener('click', () => bloom(p));
+    p.addEventListener('focus', () => bloom(p));
   });
 
   /* --------------------------- final line wave + drift --------------------------- */
-  const l50 = document.querySelector('.pi-line-50');
-  if (l50) {
+  const l50Base = base.querySelector('.pi-line-50');
+  const l50Fill = fill.querySelector('.pi-line-50');
+  if (l50Base) {
     const wave = () => {
       if (reduce) return;
-      const chars = l50.querySelectorAll('.char');
-      gsap.killTweensOf(l50); gsap.killTweensOf(chars);
+      const bChars = l50Base.querySelectorAll('.char');
+      const fChars = l50Fill ? l50Fill.querySelectorAll('.char') : [];
+      gsap.killTweensOf([l50Base, l50Fill, bChars, fChars]);
 
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const w = innerWidth, h = innerHeight;
       const tl = gsap.timeline();
-
-      // gentle per-character wave (long & slow)
-      tl.to(chars, {
-        y: -12,
-        duration: 0.8,
-        yoyo: true,
-        repeat: 15,
-        ease: 'sine.inOut',
-        stagger: 0.08
+      tl.to([bChars, fChars], {
+        y: -12, duration: 0.8, yoyo: true, repeat: 15,
+        ease: 'sine.inOut', stagger: 0.08
       }, 0);
-
-      // slow diagonal drift with fade
-      tl.to(l50, {
-        x: w * 1.2,
-        y: h * 0.6,
-        opacity: 0,
-        duration: 18,
-        ease: 'power1.inOut'
+      tl.to([l50Base, l50Fill], {
+        x: w * 1.2, y: h * 0.6, opacity: 0, duration: 18, ease: 'power1.inOut'
       }, 0);
-
-      // rocking + bobbing
-      tl.to(l50, {
-        rotation: 5,
-        duration: 2.2,
-        yoyo: true,
-        repeat: 12,
-        ease: 'sine.inOut'
+      tl.to([l50Base, l50Fill], {
+        rotation: 5, duration: 2.2, yoyo: true, repeat: 12, ease: 'sine.inOut'
       }, 0);
-      tl.to(l50, {
-        y: '+=12',
-        duration: 1.8,
-        yoyo: true,
-        repeat: 10,
-        ease: 'sine.inOut'
+      tl.to([l50Base, l50Fill], {
+        y: '+=12', duration: 1.8, yoyo: true, repeat: 10, ease: 'sine.inOut'
       }, 0);
     };
-
-    // desktop hover
-    l50.addEventListener('pointerenter', wave);
-    // mobile tap anywhere on the line except the audio word
-    l50.addEventListener('click', (e) => {
+    l50Base.addEventListener('pointerenter', wave);
+    l50Base.addEventListener('click', (e) => {
       if (e.target.closest('#pi-zeezucht')) return;
       wave();
     });
@@ -301,10 +355,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let player = null, ready = false, playing = false;
   const trigger = document.getElementById('pi-zeezucht');
   if (trigger) {
-    // simple tweened volume proxy (falls back to instant if something fails)
     const volumeProxy = { v: 0 };
     const fadeTo = (target, sec, done) => {
-      if (!hasGSAP) { if (player?.setVolume) player.setVolume(target); done && done(); return; }
       gsap.to(volumeProxy, {
         v: target, duration: sec, ease: 'power1.inOut',
         onUpdate() { if (ready && player && player.setVolume) player.setVolume(Math.round(volumeProxy.v)); },
@@ -317,7 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
     trigger.addEventListener('click', e => { e.preventDefault(); toggle(); });
     trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
 
-    // YouTube IFrame API
     const prev = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = function() {
       try { if (typeof prev === 'function') prev(); } catch(e) {}
@@ -332,6 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+
 <p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
 </body>
 </html>
