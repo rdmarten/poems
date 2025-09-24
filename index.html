@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Ostende bonsoir</title>
+  <title>les galeries vénitiennes — interactive</title>
 
   <!-- Tufte CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
@@ -23,22 +23,18 @@
     /* Clickable audio word */
     .pi-audio { text-decoration: underline; cursor: pointer; }
     .pi-audio[aria-pressed="true"] { text-decoration: underline dotted; }
-
-    /* GSAP Bloom in italics */
-    .gsap-bloom { font-style: italic; }
   </style>
 
-  <!-- Libraries -->
+  <!-- GSAP core + ScrollTrigger + Splitting -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/splitting@1.0.6/dist/splitting.min.js"></script>
+  <!-- YouTube IFrame API -->
   <script async src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
 
 <article class="pi-tufte">
-  <h2 class="pi-title"><i>Ostende bonsoir</i></h1>
-  <p class="pi-subtitle"><i>— Palais des Thermes —</i></p>
-  
   <div class="poem">
 
     <!-- 1–4 (note on 1–3; 4 italic) -->
@@ -55,10 +51,10 @@
 
     <!-- 5–10 (only 6–9 bloom) -->
     <p class="pi-ital">~</p>
-    <p class="gsap-bloom pi-ital">the gods are vulnerable</p>
-    <p class="gsap-bloom pi-ital">still so fertile, so soft</p>
-    <p class="gsap-bloom pi-ital">yet they’re dying out</p>
-    <p class="gsap-bloom pi-ital">in front of our eyes</p>
+    <p class="gsap-bloom">the gods are vulnerable</p>
+    <p class="gsap-bloom">still so fertile, so soft</p>
+    <p class="gsap-bloom">yet they’re dying out</p>
+    <p class="gsap-bloom">in front of our eyes</p>
     <p class="pi-ital">~</p>
 
     <br><br>
@@ -161,148 +157,188 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.querySelector('.pi-tufte');
-  if (!root) return;
+  if (!root || typeof gsap === 'undefined') return;
 
-  // Wait for GSAP then init
-  const waitForGSAP = () => new Promise(r => (typeof gsap !== 'undefined' ? r() : (function check(){ typeof gsap !== 'undefined' ? r() : setTimeout(check,50) })()));
-  waitForGSAP().then(initAnimations);
+  // Respect OS reduced-motion (set to false for testing if needed)
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  gsap.registerPlugin(ScrollTrigger);
 
-  function initAnimations() {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // Split only the lines we animate
-    const splitTargets = root.querySelectorAll('.gsap-bloom, .pi-line-50');
-    const ensureSplit = () => {
-      if (typeof Splitting === 'function') {
-        Splitting({ target: splitTargets, by: 'chars' });
-      } else {
-        setTimeout(ensureSplit, 50);
-      }
-    };
-    ensureSplit();
-
-    // Bloom (lines 6–9 and 36–39)
-    function bloom(line) {
-  if (reduce) return;
-  const chars = line.querySelectorAll('.char');
-  if (!chars.length) return;
-
-  gsap.killTweensOf(chars);
-  gsap.to(chars, {
-    scale: 1.24,           // was ~1.14 — a little bigger
-    color: '#40E0D0',      // turquoise bloom colour
-    duration: 0.6,         // slightly slower to emphasise the bloom
-    yoyo: true,
-    repeat: 1,
-    ease: 'power1.inOut',
-    stagger: 0.04
-    repeatDelay: 0.1
-  });
-}
-    root.querySelectorAll('.gsap-bloom').forEach(p => {
-      p.tabIndex = 0;
-      p.addEventListener('mouseenter', () => bloom(p));
-      p.addEventListener('focus', () => bloom(p));
-      p.addEventListener('mouseleave', () => gsap.killTweensOf(p.querySelectorAll('.char')));
-      p.addEventListener('blur', () => gsap.killTweensOf(p.querySelectorAll('.char')));
-    });
-
-    // Final line: slow diagonal drift + wave
-    const l50 = root.querySelector('.pi-line-50');
-    if (l50) {
-      l50.addEventListener('mouseenter', () => {
-        if (reduce) return;
-
-        const chars = l50.querySelectorAll('.char');
-        gsap.killTweensOf(l50);
-        gsap.killTweensOf(chars);
-
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        const tl = gsap.timeline();
-
-        // gentle per-character wave
-        tl.to(chars, {
-          y: -12,
-          duration: 0.8,
-          yoyo: true,
-          repeat: 15,
-          ease: 'sine.inOut',
-          stagger: 0.08
-        }, 0);
-
-        // slow drift to bottom-right with fade out
-        tl.to(l50, {
-          x: w * 1.2,
-          y: h * 0.6,
-          opacity: 0,
-          duration: 18,
-          ease: 'power1.inOut'
-        }, 0);
-
-        // rocking + bobbing for wave-like feel
-        tl.to(l50, {
-          rotation: 5,
-          duration: 2.2,
-          yoyo: true,
-          repeat: 12,
-          ease: 'sine.inOut'
-        }, 0);
-        tl.to(l50, {
-          y: '+=12',
-          duration: 1.8,
-          yoyo: true,
-          repeat: 10,
-          ease: 'sine.inOut'
-        }, 0);
+  // 1) Split only the lines we animate (bloom + final line)
+  const splitTargets = root.querySelectorAll('.gsap-bloom, .pi-line-50');
+  const doSplit = () => {
+    if (typeof Splitting === 'function') {
+      Splitting({ target: splitTargets, by: 'chars' });
+    } else {
+      // If Splitting is blocked, fall back to a tiny inline splitter
+      splitTargets.forEach(el => {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        const texts = [];
+        while (walker.nextNode()) texts.push(walker.currentNode);
+        texts.forEach(node => {
+          if (!/\S/.test(node.nodeValue)) return;
+          const frag = document.createDocumentFragment();
+          for (const ch of node.nodeValue) {
+            if (ch === ' ') { frag.appendChild(document.createTextNode(' ')); continue; }
+            const span = document.createElement('span');
+            span.className = 'char'; span.textContent = ch;
+            frag.appendChild(span);
+          }
+          node.parentNode.replaceChild(frag, node);
+        });
       });
     }
+  };
+  doSplit();
 
-    // YouTube audio on "zeezucht" with GSAP volume fade
-    let player = null, ready = false, playing = false;
-    const trigger = document.getElementById('pi-zeezucht');
-    if (trigger) {
-      const volumeProxy = { v: 0 };
-      const fadeTo = (target, sec, done) => {
-        gsap.to(volumeProxy, {
-          v: target, duration: sec, ease: 'power1.inOut',
-          onUpdate() { if (ready && player && player.setVolume) player.setVolume(Math.round(volumeProxy.v)); },
-          onComplete: () => done && done()
-        });
-      };
-      const play = () => {
-        if (!ready) return;
-        player.setVolume(0);
-        player.playVideo();
-        trigger.setAttribute('aria-pressed','true');
-        playing = true;
-        fadeTo(50, 1.2);
-      };
-      const pause = () => {
-        if (!ready) return;
-        fadeTo(0, 1, () => {
-          player.pauseVideo();
-          trigger.setAttribute('aria-pressed','false');
-          playing = false;
-        });
-      };
-      const toggle = () => (playing ? pause() : play());
+  // 2) Scroll reveal on mobile/desktop (skip if reduced motion)
+  if (!reduce) {
+    gsap.utils.toArray('.poem p').forEach(el => {
+      // Don’t reveal the final line twice; it has its own animation later
+      gsap.from(el, {
+        opacity: 0,
+        y: 12,
+        duration: 0.6,
+        ease: 'power1.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          toggleActions: 'play none none reverse'
+        }
+      });
+    });
+  }
 
-      trigger.addEventListener('click', e => { e.preventDefault(); toggle(); });
-      trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  // 3) Bloom (lines with .gsap-bloom): works on hover (desktop) AND tap (mobile)
+  function bloom(line) {
+    if (reduce) return;
+    const chars = line.querySelectorAll('.char');
+    if (!chars.length) return;
+    gsap.killTweensOf(chars);
+    gsap.to(chars, {
+      scale: 1.24,
+      color: '#40E0D0',
+      duration: 0.6,
+      yoyo: true,
+      repeat: 1,
+      ease: 'power1.inOut',
+      stagger: 0.04
+      repeatDelay: 0.1
+    });
+  }
+  root.querySelectorAll('.gsap-bloom').forEach(p => {
+    p.tabIndex = 0;
+    // Desktop hover
+    p.addEventListener('pointerenter', () => bloom(p));
+    // Mobile tap / any click
+    p.addEventListener('click', () => bloom(p));
+    // Keyboard focus
+    p.addEventListener('focus', () => bloom(p));
+  });
 
-      const prev = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = function() {
-        if (typeof prev === 'function') try { prev(); } catch(e) {}
-        player = new YT.Player('yt-audio-holder', {
-          height: '1', width: '1',
-          videoId: 'aeIzNh35VBA',
-          playerVars: { controls: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
-          events: { onReady: () => { ready = true; player.setVolume(0); } }
-        });
-      };
-      if (window.YT && YT.Player) window.onYouTubeIframeAPIReady();
-    }
+  // 4) Final line: slow wave + diagonal drift
+  const l50 = root.querySelector('.pi-line-50');
+  if (l50) {
+    const triggerWave = () => {
+      if (reduce) return;
+      const chars = l50.querySelectorAll('.char');
+      if (!chars.length) return;
+
+      gsap.killTweensOf(l50);
+      gsap.killTweensOf(chars);
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const tl = gsap.timeline();
+
+      // gentle per-character wave
+      tl.to(chars, {
+        y: -12,
+        duration: 0.8,
+        yoyo: true,
+        repeat: 15,
+        ease: 'sine.inOut',
+        stagger: 0.08
+      }, 0);
+
+      // slow drift to bottom-right, fade out
+      tl.to(l50, {
+        x: w * 1.2,
+        y: h * 0.6,
+        opacity: 0,
+        duration: 18,
+        ease: 'power1.inOut'
+      }, 0);
+
+      // rocking + bobbing
+      tl.to(l50, {
+        rotation: 5,
+        duration: 2.2,
+        yoyo: true,
+        repeat: 12,
+        ease: 'sine.inOut'
+      }, 0);
+      tl.to(l50, {
+        y: '+=12',
+        duration: 1.8,
+        yoyo: true,
+        repeat: 10,
+        ease: 'sine.inOut'
+      }, 0);
+    };
+
+    // Desktop hover
+    l50.addEventListener('pointerenter', triggerWave);
+    // Mobile tap anywhere on the line EXCEPT the audio word
+    l50.addEventListener('click', (e) => {
+      if (e.target.closest('#pi-zeezucht')) return; // let audio handle its own clicks
+      triggerWave();
+    });
+  }
+
+  // 5) YouTube audio on "zeezucht" with GSAP volume fade (tap/click)
+  let player = null, ready = false, playing = false;
+  const trigger = document.getElementById('pi-zeezucht');
+  if (trigger) {
+    const volumeProxy = { v: 0 };
+    const fadeTo = (target, sec, done) => {
+      gsap.to(volumeProxy, {
+        v: target, duration: sec, ease: 'power1.inOut',
+        onUpdate() { if (ready && player && player.setVolume) player.setVolume(Math.round(volumeProxy.v)); },
+        onComplete: () => done && done()
+      });
+    };
+    const play = () => {
+      if (!ready) return;
+      player.setVolume(0);
+      player.playVideo();
+      trigger.setAttribute('aria-pressed','true');
+      playing = true;
+      fadeTo(50, 1.2);
+    };
+    const pause = () => {
+      if (!ready) return;
+      fadeTo(0, 1, () => {
+        player.pauseVideo();
+        trigger.setAttribute('aria-pressed','false');
+        playing = false;
+      });
+    };
+    const toggle = () => (playing ? pause() : play());
+
+    trigger.addEventListener('click', e => { e.preventDefault(); toggle(); });
+    trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function() {
+      if (typeof prev === 'function') try { prev(); } catch(e) {}
+      player = new YT.Player('yt-audio-holder', {
+        height: '1', width: '1',
+        videoId: 'aeIzNh35VBA',
+        playerVars: { controls: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
+        events: { onReady: () => { ready = true; player.setVolume(0); } }
+      });
+    };
+    if (window.YT && YT.Player) window.onYouTubeIframeAPIReady();
   }
 });
 </script>
