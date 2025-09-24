@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Ostende-2</title>
+
+  <!-- Tufte CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
+
+  <style>
+    /* ===== Background image + tint overlay =====
+       Change the URL if your filename is different. */
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      background: url("./COLLEGE-PETRUS-EN-PAULUS-HISTORIEK-vetsigingsplaatsen.jpeg") center/cover no-repeat;
+      filter: grayscale(100%);
+      z-index:-2;
+    }
+    body::after{
+      content:"";
+      position:fixed; inset:0;
+      background: rgba(0,0,0,0.35); /* adjust for more/less contrast */
+      z-index:-1;
+    }
+
+    /* ===== Layout + poem typography ===== */
+    .pi-tufte { max-width: 70ch; margin: 0 auto; padding: 1.2rem 0 4rem; }
+    .poem-wrap { position: relative; }
+    .poem { font-size: 0.50rem; line-height: 1.5; }
+    .poem p { margin: 0.15rem 0; }
+    .pi-ital { font-style: italic; }
+
+    /* ===== Scroll-fill layers ===== */
+    .poem-base { color: #9a9a9a; }      /* baseline grey */
+    .poem-fill {
+      position: absolute; inset: 0;
+      color: #fff;                      /* fill colour */
+      pointer-events: none;             /* clicks remain on base */
+      --reveal: 0;                      /* 0..1, set via JS */
+      -webkit-mask-image: linear-gradient(to bottom,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,1) calc(var(--reveal) * 100%),
+        rgba(0,0,0,0) calc(var(--reveal) * 100%));
+      mask-image: linear-gradient(to bottom,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,1) calc(var(--reveal) * 100%),
+        rgba(0,0,0,0) calc(var(--reveal) * 100%));
+    }
+    /* Hide sidenote UI in the overlay copy */
+    .poem-fill .margin-toggle,
+    .poem-fill .sidenote,
+    .poem-fill input[type="checkbox"] { display: none !important; }
+
+    /* Per-character animation wrappers (our inline splitter creates .char) */
+    .char { display: inline-block; will-change: transform, color; }
+
+    /* Scroll-reveal initial state for the baseline text */
+    .reveal { opacity: 0; transform: translateY(12px); }
+
+    /* Audio word styling */
+    .pi-audio { text-decoration: underline; cursor: pointer; }
+    .pi-audio[aria-pressed="true"] { text-decoration: underline dotted; }
+  </style>
+
+  <!-- GSAP core (animations); no extra plugins required -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <!-- YouTube IFrame API for audio click -->
+  <script async src="https://www.youtube.com/iframe_api"></script>
+</head>
+<body>
+
+<article class="pi-tufte">
+  <h1 style="font-size:0.9rem;margin:0 0 0.8rem;color:#ececec;">Ostende-2</h1>
+
+  <div class="poem-wrap" id="poemWrap">
+    <!-- Baseline (interactive) layer -->
+    <div class="poem poem-base" id="poemBase">
+
+      <!-- 1–4 (note on 1–3; 4 italic) -->
+      <p class="reveal">les galeries vénitiennes</p>
+      <p class="reveal">garde une jardin Japonais</p>
+      <p class="reveal">devant un puits artésien,
+        <label for="sn-1" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-1" class="margin-toggle" />
+        <span class="sidenote">the Venetian galleries<br>hide a Japanese garden<br>in front of an artesian well</span>
+      </p>
+      <p class="pi-ital reveal">Palais des Thermes:</p>
+
+      <br><br>
+
+      <!-- 5–10 (bloom targets) -->
+      <p class="pi-ital reveal">~</p>
+      <p class="gsap-bloom reveal">the gods are vulnerable</p>
+      <p class="gsap-bloom reveal">still so fertile, so soft</p>
+      <p class="gsap-bloom reveal">yet they’re dying out</p>
+      <p class="gsap-bloom reveal">in front of our eyes</p>
+      <p class="pi-ital reveal">~</p>
+
+      <br><br>
+
+      <!-- 11–18 -->
+      <p class="reveal">art-deco exuberante</p>
+      <p class="reveal">frescos, des styles</p>
+      <p class="reveal">architecturaux</p>
+      <p class="reveal">classiques conservatrices</p>
+      <p class="reveal">culminant dans une</p>
+      <p class="reveal">forme éclectique</p>
+      <p class="reveal">avec des accents</p>
+      <p class="reveal">néo-Louis XV
+        <label for="sn-2" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-2" class="margin-toggle" />
+        <span class="sidenote">exuberant art deco<br>frescoes, with styles so<br>architecturally<br>classical conservative<br>culminating in an<br>eclectic form<br>with neo-accents<br>of Louis XV</span>
+      </p>
+
+      <br><br>
+
+      <!-- 19–26 -->
+      <p class="reveal">mes pours les mecs</p>
+      <p class="reveal">locales, c’était</p>
+      <p class="pi-ital reveal">de witten ooljefant</p>
+      <p class="reveal">chère, une modalité</p>
+      <p class="reveal">pour les riches</p>
+      <p class="reveal">les bourgeouis,</p>
+      <p class="reveal">pas nous, le peuple</p>
+      <p class="reveal">ordinaire, les marchants
+        <label for="sn-3" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-3" class="margin-toggle" />
+        <span class="sidenote">but for the lads,<br>the locals, it was<br>“the White Elephant”<br>expensive, a luxury<br>for the rich,<br>the bourgeoisie,<br>not us, the people,<br>the merchants</span>
+      </p>
+
+      <br><br>
+
+      <!-- 27–34 -->
+      <p class="reveal">ma ècole, une palais</p>
+      <p class="reveal">napoleonique</p>
+      <p class="pi-ital reveal">althans dat is wat</p>
+      <p class="pi-ital reveal">ze ons hadden</p>
+      <p class="pi-ital reveal">verteld, al lijkt daar</p>
+      <p class="pi-ital reveal">weinig echt van aan</p>
+      <p class="reveal">avec des anciens</p>
+      <p class="reveal">comme Ensor
+        <label for="sn-4" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-4" class="margin-toggle" />
+        <span class="sidenote">my school, a palace<br>in Napoleon-style<br>at least that's what<br>they told us,<br>although there seems to be<br>little truth in it<br>with alumni<br>like James Ensor (the painter)</span>
+      </p>
+
+      <br><br>
+
+      <!-- 35–40 (bloom targets) -->
+      <p class="pi-ital reveal">~</p>
+      <p class="gsap-bloom reveal">left with only memories</p>
+      <p class="gsap-bloom reveal">of roses, his beard, the scent</p>
+      <p class="gsap-bloom reveal">of lilacs, wild raspberries,</p>
+      <p class="gsap-bloom reveal">rumour of a long-eared owl</p>
+      <p class="pi-ital reveal">~</p>
+
+      <br><br>
+
+      <!-- 41–45 -->
+      <p class="reveal">(en fait il n'y est</p>
+      <p class="reveal">resté que deux ans)</p>
+      <p class="reveal">comme Spilliaert</p>
+      <p class="pi-ital reveal">excentrieke ziener van</p>
+      <p class="pi-ital reveal">een vreemde realiteit
+        <label for="sn-5" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-5" class="margin-toggle" />
+        <span class="sidenote">(in fact, he only stayed there<br>for two years)<br>like Léon Spilliaert (another painter)<br>eccentric seer of<br>a strange reality</span>
+      </p>
+
+      <br><br>
+
+      <!-- 46–49 -->
+      <p class="reveal">fort militaire polygonal</p>
+      <p class="reveal">au bord de la mer</p>
+      <p class="reveal">à l'infini</p>
+      <p class="reveal">avant qu'il ne soit fini
+        <label for="sn-6" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-6" class="margin-toggle" />
+        <span class="sidenote">polygonal military fort<br>by the sea<br>into infinity<br>before it is all gone</span>
+      </p>
+
+      <!-- Six breaks before final line -->
+      <br><br><br><br><br><br>
+
+      <!-- 50 (final wave + audio) -->
+      <p id="line-50" class="pi-ital reveal" tabindex="0">
+        sehnsucht? <span id="pi-zeezucht" class="pi-audio" role="button" aria-pressed="false" tabindex="0">zeezucht</span>
+      </p>
+    </div>
+    <!-- JS inserts the white overlay (.poem-fill) here -->
+  </div>
+
+  <div id="yt-audio-holder" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;"></div>
+</article>
+
+<script>
+(() => {
+  const wrap = document.getElementById('poemWrap');
+  const base = document.getElementById('poemBase');
+
+  /* ---------- overlay clone for scroll-fill (white) ---------- */
+  const fill = base.cloneNode(true);
+  fill.classList.remove('poem-base'); fill.classList.add('poem-fill');
+  fill.removeAttribute('id');
+  // Prevent duplicate IDs in the overlay
+  fill.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+  // Hide sidenote UI in overlay (belt-and-braces)
+  fill.querySelectorAll('.sidenote, .margin-toggle, input[type="checkbox"]').forEach(el => el.remove());
+  wrap.appendChild(fill);
+
+  /* ---------- scroll-fill progress (sets --reveal 0..1) ---------- */
+  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+  function updateReveal() {
+    if (prefersReduce) { wrap.style.setProperty('--reveal', 1); return; }
+    const rect = wrap.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    // Progress from when the poem starts to enter until it leaves
+    const total = rect.height + vh;
+    const progress = clamp((vh - rect.top) / total, 0, 1);
+    wrap.style.setProperty('--reveal', progress.toFixed(4));
+  }
+  updateReveal();
+  window.addEventListener('scroll', updateReveal, { passive: true });
+  window.addEventListener('resize', updateReveal);
+
+  /* ---------- tiny inline character splitter ---------- */
+  function splitCharsIn(el) {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) { return /\S/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+      const parent = node.parentElement;
+      if (parent && (parent.closest('.sidenote') || parent.closest('label') || parent.closest('input'))) return;
+      const frag = document.createDocumentFragment();
+      for (const ch of node.nodeValue) {
+        if (ch === ' ') { frag.appendChild(document.createTextNode(' ')); continue; }
+        const span = document.createElement('span');
+        span.className = 'char'; span.textContent = ch;
+        frag.appendChild(span);
+      }
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+  // Split bloom lines + final line in BOTH layers
+  base.querySelectorAll('.gsap-bloom, #line-50').forEach(splitCharsIn);
+  fill.querySelectorAll('.gsap-bloom').forEach(splitCharsIn);
+
+  /* ---------- scroll-reveal for baseline text ---------- */
+  const hasGSAP = typeof gsap !== 'undefined';
+  const revealEls = Array.from(base.querySelectorAll('.reveal'));
+  if (!prefersReduce && 'IntersectionObserver' in window && hasGSAP) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(({ target, isIntersecting }) => {
+        if (isIntersecting) {
+          io.unobserve(target);
+          gsap.to(target, { opacity: 1, y: 0, duration: 0.6, ease: 'power1.out' });
+        }
+      });
+    }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+  }
+
+  /* ---------- BLOOM on scroll (turquoise + scale), automated ---------- */
+  const baseBlooms = Array.from(base.querySelectorAll('.gsap-bloom'));
+  const fillBlooms = Array.from(fill.querySelectorAll('.gsap-bloom'));
+  if (!prefersReduce && 'IntersectionObserver' in window && hasGSAP) {
+    const seen = new WeakSet();
+    const bloomIO = new IntersectionObserver((entries) => {
+      entries.forEach(({ target, isIntersecting }) => {
+        if (!isIntersecting || seen.has(target)) return;
+        seen.add(target);
+        const idx = baseBlooms.indexOf(target);
+        const baseChars = target.querySelectorAll('.char');
+        const fillChars = idx > -1 ? (fillBlooms[idx]?.querySelectorAll('.char') || []) : [];
+
+        // Base: scale + colour to #40E0D0, then yoyo
+        gsap.to(baseChars, {
+          scale: 1.24,
+          color: '#40E0D0',
+          duration: 0.6,
+          yoyo: true,
+          repeat: 1,
+          ease: 'power1.inOut',
+          stagger: 0.04
+        });
+        // Overlay: scale only (colour stays white)
+        if (fillChars.length) {
+          gsap.to(fillChars, {
+            scale: 1.24,
+            duration: 0.6,
+            yoyo: true,
+            repeat: 1,
+            ease: 'power1.inOut',
+            stagger: 0.04
+          });
+        }
+      });
+    }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.35 });
+    baseBlooms.forEach(el => bloomIO.observe(el));
+  }
+
+  /* ---------- FINAL LINE: wave + diagonal drift (hover/tap) ---------- */
+  const l50 = document.getElementById('line-50');
+  if (l50 && hasGSAP) {
+    const triggerWave = () => {
+      if (prefersReduce) return;
+      const chars = l50.querySelectorAll('.char');
+      gsap.killTweensOf(l50); gsap.killTweensOf(chars);
+
+      const w = window.innerWidth, h = window.innerHeight;
+      const tl = gsap.timeline();
+
+      // gentle per-character wave (long & slow)
+      tl.to(chars, {
+        y: -12,
+        duration: 0.8,
+        yoyo: true,
+        repeat: 15,
+        ease: 'sine.inOut',
+        stagger: 0.08
+      }, 0);
+
+      // slow drift to bottom-right with fade out
+      tl.to(l50, {
+        x: w * 1.2,
+        y: h * 0.6,
+        opacity: 0,
+        duration: 18,
+        ease: 'power1.inOut'
+      }, 0);
+
+      // rocking + bobbing
+      tl.to(l50, { rotation: 5, duration: 2.2, yoyo: true, repeat: 12, ease: 'sine.inOut' }, 0);
+      tl.to(l50, { y: '+=12', duration: 1.8, yoyo: true, repeat: 10, ease: 'sine.inOut' }, 0);
+    };
+
+    // desktop hover + mobile tap (ignore taps on the audio word)
+    l50.addEventListener('pointerenter', triggerWave);
+    l50.addEventListener('click', (e) => {
+      if (e.target.closest('#pi-zeezucht')) return;
+      triggerWave();
+    });
+  }
+
+  /* ---------- Audio: click “zeezucht” to play/pause (with simple fade) ---------- */
+  let player = null, ready = false, playing = false;
+  const trigger = document.getElementById('pi-zeezucht');
+
+  function fadeVolume(target, ms, done){
+    if (!ready || !player || !player.setVolume) return done && done();
+    try{
+      const start = player.getVolume ? player.getVolume() : 0;
+      const t0 = performance.now();
+      function step(now){
+        const t = Math.min(1, (now - t0) / ms);
+        const v = Math.round(start + (target - start) * t);
+        player.setVolume(v);
+        if (t < 1) requestAnimationFrame(step); else done && done();
+      }
+      requestAnimationFrame(step);
+    }catch(e){ done && done(); }
+  }
+
+  if (trigger) {
+    function play(){
+      if (!ready) return;
+      try { player.setVolume(0); player.playVideo(); } catch(e){}
+      trigger.setAttribute('aria-pressed','true');
+      playing = true;
+      fadeVolume(60, 900);
+    }
+    function pause(){
+      if (!ready) return;
+      fadeVolume(0, 700, () => { try { player.pauseVideo(); } catch(e){} });
+      trigger.setAttribute('aria-pressed','false');
+      playing = false;
+    }
+    const toggle = () => (playing ? pause() : play());
+
+    trigger.addEventListener('click', e => { e.preventDefault(); toggle(); });
+    trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+
+    // YouTube IFrame API
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function(){
+      try { if (typeof prev === 'function') prev(); } catch(e){}
+      player = new YT.Player('yt-audio-holder', {
+        height: '1', width: '1',
+        videoId: 'aeIzNh35VBA',
+        playerVars: { controls: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
+        events: { onReady: () => { ready = true; try { player.setVolume(0); } catch(e){} } }
+      });
+    };
+    if (window.YT && YT.Player) window.onYouTubeIframeAPIReady();
+  }
+})();
+</script>
+
+</body>
+</html>
