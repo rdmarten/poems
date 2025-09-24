@@ -14,8 +14,7 @@
     .pi-tufte .poem { font-size: 0.50rem; line-height: 1.5; }
     .pi-tufte .poem p { margin: 0.15rem 0; }
 
-    /* Required for per-character animation (Splitting output) */
-    .word { display: inline-block; position: relative; }
+    /* Per-character animation */
     .char { display: inline-block; will-change: transform; }
 
     /* Italic helper */
@@ -26,7 +25,7 @@
     .pi-audio[aria-pressed="true"] { text-decoration: underline dotted; }
   </style>
 
-  <!-- Libraries (defer = parse after HTML; DOMContentLoaded guards init) -->
+  <!-- Libraries -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/splitting@1.0.6/dist/splitting.min.js"></script>
   <script async src="https://www.youtube.com/iframe_api"></script>
@@ -34,6 +33,9 @@
 <body>
 
 <article class="pi-tufte">
+  <h1 class="pi-title">Ostende bonsoir</h1>
+  <p class="pi-subtitle"><i>— Palais des Thermes —</i></p>
+  
   <div class="poem">
 
     <!-- 1–4 (note on 1–3; 4 italic) -->
@@ -45,16 +47,19 @@
       <span class="sidenote">the Venetian galleries<br>hide a Japanese garden<br>in front of an artesian well</span>
     </p>
     <p class="pi-ital">Palais des Thermes:</p>
-<br><br>
+
+    <br><br>
+
     <!-- 5–10 (only 6–9 bloom) -->
     <p class="pi-ital">~</p>
-      <p class="gsap-bloom">the gods are vulnerable</p>
-      <p class="gsap-bloom">still so fertile, so soft</p>
-      <p class="gsap-bloom">yet they’re dying out</p>
-      <p class="gsap-bloom">in front of our eyes</p>
-      <p class="pi-ital">~</p>
-  
-<br><br>
+    <p class="gsap-bloom">the gods are vulnerable</p>
+    <p class="gsap-bloom">still so fertile, so soft</p>
+    <p class="gsap-bloom">yet they’re dying out</p>
+    <p class="gsap-bloom">in front of our eyes</p>
+    <p class="pi-ital">~</p>
+
+    <br><br>
+
     <!-- 11–18 (shared sidenote) -->
     <p>art-deco exuberante</p>
     <p>frescos, des styles</p>
@@ -68,7 +73,9 @@
       <input type="checkbox" id="sn-2" class="margin-toggle" />
       <span class="sidenote">exuberant art deco<br>frescoes, with styles so<br>architecturally<br>classical conservative<br>culminating in an<br>eclectic form<br>with neo-accents<br>of Louis XV</span>
     </p>
-<br><br>
+
+    <br><br>
+
     <!-- 19–26 (shared sidenote; 21 italic) -->
     <p>mes pours les mecs</p>
     <p>locales, c’était</p>
@@ -82,7 +89,9 @@
       <input type="checkbox" id="sn-3" class="margin-toggle" />
       <span class="sidenote">but for the lads,<br>the locals, it was<br>“the White Elephant”<br>expensive, a luxury<br>for the rich,<br>the bourgeoisie,<br>not us, the people,<br>the merchants</span>
     </p>
-<br><br>
+
+    <br><br>
+
     <!-- 27–34 (shared sidenote; 29–32 italic) -->
     <p>ma ècole, une palais</p>
     <p>napoleonique</p>
@@ -96,16 +105,19 @@
       <input type="checkbox" id="sn-4" class="margin-toggle" />
       <span class="sidenote">my school, a palace<br>in Napoleon-style<br>at least that's what<br>they told us,<br>although there seems to be<br>little truth in it<br>with alumni<br>like James Ensor (the painter)</span>
     </p>
-<br><br>
-    <!-- 35–40 (all italic) -->
+
+    <br><br>
+
+    <!-- 35–40 (all italic; 36–39 bloom) -->
     <p class="pi-ital">~</p>
-      <p class="gsap-bloom">left with only memories</p>
-      <p class="gsap-bloom">of roses, his beard, the scent</p>
-      <p class="gsap-bloom">of lilacs, wild raspberries,</p>
-      <p class="gsap-bloom">rumour of a long-eared owl</p>
-      <p class="pi-ital">~</p>
-   
-<br><br>
+    <p class="gsap-bloom">left with only memories</p>
+    <p class="gsap-bloom">of roses, his beard, the scent</p>
+    <p class="gsap-bloom">of lilacs, wild raspberries,</p>
+    <p class="gsap-bloom">rumour of a long-eared owl</p>
+    <p class="pi-ital">~</p>
+
+    <br><br>
+
     <!-- 41–45 (shared sidenote; 44–45 italic) -->
     <p>(en fait il n'y est</p>
     <p>resté que deux ans)</p>
@@ -116,7 +128,9 @@
       <input type="checkbox" id="sn-5" class="margin-toggle" />
       <span class="sidenote">(in fact, he only stayed there<br>for two years)<br>like Léon Spilliaert (another painter)<br>eccentric seer of<br>a strange reality</span>
     </p>
-<br><br>
+
+    <br><br>
+
     <!-- 46–49 (shared sidenote) -->
     <p>fort militaire polygonal</p>
     <p>au bord de la mer</p>
@@ -126,7 +140,10 @@
       <input type="checkbox" id="sn-6" class="margin-toggle" />
       <span class="sidenote">polygonal military fort<br>by the sea<br>into infinity<br>before it is all gone</span>
     </p>
-<br><br><br><br><br><br>
+
+    <!-- Six breaks before final line -->
+    <br><br><br><br><br><br>
+
     <!-- 50 (italic, GSAP drift + audio) -->
     <p class="pi-ital pi-line-50" tabindex="0">
       sehnsucht? <span id="pi-zeezucht" class="pi-audio" role="button" aria-pressed="false" tabindex="0">zeezucht</span>
@@ -142,206 +159,141 @@
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.querySelector('.pi-tufte');
   if (!root) return;
-  
-  // Wait for GSAP to load
-  const waitForGSAP = () => {
-    return new Promise((resolve) => {
-      if (typeof gsap !== 'undefined') {
-        resolve();
-      } else {
-        const checkGSAP = () => {
-          if (typeof gsap !== 'undefined') {
-            resolve();
-          } else {
-            setTimeout(checkGSAP, 50);
-          }
-        };
-        checkGSAP();
-      }
-    });
-  };
-  
-  waitForGSAP().then(() => {
-    initAnimations();
-  });
-  
+
+  // Wait for GSAP then init
+  const waitForGSAP = () => new Promise(r => (typeof gsap !== 'undefined' ? r() : (function check(){ typeof gsap !== 'undefined' ? r() : setTimeout(check,50) })()));
+  waitForGSAP().then(initAnimations);
+
   function initAnimations() {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Respect user setting; set to false temporarily if you need to test animations
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Split only the lines we animate
-  if (typeof Splitting === 'function') {
-    Splitting({ target: root.querySelectorAll('.gsap-bloom, .pi-line-50'), by: 'chars' });
-  } else {
-    // Wait for Splitting to load
-    const waitForSplitting = () => {
+    // Split only the lines we animate
+    const splitTargets = root.querySelectorAll('.gsap-bloom, .pi-line-50');
+    const ensureSplit = () => {
       if (typeof Splitting === 'function') {
-        Splitting({ target: root.querySelectorAll('.gsap-bloom, .pi-line-50'), by: 'chars' });
+        Splitting({ target: splitTargets, by: 'chars' });
       } else {
-        setTimeout(waitForSplitting, 50);
+        setTimeout(ensureSplit, 50);
       }
     };
-    waitForSplitting();
-  }
+    ensureSplit();
 
-  // Bloom (lines 6–9)
-  function bloom(line) {
-    if (reduce) return;
-    const chars = line.querySelectorAll('.char');
-    if (!chars.length) return;
-    
-    gsap.killTweensOf(chars);
-    gsap.fromTo(chars,
-      { scale: 1 },
-      { 
-        scale: 1.14, 
-        duration: 0.45, 
-        yoyo: true, 
-        repeat: 1, 
-        ease: 'power1.inOut', 
-        stagger: { each: 0.035 } 
-      }
-    );
-  }
-  
-  root.querySelectorAll('.gsap-bloom').forEach(p => {
-    p.tabIndex = 0;
-    p.addEventListener('mouseenter', () => bloom(p));
-    p.addEventListener('focus', () => bloom(p));
-    p.addEventListener('mouseleave', () => gsap.killTweensOf(p.querySelectorAll('.char')));
-    p.addEventListener('blur', () => gsap.killTweensOf(p.querySelectorAll('.char')));
-  });
-
-  // Line 50: enhanced wave animation with drift and fade
-  const l50 = root.querySelector('.pi-line-50');
-  if (l50) {
-    let waveAnimation = null;
-    
-    l50.addEventListener('mouseenter', () => {
+    // Bloom (lines 6–9 and 36–39)
+    function bloom(line) {
       if (reduce) return;
-      if (waveAnimation) waveAnimation.kill();
-      
-      gsap.killTweensOf(l50);
-      gsap.killTweensOf(l50.querySelectorAll('.char'));
-
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-
-      waveAnimation = gsap.timeline({
-        onComplete: () => {
-          // Fade out audio when animation completes
-          if (playing) {
-            fadeTo(0, 2, () => {
-              if (player && ready) player.pauseVideo();
-              playing = false;
-              trigger.setAttribute('aria-pressed','false');
-            });
-          }
-        }
-      });
-
-      // Enhanced wave motion - slower and more fluid
-      waveAnimation.to(l50.querySelectorAll('.char'), {
-        y: -12,
-        duration: 0.8,
-        yoyo: true,
-        repeat: 15,
-        ease: 'sine.inOut',
-        stagger: 0.08
-      }, 0);
-
-      // Slower drift to bottom-right with fade to invisible
-      waveAnimation.to(l50, {
-        x: w * 1.2,
-        y: h * 0.6,
-        opacity: 0,
-        duration: 18,
-        ease: 'power1.inOut'
-      }, 0);
-
-      // Enhanced rocking motion
-      waveAnimation.to(l50, {
-        rotation: 5,
-        duration: 2.2,
-        yoyo: true,
-        repeat: 12,
-        ease: 'sine.inOut'
-      }, 0);
-      
-      // Additional floating motion for more wave-like effect
-      waveAnimation.to(l50, {
-        scaleY: 0.95,
-        duration: 1.8,
-        yoyo: true,
-        repeat: 14,
-        ease: 'sine.inOut'
-      }, 0);
-    });
-  }
-
-  // YouTube audio on "zeezucht" with GSAP volume fade
-  let player = null, ready = false, playing = false;
-  const trigger = document.getElementById('pi-zeezucht');
-  if (trigger) {
-    const volumeProxy = { v: 0 };
-    const fadeTo = (target, sec, done) => {
-      gsap.to(volumeProxy, {
-        v: target, duration: sec, ease: 'power1.inOut',
-        onUpdate() { if (ready && player && player.setVolume) player.setVolume(Math.round(volumeProxy.v)); },
-        onComplete: () => done && done()
-      });
-    };
-    
-    const play = () => {
-      if (!ready) return;
-      player.setVolume(0);
-      player.playVideo();
-      trigger.setAttribute('aria-pressed','true');
-      playing = true;
-      fadeTo(50, 1.2);
-    };
-    
-    const pause = () => {
-      if (!ready) return;
-      fadeTo(0, 1, () => {
-        player.pauseVideo();
-        trigger.setAttribute('aria-pressed','false');
-        playing = false;
-      });
-    };
-    
-    const toggle = () => (playing ? pause() : play());
-
-    trigger.addEventListener('click', e => { e.preventDefault(); toggle(); });
-    trigger.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      const chars = line.querySelectorAll('.char');
+      if (!chars.length) return;
+      gsap.killTweensOf(chars);
+      gsap.fromTo(chars,
+        { scale: 1 },
+        { scale: 1.14, duration: 0.45, yoyo: true, repeat: 1, ease: 'power1.inOut', stagger: 0.035 }
+      );
+    }
+    root.querySelectorAll('.gsap-bloom').forEach(p => {
+      p.tabIndex = 0;
+      p.addEventListener('mouseenter', () => bloom(p));
+      p.addEventListener('focus', () => bloom(p));
+      p.addEventListener('mouseleave', () => gsap.killTweensOf(p.querySelectorAll('.char')));
+      p.addEventListener('blur', () => gsap.killTweensOf(p.querySelectorAll('.char')));
     });
 
-    // YT API hook with origin + playsinline
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = function() {
-      if (typeof prev === 'function') try { prev(); } catch(e) {}
-      player = new YT.Player('yt-audio-holder', {
-        height: '1', width: '1',
-        videoId: 'aeIzNh35VBA',
-        playerVars: { controls: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
-        events: { 
-          onReady: () => { 
-            ready = true; 
-            player.setVolume(0);
-            // Auto-play and fade in when page loads
-            setTimeout(() => {
-              play();
-            }, 1000);
-          } 
-        }
+    // Final line: slow diagonal drift + wave
+    const l50 = root.querySelector('.pi-line-50');
+    if (l50) {
+      l50.addEventListener('mouseenter', () => {
+        if (reduce) return;
+
+        const chars = l50.querySelectorAll('.char');
+        gsap.killTweensOf(l50);
+        gsap.killTweensOf(chars);
+
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const tl = gsap.timeline();
+
+        // gentle per-character wave
+        tl.to(chars, {
+          y: -12,
+          duration: 0.8,
+          yoyo: true,
+          repeat: 15,
+          ease: 'sine.inOut',
+          stagger: 0.08
+        }, 0);
+
+        // slow drift to bottom-right with fade out
+        tl.to(l50, {
+          x: w * 1.2,
+          y: h * 0.6,
+          opacity: 0,
+          duration: 18,
+          ease: 'power1.inOut'
+        }, 0);
+
+        // rocking + bobbing for wave-like feel
+        tl.to(l50, {
+          rotation: 5,
+          duration: 2.2,
+          yoyo: true,
+          repeat: 12,
+          ease: 'sine.inOut'
+        }, 0);
+        tl.to(l50, {
+          y: '+=12',
+          duration: 1.8,
+          yoyo: true,
+          repeat: 10,
+          ease: 'sine.inOut'
+        }, 0);
       });
-    };
-    if (window.YT && YT.Player) window.onYouTubeIframeAPIReady();
+    }
+
+    // YouTube audio on "zeezucht" with GSAP volume fade
+    let player = null, ready = false, playing = false;
+    const trigger = document.getElementById('pi-zeezucht');
+    if (trigger) {
+      const volumeProxy = { v: 0 };
+      const fadeTo = (target, sec, done) => {
+        gsap.to(volumeProxy, {
+          v: target, duration: sec, ease: 'power1.inOut',
+          onUpdate() { if (ready && player && player.setVolume) player.setVolume(Math.round(volumeProxy.v)); },
+          onComplete: () => done && done()
+        });
+      };
+      const play = () => {
+        if (!ready) return;
+        player.setVolume(0);
+        player.playVideo();
+        trigger.setAttribute('aria-pressed','true');
+        playing = true;
+        fadeTo(50, 1.2);
+      };
+      const pause = () => {
+        if (!ready) return;
+        fadeTo(0, 1, () => {
+          player.pauseVideo();
+          trigger.setAttribute('aria-pressed','false');
+          playing = false;
+        });
+      };
+      const toggle = () => (playing ? pause() : play());
+
+      trigger.addEventListener('click', e => { e.preventDefault(); toggle(); });
+      trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function() {
+        if (typeof prev === 'function') try { prev(); } catch(e) {}
+        player = new YT.Player('yt-audio-holder', {
+          height: '1', width: '1',
+          videoId: 'aeIzNh35VBA',
+          playerVars: { controls: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
+          events: { onReady: () => { ready = true; player.setVolume(0); } }
+        });
+      };
+      if (window.YT && YT.Player) window.onYouTubeIframeAPIReady();
+    }
   }
-  
-  } // end initAnimations
 });
 </script>
 
