@@ -183,15 +183,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Bloom (lines 6–9 and 36–39)
     function bloom(line) {
-      if (reduce) return;
-      const chars = line.querySelectorAll('.char');
-      if (!chars.length) return;
-      gsap.killTweensOf(chars);
-      gsap.fromTo(chars,
-        { scale: 1 },
-        { scale: 1.14, duration: 0.45, yoyo: true, repeat: 1, ease: 'power1.inOut', stagger: 0.035 }
-      );
-    }
+  if (reduce) return;
+  const chars = line.querySelectorAll('.char');
+  if (!chars.length) return;
+
+  gsap.killTweensOf(chars);
+  gsap.to(chars, {
+    scale: 1.24,           // was ~1.14 — a little bigger
+    color: '#40E0D0',      // turquoise bloom colour
+    duration: 0.6,         // slightly slower to emphasise the bloom
+    yoyo: true,
+    repeat: 1,
+    ease: 'power1.inOut',
+    stagger: 0.04
+    repeatDelay: 0.1
+  });
+}
     root.querySelectorAll('.gsap-bloom').forEach(p => {
       p.tabIndex = 0;
       p.addEventListener('mouseenter', () => bloom(p));
