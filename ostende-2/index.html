@@ -9,36 +9,20 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
 
   <style>
-    /* ===== Background image + tint overlay =====
-       Change the URL if your filename is different. */
-    body::before{
-      content:"";
-      position:fixed; inset:0;
-      background: url("./COLLEGE-PETRUS-EN-PAULUS-HISTORIEK-vetsigingsplaatsen.jpeg") center/cover no-repeat;
-      filter: grayscale(100%);
-      z-index:-2;
-    }
-    body::after{
-      content:"";
-      position:fixed; inset:0;
-      background: rgba(0,0,0,0.35); /* adjust for more/less contrast */
-      z-index:-1;
-    }
-
-    /* ===== Layout + poem typography ===== */
+    /* Layout + poem type */
     .pi-tufte { max-width: 70ch; margin: 0 auto; padding: 1.2rem 0 4rem; }
     .poem-wrap { position: relative; }
     .poem { font-size: 0.50rem; line-height: 1.5; }
     .poem p { margin: 0.15rem 0; }
     .pi-ital { font-style: italic; }
 
-    /* ===== Scroll-fill layers ===== */
-    .poem-base { color: #9a9a9a; }      /* baseline grey */
+    /* Scroll-fill: base (grey) + overlay (white) */
+    .poem-base { color: #9a9a9a; }
     .poem-fill {
       position: absolute; inset: 0;
-      color: #fff;                      /* fill colour */
-      pointer-events: none;             /* clicks remain on base */
-      --reveal: 0;                      /* 0..1, set via JS */
+      color: #fff;
+      pointer-events: none;            /* keep interactions on the base layer */
+      --reveal: 0;                     /* 0..1 set by JS */
       -webkit-mask-image: linear-gradient(to bottom,
         rgba(0,0,0,1) 0%,
         rgba(0,0,0,1) calc(var(--reveal) * 100%),
@@ -48,37 +32,80 @@
         rgba(0,0,0,1) calc(var(--reveal) * 100%),
         rgba(0,0,0,0) calc(var(--reveal) * 100%));
     }
-    /* Hide sidenote UI in the overlay copy */
-    .poem-fill .margin-toggle,
     .poem-fill .sidenote,
+    .poem-fill .margin-toggle,
     .poem-fill input[type="checkbox"] { display: none !important; }
 
-    /* Per-character animation wrappers (our inline splitter creates .char) */
-    .char { display: inline-block; will-change: transform, color; }
+    /* Reveal-on-scroll baseline */
+    .reveal { opacity: 0; transform: translateY(12px); transition: opacity .6s ease, transform .6s ease; }
+    .revealed { opacity: 1; transform: none; }
 
-    /* Scroll-reveal initial state for the baseline text */
-    .reveal { opacity: 0; transform: translateY(12px); }
+    /* Character-splitting output */
+    .char { display:inline-block; will-change: transform, color; }
 
-    /* Audio word styling */
+    /* BLOOM: CSS keyframes (scale + turquoise then back) */
+    @keyframes bloomKF {
+      0%   { transform: scale(1);   color: inherit; }
+      50%  { transform: scale(1.24); color: #40E0D0; }
+      100% { transform: scale(1);   color: inherit; }
+    }
+    .do-bloom .char {
+      animation: bloomKF .75s ease-in-out both;
+      animation-delay: calc(var(--i, 0) * 0.04s);
+    }
+
+    /* FINAL WAVE (triggered by adding .wavego to #line-50) */
+    @keyframes charWaveKF {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(-12px); }
+    }
+    @keyframes driftKF {
+      from { transform: translate(0,0) rotate(0deg); opacity: 1; }
+      to   { transform: translate(90vw, 40vh) rotate(5deg); opacity: 0; }
+    }
+    @keyframes bobKF {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(12px); }
+    }
+    #line-50.wavego { 
+      animation: driftKF 18s ease-in-out forwards, bobKF 1.8s ease-in-out 10 alternate;
+    }
+    #line-50.wavego .char {
+      animation: charWaveKF .8s ease-in-out 15 alternate;
+      animation-delay: calc(var(--i, 0) * 0.08s);
+    }
+
+    /* Audio word */
     .pi-audio { text-decoration: underline; cursor: pointer; }
     .pi-audio[aria-pressed="true"] { text-decoration: underline dotted; }
+
+    /* Optional subtitle styling */
+    .pi-sub { font-size: .65rem; margin: -.2rem 0 1rem; color:#666; font-style: italic; }
+    .pi-sub img { max-width: 100%; height: auto; opacity: .95; display:block; }
   </style>
 
-  <!-- GSAP core (animations); no extra plugins required -->
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <!-- YouTube IFrame API for audio click -->
+  <!-- YouTube IFrame API (for audio click) -->
   <script async src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
 
 <article class="pi-tufte">
-  <h1 style="font-size:0.9rem;margin:0 0 0.8rem;color:#ececec;">Ostende-2</h1>
+  <h1 style="font-size:0.9rem;margin:0 0 0.4rem;">Ostende-2</h1>
+  <!-- Subtitle with image in a sidenote -->
+  <p class="pi-sub">
+    — notes and map
+    <label for="sn-img" class="margin-toggle sidenote-number"></label>
+    <input type="checkbox" id="sn-img" class="margin-toggle"/>
+    <span class="sidenote">
+      <img src="./COLLEGE-PETRUS-EN-PAULUS-HISTORIEK-vetsigingsplaatsen.jpeg" alt="Historic plan of Ostend (map)"/>
+    </span>
+  </p>
 
   <div class="poem-wrap" id="poemWrap">
     <!-- Baseline (interactive) layer -->
     <div class="poem poem-base" id="poemBase">
 
-      <!-- 1–4 (note on 1–3; 4 italic) -->
+      <!-- 1–4 -->
       <p class="reveal">les galeries vénitiennes</p>
       <p class="reveal">garde une jardin Japonais</p>
       <p class="reveal">devant un puits artésien,
@@ -189,7 +216,7 @@
         sehnsucht? <span id="pi-zeezucht" class="pi-audio" role="button" aria-pressed="false" tabindex="0">zeezucht</span>
       </p>
     </div>
-    <!-- JS inserts the white overlay (.poem-fill) here -->
+    <!-- JS will insert .poem-fill clone here -->
   </div>
 
   <div id="yt-audio-holder" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;"></div>
@@ -199,34 +226,31 @@
 (() => {
   const wrap = document.getElementById('poemWrap');
   const base = document.getElementById('poemBase');
+  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- overlay clone for scroll-fill (white) ---------- */
+  /* --- Overlay clone for scroll-fill (white) --- */
   const fill = base.cloneNode(true);
   fill.classList.remove('poem-base'); fill.classList.add('poem-fill');
   fill.removeAttribute('id');
-  // Prevent duplicate IDs in the overlay
+  // Remove duplicate IDs and sidenote controls from overlay
   fill.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-  // Hide sidenote UI in overlay (belt-and-braces)
   fill.querySelectorAll('.sidenote, .margin-toggle, input[type="checkbox"]').forEach(el => el.remove());
   wrap.appendChild(fill);
 
-  /* ---------- scroll-fill progress (sets --reveal 0..1) ---------- */
-  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* --- Scroll-fill progress: sets --reveal on wrap --- */
   function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
   function updateReveal() {
     if (prefersReduce) { wrap.style.setProperty('--reveal', 1); return; }
-    const rect = wrap.getBoundingClientRect();
-    const vh = window.innerHeight || 1;
-    // Progress from when the poem starts to enter until it leaves
-    const total = rect.height + vh;
-    const progress = clamp((vh - rect.top) / total, 0, 1);
-    wrap.style.setProperty('--reveal', progress.toFixed(4));
+    const r = wrap.getBoundingClientRect(), vh = window.innerHeight || 1;
+    const total = r.height + vh; // enter to leave
+    const p = clamp((vh - r.top) / total, 0, 1);
+    wrap.style.setProperty('--reveal', p.toFixed(4));
   }
   updateReveal();
-  window.addEventListener('scroll', updateReveal, { passive: true });
-  window.addEventListener('resize', updateReveal);
+  addEventListener('scroll', updateReveal, { passive:true });
+  addEventListener('resize', updateReveal);
 
-  /* ---------- tiny inline character splitter ---------- */
+  /* --- Tiny character splitter for bloom + final line --- */
   function splitCharsIn(el) {
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
       acceptNode(n) { return /\S/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
@@ -237,165 +261,100 @@
       const parent = node.parentElement;
       if (parent && (parent.closest('.sidenote') || parent.closest('label') || parent.closest('input'))) return;
       const frag = document.createDocumentFragment();
+      let i = 0;
       for (const ch of node.nodeValue) {
         if (ch === ' ') { frag.appendChild(document.createTextNode(' ')); continue; }
         const span = document.createElement('span');
         span.className = 'char'; span.textContent = ch;
+        span.style.setProperty('--i', i++); // index for stagger
         frag.appendChild(span);
       }
       node.parentNode.replaceChild(frag, node);
     });
   }
-  // Split bloom lines + final line in BOTH layers
   base.querySelectorAll('.gsap-bloom, #line-50').forEach(splitCharsIn);
   fill.querySelectorAll('.gsap-bloom').forEach(splitCharsIn);
 
-  /* ---------- scroll-reveal for baseline text ---------- */
-  const hasGSAP = typeof gsap !== 'undefined';
-  const revealEls = Array.from(base.querySelectorAll('.reveal'));
-  if (!prefersReduce && 'IntersectionObserver' in window && hasGSAP) {
+  /* --- Reveal baseline lines on scroll (no libs) --- */
+  const rev = base.querySelectorAll('.reveal');
+  if (!prefersReduce && 'IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
-      entries.forEach(({ target, isIntersecting }) => {
-        if (isIntersecting) {
-          io.unobserve(target);
-          gsap.to(target, { opacity: 1, y: 0, duration: 0.6, ease: 'power1.out' });
-        }
+      entries.forEach(({target, isIntersecting}) => {
+        if (isIntersecting) { target.classList.add('revealed'); io.unobserve(target); }
       });
-    }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
-    revealEls.forEach(el => io.observe(el));
+    }, { threshold: 0.1, rootMargin: '0px 0px -10% 0px' });
+    rev.forEach(el => io.observe(el));
   } else {
-    revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+    rev.forEach(el => el.classList.add('revealed'));
   }
 
-  /* ---------- BLOOM on scroll (turquoise + scale), automated ---------- */
-  const baseBlooms = Array.from(base.querySelectorAll('.gsap-bloom'));
-  const fillBlooms = Array.from(fill.querySelectorAll('.gsap-bloom'));
-  if (!prefersReduce && 'IntersectionObserver' in window && hasGSAP) {
+  /* --- BLOOM on scroll: add .do-bloom once when visible --- */
+  const bloomTargets = base.querySelectorAll('.gsap-bloom');
+  if (!prefersReduce && 'IntersectionObserver' in window) {
     const seen = new WeakSet();
-    const bloomIO = new IntersectionObserver((entries) => {
-      entries.forEach(({ target, isIntersecting }) => {
+    const bio = new IntersectionObserver((entries) => {
+      entries.forEach(({target, isIntersecting}) => {
         if (!isIntersecting || seen.has(target)) return;
         seen.add(target);
-        const idx = baseBlooms.indexOf(target);
-        const baseChars = target.querySelectorAll('.char');
-        const fillChars = idx > -1 ? (fillBlooms[idx]?.querySelectorAll('.char') || []) : [];
-
-        // Base: scale + colour to #40E0D0, then yoyo
-        gsap.to(baseChars, {
-          scale: 1.24,
-          color: '#40E0D0',
-          duration: 0.6,
-          yoyo: true,
-          repeat: 1,
-          ease: 'power1.inOut',
-          stagger: 0.04
-        });
-        // Overlay: scale only (colour stays white)
-        if (fillChars.length) {
-          gsap.to(fillChars, {
-            scale: 1.24,
-            duration: 0.6,
-            yoyo: true,
-            repeat: 1,
-            ease: 'power1.inOut',
-            stagger: 0.04
-          });
-        }
+        target.classList.add('do-bloom');
+        // Also scale the overlay copy’s chars (same index)
+        const idx = Array.from(bloomTargets).indexOf(target);
+        const overlay = fill.querySelectorAll('.gsap-bloom')[idx];
+        if (overlay) overlay.classList.add('do-bloom');
+        bio.unobserve(target);
       });
-    }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.35 });
-    baseBlooms.forEach(el => bloomIO.observe(el));
+    }, { threshold: 0.35 });
+    bloomTargets.forEach(el => bio.observe(el));
   }
 
-  /* ---------- FINAL LINE: wave + diagonal drift (hover/tap) ---------- */
+  /* --- FINAL wave (hover/tap) with CSS animations --- */
   const l50 = document.getElementById('line-50');
-  if (l50 && hasGSAP) {
-    const triggerWave = () => {
+  if (l50) {
+    const startWave = (e) => {
       if (prefersReduce) return;
-      const chars = l50.querySelectorAll('.char');
-      gsap.killTweensOf(l50); gsap.killTweensOf(chars);
-
-      const w = window.innerWidth, h = window.innerHeight;
-      const tl = gsap.timeline();
-
-      // gentle per-character wave (long & slow)
-      tl.to(chars, {
-        y: -12,
-        duration: 0.8,
-        yoyo: true,
-        repeat: 15,
-        ease: 'sine.inOut',
-        stagger: 0.08
-      }, 0);
-
-      // slow drift to bottom-right with fade out
-      tl.to(l50, {
-        x: w * 1.2,
-        y: h * 0.6,
-        opacity: 0,
-        duration: 18,
-        ease: 'power1.inOut'
-      }, 0);
-
-      // rocking + bobbing
-      tl.to(l50, { rotation: 5, duration: 2.2, yoyo: true, repeat: 12, ease: 'sine.inOut' }, 0);
-      tl.to(l50, { y: '+=12', duration: 1.8, yoyo: true, repeat: 10, ease: 'sine.inOut' }, 0);
+      if (e && e.target && e.target.closest && e.target.closest('#pi-zeezucht')) return; // let audio handle itself
+      l50.classList.remove('wavego'); // restart if needed
+      // force reflow to restart animation if already running
+      void l50.offsetWidth;
+      l50.classList.add('wavego');
+      // remove the class after animations end so it can be re-triggered
+      setTimeout(() => l50.classList.remove('wavego'), 18500);
     };
-
-    // desktop hover + mobile tap (ignore taps on the audio word)
-    l50.addEventListener('pointerenter', triggerWave);
-    l50.addEventListener('click', (e) => {
-      if (e.target.closest('#pi-zeezucht')) return;
-      triggerWave();
-    });
+    l50.addEventListener('pointerenter', startWave);
+    l50.addEventListener('click', startWave);
   }
 
-  /* ---------- Audio: click “zeezucht” to play/pause (with simple fade) ---------- */
+  /* --- YouTube audio click with small fade --- */
   let player = null, ready = false, playing = false;
   const trigger = document.getElementById('pi-zeezucht');
 
   function fadeVolume(target, ms, done){
     if (!ready || !player || !player.setVolume) return done && done();
-    try{
-      const start = player.getVolume ? player.getVolume() : 0;
-      const t0 = performance.now();
-      function step(now){
-        const t = Math.min(1, (now - t0) / ms);
-        const v = Math.round(start + (target - start) * t);
-        player.setVolume(v);
-        if (t < 1) requestAnimationFrame(step); else done && done();
-      }
-      requestAnimationFrame(step);
-    }catch(e){ done && done(); }
+    const start = player.getVolume ? player.getVolume() : 0;
+    const t0 = performance.now();
+    function step(now){
+      const t = Math.min(1, (now - t0) / ms);
+      const v = Math.round(start + (target - start) * t);
+      player.setVolume(v);
+      if (t < 1) requestAnimationFrame(step); else done && done();
+    }
+    requestAnimationFrame(step);
   }
 
   if (trigger) {
-    function play(){
-      if (!ready) return;
-      try { player.setVolume(0); player.playVideo(); } catch(e){}
-      trigger.setAttribute('aria-pressed','true');
-      playing = true;
-      fadeVolume(60, 900);
-    }
-    function pause(){
-      if (!ready) return;
-      fadeVolume(0, 700, () => { try { player.pauseVideo(); } catch(e){} });
-      trigger.setAttribute('aria-pressed','false');
-      playing = false;
-    }
+    const play = () => { if (!ready) return; try { player.setVolume(0); player.playVideo(); } catch(e){} trigger.setAttribute('aria-pressed','true'); playing = true; fadeVolume(60, 900); };
+    const pause = () => { if (!ready) return; fadeVolume(0, 700, () => { try { player.pauseVideo(); } catch(e){} }); trigger.setAttribute('aria-pressed','false'); playing = false; };
     const toggle = () => (playing ? pause() : play());
-
     trigger.addEventListener('click', e => { e.preventDefault(); toggle(); });
     trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
 
-    // YouTube IFrame API
     const prev = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = function(){
       try { if (typeof prev === 'function') prev(); } catch(e){}
       player = new YT.Player('yt-audio-holder', {
-        height: '1', width: '1',
-        videoId: 'aeIzNh35VBA',
-        playerVars: { controls: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
-        events: { onReady: () => { ready = true; try { player.setVolume(0); } catch(e){} } }
+        height:'1', width:'1', videoId:'aeIzNh35VBA',
+        playerVars:{ controls:0, modestbranding:1, playsinline:1, origin:location.origin },
+        events:{ onReady: () => { ready = true; try { player.setVolume(0); } catch(e){} } }
       });
     };
     if (window.YT && YT.Player) window.onYouTubeIframeAPIReady();
