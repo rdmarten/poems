@@ -12,6 +12,7 @@
     :root {
       --lh: 1.45;
       --glow-r: 255; --glow-g: 0; --glow-b: 0; /* red bloom color */
+      --final-indent: 34ch;                     /* further right */
     }
 
     .pi-tufte { max-width: 70ch; margin: 0 auto; }
@@ -21,9 +22,9 @@
     /* 10 "lines" of whitespace before and after */
     .vspace { height: calc(10 * 1em * var(--lh)); }
 
-    /* ===== Bracketed block, tuned to your screenshot ===== */
+    /* ===== Bracketed block tuned to screenshot spacing ===== */
     .bracketed {
-      --gapY: 10vh;     /* vertical spacing between the bracketed lines */
+      --gapY: 10vh;     /* vertical spacing between bracketed lines */
       --indent1: 0ch;   /* just vibes, */
       --indent2: 8ch;   /* and slides, */
       --indent3: 16ch;  /* you know, */
@@ -39,7 +40,7 @@
       user-select: none;
     }
 
-    /* Interactive lines: visually plain text, behavior of buttons */
+    /* Interactive lines: look like text, behave like buttons */
     .line {
       opacity: 0;
       transform: translateY(-0.6em);
@@ -64,22 +65,31 @@
     /* Post-bracket lines: stay hidden until click-chain completes */
     .reveal { opacity: 0; transform: translateY(12px); will-change: transform, opacity; }
 
-    /* Final line: smaller, further right, and prepared for bloom */
+    /* Final line: smaller, further right, with hover/click bloom */
     .final-line {
-      font-size: 0.95rem;           /* smaller */
-      margin-left: 22ch;            /* push further right; tweak as desired */
+      font-size: 0.95rem;           /* smaller than main body */
+      margin-left: var(--final-indent);
       position: relative;
+      outline: none;
+      cursor: pointer;              /* for hover/click affordance */
     }
-    /* Red bloom look (applied on reveal) */
-    .final-line.bloom {
+    /* Make the sidenote slightly smaller than the final line */
+    .poem .sidenote { font-size: 0.9em; max-width: 22rem; }
+
+    /* Bloom target */
+    .final-line .hot {
+      transition: text-shadow 200ms ease, color 160ms ease, filter 200ms ease;
+    }
+    .final-line:hover .hot,
+    .final-line:focus .hot,
+    .final-line.bloom-persist .hot {
       text-shadow:
         0 0 0.6em rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.32),
         0 0 1.4em rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.24),
         0 0 2.2em rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.18);
+      filter: saturate(120%);
     }
 
-    /* Sidenote width tweak */
-    .poem .sidenote { max-width: 22rem; }
     @media (max-width: 760px) {
       .poem .sidenote { max-width: 100%; }
       .final-line { margin-left: 0; } /* prevent crowding on phones */
@@ -88,7 +98,6 @@
     /* Reduced motion */
     @media (prefers-reduced-motion: reduce) {
       .line, .reveal, .bracket-close { opacity: 1; transform: none !important; }
-      .final-line { text-shadow: none !important; }
     }
   </style>
 </head>
@@ -115,8 +124,8 @@
       <!-- After the bracket: only enabled once the chain is finished -->
       <p class="reveal">*Fuck off, most days I’m just barely phorical±</p>
 
-      <p class="reveal final-line" id="final-line">
-        ± φορά — fine, I’ll carry this meta-shit uphill, to nowhere
+      <p class="reveal final-line" id="final-line" tabindex="0" aria-label="± φορά — fine, I’ll carry this meta-shit (click to glow)">
+        <span class="hot">± φορά — fine, I’ll carry this meta-shit</span>
         <label for="sn-1" class="margin-toggle sidenote-number"></label>
         <input type="checkbox" id="sn-1" class="margin-toggle"/>
         <span class="sidenote">
@@ -150,38 +159,25 @@
       ].filter(Boolean);
 
       const afterEls = gsap.utils.toArray('.reveal');   // post-bracket paragraphs
-      let chainEnabled = false;  // guards attaching scroll triggers once
+      let afterEnabled = false;
 
-      /* --------- Attach scroll triggers for after-lines ONLY after chain done --------- */
+      /* Attach scroll triggers for after-lines ONLY after chain done */
       function enableAfterScroll() {
-        if (chainEnabled) return;
-        chainEnabled = true;
+        if (afterEnabled) return;
+        afterEnabled = true;
 
         afterEls.forEach(el => {
-          const isFinal = el === finalLine;
-
-          const base = {
-            opacity: 0, y: 12
-          };
-          const to = {
-            opacity: 1, y: 0, duration: 0.55, ease: 'power2.out',
-            scrollTrigger: { trigger: el, start: 'top 85%', once: true }
-          };
-
-          if (isFinal) {
-            // add a red bloom as it appears
-            to.onStart = () => el.classList.add('bloom');
-            // subtle pulse on reveal
-            to.duration = 0.65;
-            to.ease = 'power2.out';
-            gsap.fromTo(el, { ...base, scale: 0.995 }, { ...to, scale: 1.0 });
-          } else {
-            gsap.fromTo(el, base, to);
-          }
+          gsap.fromTo(el,
+            { opacity: 0, y: 12 },
+            {
+              opacity: 1, y: 0, duration: 0.55, ease: 'power2.out',
+              scrollTrigger: { trigger: el, start: 'top 85%', once: true }
+            }
+          );
         });
       }
 
-      /* -------------------- 1) Auto-reveal the first line on scroll-in -------------------- */
+      /* Auto-reveal the first line on scroll-in */
       if (reduce) {
         lines.forEach((el, i) => {
           el.style.opacity = i === 0 ? 1 : 0;
@@ -192,8 +188,7 @@
         gsap.fromTo(lines[0],
           { opacity: 0, y: -14 },
           {
-            opacity: 1,
-            y: 0,
+            opacity: 1, y: 0,
             duration: 0.6,
             scrollTrigger: { trigger: wrap, start: 'top 70%', once: true },
             onComplete: () => lines[0].classList.add('is-active')
@@ -201,7 +196,7 @@
         );
       }
 
-      /* -------------------- 2) Click chain with a curvier “playground slide” -------------------- */
+      /* Click chain with curvier “slide” + auto-rotate (tilt along curve) */
       function slideIntoNext(i) {
         const current = lines[i];
         const next    = lines[i + 1];
@@ -214,35 +209,35 @@
         const dx = (r2.left - r1.left) * 0.98;
         const dy = (r2.top  - r1.top)  * 0.98;
 
-        // Cubic Bézier path string (curvier: shallow start, steeper mid, flatten at end)
-        const c1x = dx * 0.30, c1y = dy * 0.05;  // gentle ramp-out
-        const c2x = dx * 0.88, c2y = dy * 0.95;  // steep then flatten near landing
+        // Curvier cubic Bézier path
+        const c1x = dx * 0.32, c1y = dy * 0.06;  // gentle ramp-out
+        const c2x = dx * 0.92, c2y = dy * 1.05;  // steep then flatten near landing
         const path = `M0,0 C ${c1x},${c1y} ${c2x},${c2y} ${dx},${dy}`;
 
         current.disabled = true;
 
         const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
 
-        // Slide along the curve (down-and-right)
+        // Slide along the curve (down-and-right) with rotation along path
         tl.to(current, {
-          duration: 0.9,
+          duration: 0.95,
           ease: 'power2.inOut',
-          motionPath: { path, autoRotate: false, alignOrigin: [0.5, 0.5] }
+          motionPath: { path, autoRotate: true, alignOrigin: [0.5, 0.5] }
         });
 
         // Small “bump” on contact + reveal next line
         tl.to(current, { x: dx + 3, y: dy + 12, duration: 0.12, ease: 'power1.out' }, '>-0.02');
         tl.fromTo(next, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.45, ease: 'back.out(1.6)' }, '<0.02');
 
-        // Return current line to its origin
-        tl.to(current, { x: 0, y: 0, duration: 0.5, ease: 'back.out(1.9)' })
+        // Return current line to its origin and upright
+        tl.to(current, { x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.9)' })
           .add(() => {
             current.classList.remove('is-active');
             next.disabled = false;
             next.classList.add('is-active');
           });
 
-        // If we just revealed the final bracket line, show the closing bracket and enable after-lines
+        // If we just revealed the final bracket line, show closing bracket then enable after-lines
         if (i === lines.length - 2) {
           tl.fromTo(closeB, { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
             .add(enableAfterScroll);
@@ -251,7 +246,20 @@
 
       lines.forEach((btn, idx) => btn.addEventListener('click', () => slideIntoNext(idx)));
 
-      /* -------------------- 3) Reduced motion: reveal everything immediately -------------------- */
+      /* Final line bloom toggle on click/keyboard (like your italics hover) */
+      finalLine.addEventListener('click', (e) => {
+        // avoid toggling when clicking inside the sidenote controls
+        if (e.target.closest('.sidenote') || e.target.matches('label, input')) return;
+        finalLine.classList.toggle('bloom-persist');
+      });
+      finalLine.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          finalLine.classList.toggle('bloom-persist');
+        }
+      });
+
+      /* Reduced motion: reveal all immediately and allow hover/click bloom */
       if (reduce) {
         lines.forEach(el => { el.style.opacity = 1; el.disabled = false; el.classList.remove('is-active'); });
         closeB.style.opacity = 1;
@@ -259,6 +267,8 @@
       }
     })();
   </script>
+
+  <!-- Back link -->
   <p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
 </body>
 </html>
