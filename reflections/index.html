@@ -15,66 +15,51 @@
   <style>
     :root{
       --ink:#111;
-      --bloom-grey:#b8b8b8; /* light grey for bloom */
+      --bloom-grey:#b8b8b8; /* light grey */
     }
     body{ background:#fff; color:var(--ink); }
     .pi-tufte{ max-width:70ch; margin:0 auto; }
     .poem{ font-size:1.05rem; line-height:1.6; }
     .poem p{ margin:0.45rem 0; }
 
-    /* IMPORTANT: visible by default (so the page works even if JS doesn’t) */
+    /* visible-by-default so content never disappears if JS hiccups */
     .reveal{ opacity:1; transform:none; }
 
-    /* Per-character */
+    /* per-char */
     .char{ display:inline-block; will-change:transform, filter, color, opacity; }
 
-    /* Bloom targets (reusing your “bloom in italics” feel) */
+    /* bloom */
     .gsap-bloom{ font-style: italic; }
 
-    /* Mirrored opener */
+    /* opener (mirrored, keep word intact) */
     .mirror-wrap{
-      display:grid; grid-template-columns: 1fr auto 1fr;
-      gap:1rem; align-items:center; margin:0 0 1rem;
+      display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:center; margin:0 0 1rem;
     }
     .mirror-sep{ width:1px; background:rgba(0,0,0,.08); height:1.4em; }
-    .opener{ white-space:nowrap; } /* keep “reflections” intact */
-    .mirrored{ transform: scaleX(-1); opacity:.5; }
+    .opener{ white-space:nowrap; }
+    .mirrored{ transform:scaleX(-1); opacity:.5; }
 
-    /* Glow → illegible */
-    .glow{
-      color:#343434;
-      text-shadow: 0 0 .2em rgba(255,255,220,.35), 0 0 .6em rgba(255,255,180,.25);
-      transition: filter .45s ease, color .45s ease, text-shadow .45s ease;
-    }
-    .glow.obscure:hover,
-    .glow.obscure:active{
-      color:#000; filter: blur(3px) contrast(1.2); text-shadow:none; cursor:not-allowed;
-    }
-
-    /* Hover-fade */
-    .hover-fade{ transition: opacity .45s ease; }
-    .hover-fade:hover{ opacity:0; }
-
-    /* Balloon burst */
+    /* “just fillers” burst */
     .burst-line{ display:inline-block; }
     .burst-line .char{ transform-origin:center; }
 
-    /* Droop */
+    /* droop */
     .droop .char{ transform-origin: top center; }
-
-    /* Bubble */
-    .bubble-line .char{ position:relative; }
 
     /* thiccer / lifter / fitter */
     .thicker{ font-weight:600; display:inline-block; }
     .lifter{ display:inline-block; }
     .thinner{ font-weight:400; display:inline-block; }
 
-    /* Sidenotes placeholders (blank as requested) */
+    /* slow float (bath/wrinkling) */
+    .slow-float{ display:inline-block; }
+
+    /* sidenotes */
     .marginnote{}
 
-    /* Final sidenote hidden until click */
-    .final-note{ display:none; }
+    /* final sidenote hidden until click */
+    #sn-final + .final-note{ display:none; }
+    #sn-final:checked + .final-note{ display:inline-block; }
 
     .pc-trigger{ text-decoration: underline; text-decoration-thickness:.06em; cursor:pointer; }
 
@@ -82,7 +67,7 @@
     .back a{ border-bottom:1px solid rgba(0,0,0,.25); text-decoration:none; }
     .back a:hover{ border-bottom-color:#000; }
 
-    @media (max-width: 640px){
+    @media (max-width:640px){
       .mirror-wrap{ grid-template-columns:1fr; gap:.25rem; }
       .mirror-sep{ display:none; }
       .mirrored{ opacity:.35; }
@@ -106,24 +91,28 @@
         <span class="line gsap-bloom per-char">the occasional hallway, or a</span><br>
         <span class="line gsap-bloom per-char">fancy bedroom—we see too much</span><br>
         <span class="line gsap-bloom per-char">of myself, everywhere, all the time—</span><br>
-        <span class="line glow per-char">at least, mirrors used to contain light</span><br>
-        <span class="line glow per-char">now they carry hydrocarbon stains</span>
+        <span class="line">at least, mirrors used to contain light</span><br>
+        <span class="line">now they carry hydrocarbon stains</span>
       </p>
+
+      <br><br>
 
       <!-- Stanza 2 -->
       <p class="reveal">
         <span class="line gsap-bloom per-char">maybe I should take off my clothes</span><br>
         <span class="line gsap-bloom per-char">and perhaps you’d like me better</span><br>
-        <span class="line hover-fade gsap-bloom per-char">terrified to grow old but no filters</span><br>
+        <span class="line">terrified to grow old but no filters</span><br>
         <span class="line"><span class="burst-line per-char">just fillers</span>: glycerin and matrixyl</span><br>
-        <span class="line gsap-bloom per-char">argireline solutions and caffeine</span><br>
-        <span class="line gsap-bloom per-char">organic cold-pressed rose hip oil</span>
+        <span class="line">argireline solutions and caffeine</span><br>
+        <span class="line">organic cold-pressed rose hip oil</span>
 
         <!-- Blank product sidenote #1 -->
         <label for="sn-1" class="margin-toggle sidenote-number"></label>
         <input type="checkbox" id="sn-1" class="margin-toggle"/>
         <span class="marginnote"></span>
       </p>
+
+      <br><br>
 
       <!-- Stanza 3 -->
       <p class="reveal">
@@ -135,17 +124,19 @@
         <span class="line gsap-bloom per-char">rewilding pathways to youth within</span>
       </p>
 
+      <br><br>
+
       <!-- Stanza 4 -->
       <p class="reveal">
-        <span class="line bubble-line per-char">why would I take a long bath and risk</span><br>
-        <span class="line bubble-line per-char">wrinkling everything, on purpose?</span><br>
+        <span class="line slow-float">why would I take a long bath and risk</span><br>
+        <span class="line slow-float">wrinkling everything, on purpose?</span><br>
         <span class="line">
           <span class="thicker">thiccer,</span>
           <span class="lifter">lifter,</span>
           <span class="thinner">fitter,</span>
           <span> triple-action,</span>
         </span><br>
-        <span class="line gsap-bloom per-char">day-and-night serums, cleansers,</span>
+        <span class="line">day-and-night serums, cleansers,</span>
 
         <!-- Blank product sidenote #2 -->
         <label for="sn-2" class="margin-toggle sidenote-number"></label>
@@ -153,15 +144,20 @@
         <span class="marginnote"></span>
 
         <br>
-        <span class="line gsap-bloom per-char">exfoliators, moisturising suspensions,</span><br>
-        <span class="line gsap-bloom per-char">organic cold-pressed Moroccan argan oil</span>
+        <span class="line">exfoliators, moisturising suspensions,</span><br>
+        <span class="line">organic cold-pressed Moroccan argan oil</span>
       </p>
+
+      <br><br>
 
       <!-- Final couplet + click-to-reveal sidenote with autoplay video -->
       <p class="reveal">
-        <span class="line gsap-bloom per-char"><span id="pc-trigger" class="pc-trigger">‘Postmodern Cynicism’</span> exists only online,</span><br>
-        <span class="line gsap-bloom per-char">you should go on his Facebook sometime</span>
-        <span class="marginnote final-note" id="final-note">
+        <span class="line"><span id="pc-trigger" class="pc-trigger">‘Postmodern Cynicism’</span> exists only online,</span><br>
+        <span class="line">you should go on his Facebook sometime</span>
+
+        <!-- Hidden toggle + sidenote (appears on click) -->
+        <input type="checkbox" id="sn-final" class="margin-toggle" />
+        <span class="marginnote final-note">
           <div style="margin-top:.25rem;">
             <iframe id="final-yt"
               width="300" height="169"
@@ -173,21 +169,18 @@
           </div>
         </span>
       </p>
-
     </article>
   </main>
 
   <script>
-    // Defensive: if GSAP or ScrollTrigger don’t exist, just show everything.
+    // Fallback: if GSAP/ScrollTrigger not available, page still reads fine.
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-      document.querySelectorAll('.reveal').forEach(el => {
-        el.style.opacity = 1; el.style.transform = 'none';
-      });
+      // nothing animated, everything already visible
     } else {
       gsap.registerPlugin(ScrollTrigger);
     }
 
-    /* -------- split characters only inside .per-char -------- */
+    /* per-char splitter for bloom/droop/burst lines only */
     function splitCharsIn(root){
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
         acceptNode(n){ return /\S/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.REJECT; }
@@ -208,9 +201,8 @@
     }
     document.querySelectorAll('.per-char').forEach(splitCharsIn);
 
-    // If ScrollTrigger is present, run animations; otherwise the content remains visible.
     if (typeof ScrollTrigger !== 'undefined') {
-      /* -------- reveal (scrub) -------- */
+      /* reveal-on-scroll (subtle) */
       document.querySelectorAll('.reveal').forEach((el)=>{
         const chars = el.querySelectorAll('.char');
         const tl = gsap.timeline({
@@ -223,7 +215,7 @@
         }
       });
 
-      /* -------- mirrored opener fade -------- */
+      /* mirrored opener faint fade */
       (function(){
         const wrap = document.querySelector('.mirror-wrap');
         if(!wrap) return;
@@ -233,24 +225,11 @@
         });
       })();
 
-      /* -------- glow lines -------- */
-      document.querySelectorAll('.glow').forEach((el)=>{
-        gsap.fromTo(el, {opacity:0.7, filter:'brightness(1)'},{
-          opacity:1, filter:'brightness(1.12)', duration:1,
-          scrollTrigger:{ trigger: el, start:"top 80%", once:true },
-          onComplete(){ el.classList.add('obscure'); }
-        });
-      });
-
-      /* -------- “just fillers” burst -------- */
+      /* just fillers — balloon burst */
       (function(){
         const line = document.querySelector('.burst-line');
         if(!line) return;
         let burstDone = false;
-        gsap.to(line.querySelectorAll('.char'), {
-          scale: 1.03, yoyo: true, repeat: -1, duration: 1.4, ease: "sine.inOut",
-          stagger: {each: 0.02, from: "random"}
-        });
         function runBurst(){
           if(burstDone) return;
           burstDone = true;
@@ -270,7 +249,7 @@
         line.addEventListener('click', runBurst);
       })();
 
-      /* -------- droop -------- */
+      /* droop */
       (function(){
         const droop = document.querySelector('.droop');
         if(!droop) return;
@@ -288,21 +267,19 @@
         });
       })();
 
-      /* -------- bubbles (slower/gentler) -------- */
-      document.querySelectorAll('.bubble-line').forEach(line=>{
-        const chars = line.querySelectorAll('.char');
-        gsap.to(chars, {
-          y: ()=> gsap.utils.random(-10,-4),
-          x: ()=> gsap.utils.random(-4,4),
-          repeat: -1, yoyo: true,
-          duration: ()=> gsap.utils.random(2.2,3.2),
+      /* slow float (NOT bubbles) for the two bath lines */
+      document.querySelectorAll('.slow-float').forEach(line=>{
+        gsap.to(line, {
+          y: -6,
+          duration: 8,   /* significantly slower */
+          yoyo: true,
+          repeat: -1,
           ease: "sine.inOut",
-          stagger: {each: 0.03, from: "random"},
-          scrollTrigger:{ trigger: line, start:"top 90%", end:"bottom 50%", scrub:true }
+          scrollTrigger:{ trigger: line, start:"top 90%", end:"bottom 50%", toggleActions:"play pause resume pause" }
         });
       });
 
-      /* -------- thiccer / lifter / fitter -------- */
+      /* thiccer / lifter / fitter */
       (function(){
         const stanza = document.querySelector('.thicker')?.closest('p');
         if(!stanza) return;
@@ -316,16 +293,17 @@
         });
       })();
 
-      /* -------- click-to-reveal final sidenote + autoplay video -------- */
+      /* click-to-reveal final sidenote + autoplay */
       (function(){
         const trigger = document.getElementById('pc-trigger');
-        const note = document.getElementById('final-note');
+        const checkbox = document.getElementById('sn-final');
         const yt = document.getElementById('final-yt');
-        if(!trigger || !note || !yt) return;
+        if(!trigger || !checkbox || !yt) return;
         const showNote = () => {
-          if (note.style.display !== 'inline-block'){
-            note.style.display = 'inline-block';
-            gsap.fromTo(note, {opacity:0, y:8}, {opacity:1, y:0, duration:0.5, ease:"power2.out"});
+          if (!checkbox.checked){
+            checkbox.checked = true;
+            const note = checkbox.nextElementSibling;
+            if (note) gsap.fromTo(note, {opacity:0, y:8}, {opacity:1, y:0, duration:0.5, ease:"power2.out"});
             if (!yt.src) yt.src = yt.dataset.src; // lazy-load + autoplay
           }
         };
@@ -333,7 +311,7 @@
         trigger.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); showNote(); }});
       })();
 
-      /* -------- bloom interaction (light grey) -------- */
+      /* bloom (light grey) — only on marked lines */
       (function(){
         const blooms = Array.from(document.querySelectorAll('.gsap-bloom'));
         function bloom(line){
@@ -358,8 +336,7 @@
         });
       })();
 
-      /* After dynamic DOM changes, ensure ScrollTrigger measures correctly (Safari fix) */
-      window.addEventListener('load', () => { try { ScrollTrigger.refresh(); } catch(e){} });
+      window.addEventListener('load', ()=>{ try{ ScrollTrigger.refresh(); }catch(e){} });
     }
   </script>
     <!-- Back link -->
