@@ -3,68 +3,80 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>maybe it’s all — scroll poem</title>
+  <title>maybe it’s all — interactive poem</title>
 
   <!-- Tufte CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
 
   <style>
-    /* Layout + poem styling */
+    /* Base layout */
     .pi-tufte { max-width: 70ch; margin: 0 auto; }
     .poem { --lh: 1.45; line-height: var(--lh); font-size: 1.1rem; margin: 0 1rem; }
     .poem p { margin: 0.85rem 0; }
 
-    /* 10 "lines" of whitespace at top and bottom (uses current line-height) */
+    /* 10 "lines" of whitespace before and after */
     .vspace { height: calc(10 * 1em * var(--lh)); }
 
-    /* Bracketed block */
+    /* ===== Bracketed block that matches your screenshot’s structure ===== */
     .bracketed {
-      position: relative;
-      padding-left: 2.2ch;
-      padding-right: 2.2ch;
-      margin: 1.1rem 0 1.2rem;
-    }
-    .bracketed::before,
-    .bracketed::after {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      display: block;
-      font-variant-numeric: tabular-nums;
-      color: #555;
-    }
-    .bracketed::before {
-      content: "[";
-      left: 0;
-      height: 1em;         /* show bracket glyph; simple, readable */
-      top: 0;
-      bottom: auto;
-    }
-    .bracketed::after {
-      content: "]";
-      right: 0;
-      height: 1em;
-      bottom: 0;
-      top: auto;
+      /* Vertical rhythm: big gaps between each line */
+      --gapY: 10vh;                 /* increase/decrease to taste */
+      --indent1: 0ch;               /* just vibes, */
+      --indent2: 8ch;               /* and slides, */
+      --indent3: 16ch;              /* you know, */
+      --indent4: 32ch;              /* metaphorical?* (far to the right) */
+
+      display: grid;
+      row-gap: var(--gapY);
+      margin: 2rem 0 2rem;
     }
 
-    .lines { display: grid; gap: 0.25rem; }
+    /* Open/close brackets on their own rows */
+    .bracket-open,
+    .bracket-close {
+      font-size: 1.35rem;
+      color: #444;
+      user-select: none;
+    }
 
-    /* Animated lines */
+    /* Individual line placement + look */
     .line {
       opacity: 0;
       transform: translateY(-0.6em);
       will-change: transform, opacity;
+      display: inline-block;
+      border: 0;
+      background: none;
+      padding: 0;
+      margin: 0;
+      text-align: left;
+      cursor: default;          /* becomes pointer when the line is "active" */
+      font: inherit;            /* look like text, not a button */
     }
-    .line span.txt { display: inline-block; }
 
-    /* Tufte sidenote sizing tweak */
+    .line-1 { margin-left: var(--indent1); }
+    .line-2 { margin-left: var(--indent2); }
+    .line-3 { margin-left: var(--indent3); }
+    .line-4 { margin-left: var(--indent4); }
+
+    /* Only the current "trigger" line is clickable */
+    .line.is-active { cursor: pointer; }
+    .line[disabled] { pointer-events: none; }
+
+    /* Post-bracket lines scroll-reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(12px);
+      will-change: transform, opacity;
+    }
+
+    /* Tufte sidenote width tweak */
     .poem .sidenote { max-width: 22rem; }
     @media (max-width: 760px) { .poem .sidenote { max-width: 100%; } }
 
-    /* Respect reduced motion */
+    /* Reduced motion */
     @media (prefers-reduced-motion: reduce) {
-      .line { opacity: 1; transform: none; }
+      .line, .reveal { opacity: 1; transform: none; }
     }
   </style>
 </head>
@@ -76,25 +88,28 @@
 
       <p>maybe it’s all</p>
 
-      <div class="bracketed" aria-label="bracketed lines">
-        <div class="lines" aria-live="polite">
-          <div class="line"><span class="txt">just vibes,</span></div>
-          <div class="line"><span class="txt">and slides,</span></div>
-          <div class="line"><span class="txt">you know,</span></div>
-          <div class="line"><span class="txt">metaphorical?*</span></div>
-        </div>
+      <!-- Bracketed display that mirrors your screenshot -->
+      <div class="bracketed" id="call-and-slide" aria-live="polite">
+        <div class="bracket-open" aria-hidden="true">[</div>
+
+        <!-- The four interactive lines -->
+        <button class="line line-1" type="button"><span>just vibes,</span></button>
+        <button class="line line-2" type="button" disabled><span>and slides,</span></button>
+        <button class="line line-3" type="button" disabled><span>you know,</span></button>
+        <button class="line line-4" type="button" disabled><span>metaphorical?*</span></button>
+
+        <div class="bracket-close" id="bracket-close" aria-hidden="true" style="opacity:0; transform:translateY(-0.4em);">]</div>
       </div>
 
-      <p>*Fuck off, most days I’m just barely phorical±</p>
+      <!-- After the bracket: normal scroll reveal continues -->
+      <p class="reveal">*Fuck off, most days I’m just barely phorical±</p>
 
-      <p>
+      <p class="reveal">
         ± φορά — fine, I’ll carry this meta-shit
-        <!-- Tufte sidenote anchored to ± -->
         <label for="sn-1" class="margin-toggle sidenote-number"></label>
         <input type="checkbox" id="sn-1" class="margin-toggle"/>
         <span class="sidenote">
-          <em>φορά</em> (forá): “bearing, carrying” in Greek — as in <em>metaphor</em>,
-          to carry across. Fine, I’ll carry this meta-stuff.
+          <em>φορά</em> (forá): “bearing, carrying” in Greek — as in <em>metaphor</em>, to carry across.
         </span>
       </p>
 
@@ -109,45 +124,101 @@
   <script>
     (function () {
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const lines = Array.from(document.querySelectorAll('.lines .line'));
 
-      if (reduce || !lines.length) {
-        lines.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
-        return;
-      }
+      const lines = [
+        document.querySelector('.line-1'),
+        document.querySelector('.line-2'),
+        document.querySelector('.line-3'),
+        document.querySelector('.line-4')
+      ].filter(Boolean);
+
+      const closeBracket = document.getElementById('bracket-close');
+      const bracketWrap  = document.getElementById('call-and-slide');
+
+      if (!lines.length) return;
 
       gsap.registerPlugin(ScrollTrigger);
 
-      // Build a scrubbed, pinned timeline so the reveal is driven by scroll.
-      const tl = gsap.timeline({
-        defaults: { ease: 'power2.out' },
-        scrollTrigger: {
-          trigger: document.querySelector('.bracketed'),
-          start: 'top 60%',
-          end: () => '+=' + (lines.length * 200), // enough distance for stepwise reveals
-          scrub: 0.5,
-          pin: true,
-          anticipatePin: 1
-          // markers: true, // uncomment to debug
-        }
-      });
-
-      lines.forEach((line, i) => {
-        // Reveal this line
-        tl.fromTo(line,
+      /* -------- 1) Auto-reveal the first bracket line on scroll-in -------- */
+      if (reduce) {
+        lines.forEach((el, i) => {
+          el.style.opacity = i === 0 ? 1 : 0;
+          el.style.transform = i === 0 ? 'none' : '';
+        });
+        lines[0].classList.add('is-active');
+      } else {
+        gsap.fromTo(lines[0],
           { opacity: 0, y: -14 },
-          { opacity: 1, y: 0, duration: 0.6 }
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            scrollTrigger: {
+              trigger: bracketWrap,
+              start: 'top 70%',
+              once: true
+            },
+            onComplete: () => lines[0].classList.add('is-active')
+          }
         );
+      }
 
-        // Nudge the previous line as this one arrives for the "slide-into-each-other" feel
-        if (i > 0) {
-          tl.to(lines[i - 1], { y: 6, duration: 0.18, ease: 'power1.out' }, '<0.00');
-          tl.to(lines[i - 1], { y: 0, duration: 0.22, ease: 'power1.inOut' }, '>-0.06');
+      /* -------- 2) Click chain: each line bumps + reveals the next -------- */
+      function chainReveal(i) {
+        const current = lines[i];
+        const next    = lines[i + 1];
+
+        if (!current || !next || current.disabled) return;
+
+        // disable repeated clicks while animating
+        current.disabled = true;
+
+        const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+
+        // "Bump" the current line down and back
+        tl.to(current, { y: 10, duration: 0.18, ease: 'power1.out' })
+          .to(current, { y: 0,  duration: 0.22, ease: 'power1.inOut' }, '>-0.06');
+
+        // Reveal the next line slightly after the bump starts
+        tl.fromTo(next,
+          { opacity: 0, y: -14 },
+          { opacity: 1, y: 0, duration: 0.6 },
+          '<0.05'
+        ).add(() => {
+          next.disabled = false;
+          next.classList.add('is-active');
+          current.classList.remove('is-active');
+        });
+
+        // After the last line appears, reveal the closing bracket
+        if (i === lines.length - 2) {
+          tl.fromTo(closeBracket,
+            { opacity: 0, y: -8 },
+            { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' },
+            '>-0.10'
+          );
         }
+      }
 
-        // Slight overlap between steps so it feels continuous
-        tl.addLabel('step' + i, '>-0.12');
+      lines.forEach((btn, idx) => {
+        btn.addEventListener('click', () => chainReveal(idx));
       });
+
+      /* -------- 3) Resume normal scroll-reveal for post-bracket lines ------- */
+      const after = gsap.utils.toArray('.reveal');
+      if (!reduce) {
+        after.forEach(el => {
+          gsap.fromTo(el,
+            { opacity: 0, y: 12 },
+            {
+              opacity: 1, y: 0, duration: 0.55, ease: 'power2.out',
+              scrollTrigger: { trigger: el, start: 'top 85%', once: true }
+            }
+          );
+        });
+      } else {
+        after.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+      }
     })();
   </script>
 </body>
