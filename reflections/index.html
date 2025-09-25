@@ -22,19 +22,17 @@
     .poem{ font-size:1.05rem; line-height:1.6; }
     .poem p{ margin:0.45rem 0; }
 
-    /* visible-by-default so content never disappears if JS hiccups */
+    /* visible-by-default */
     .reveal{ opacity:1; transform:none; }
 
     /* per-char */
     .char{ display:inline-block; will-change:transform, filter, color, opacity; }
 
-    /* bloom */
+    /* bloom targets */
     .gsap-bloom{ font-style: italic; }
 
     /* opener (mirrored, keep word intact) */
-    .mirror-wrap{
-      display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:center; margin:0 0 1rem;
-    }
+    .mirror-wrap{ display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:center; margin:0 0 1rem; }
     .mirror-sep{ width:1px; background:rgba(0,0,0,.08); height:1.4em; }
     .opener{ white-space:nowrap; }
     .mirrored{ transform:scaleX(-1); opacity:.5; }
@@ -51,16 +49,17 @@
     .lifter{ display:inline-block; }
     .thinner{ font-weight:400; display:inline-block; }
 
-    /* slow float (bath/wrinkling) */
+    /* very slow float (bath/wrinkling) */
     .slow-float{ display:inline-block; }
 
     /* sidenotes */
     .marginnote{}
+    .note-media{ width:240px; max-width:90vw; }
+    .note-media video{ width:100%; height:auto; display:block; border-radius:10px; }
 
-    /* final sidenote hidden until click */
+    /* final sidenote (checkbox-driven show/hide) */
     #sn-final + .final-note{ display:none; }
     #sn-final:checked + .final-note{ display:inline-block; }
-
     .pc-trigger{ text-decoration: underline; text-decoration-thickness:.06em; cursor:pointer; }
 
     .back{ margin:3rem 0 4rem; font-size:.95rem; }
@@ -72,140 +71,225 @@
       .mirror-sep{ display:none; }
       .mirrored{ opacity:.35; }
     }
+
+    /* ===== Scroll-fill overlay ===== */
+    .poem-wrap{ position:relative; }
+    .poem-base{ color:#9a9a9a; }           /* grey base layer */
+    .poem-fill-clip{
+      position:absolute; inset:0;
+      overflow:hidden;    /* mask */
+      height:0%;          /* JS animates 0 → 100% */
+      pointer-events:none;
+    }
+    .poem-fill{ color:var(--ink); }
+    /* Don’t render sidenote UI in the overlay copy */
+    .poem-fill .marginnote,
+    .poem-fill .margin-toggle,
+    .poem-fill input[type="checkbox"]{ display:none !important; }
   </style>
 </head>
 <body>
   <main class="pi-tufte">
-    <article class="poem">
+    <!-- ===== Scroll-fill wrapper ===== -->
+    <div class="poem-wrap" id="poemWrap">
+      <!-- Base (interactive) layer -->
+      <article class="poem poem-base" id="poemBase">
 
-      <!-- Mirrored opener -->
-      <div class="mirror-wrap reveal">
-        <p class="opener">there are just too many reflections</p>
-        <div class="mirror-sep" aria-hidden="true"></div>
-        <p class="opener mirrored">there are just too many reflections</p>
-      </div>
+        <!-- Mirrored opener -->
+        <div class="mirror-wrap reveal">
+          <p class="opener">there are just too many reflections</p>
+          <div class="mirror-sep" aria-hidden="true"></div>
+          <p class="opener mirrored">there are just too many reflections</p>
+        </div>
 
-      <!-- Stanza 1 -->
-      <p class="reveal">
-        <span class="line gsap-bloom per-char">it used to be only in bathrooms,</span><br>
-        <span class="line gsap-bloom per-char">the occasional hallway, or a</span><br>
-        <span class="line gsap-bloom per-char">fancy bedroom—we see too much</span><br>
-        <span class="line gsap-bloom per-char">of myself, everywhere, all the time—</span><br>
-        <span class="line">at least, mirrors used to contain light</span><br>
-        <span class="line">now they carry hydrocarbon stains</span>
-      </p>
+        <!-- Stanza 1 -->
+        <p class="reveal">
+          <span class="line gsap-bloom per-char">it used to be only in bathrooms,</span><br>
+          <span class="line gsap-bloom per-char">the occasional hallway, or a</span><br>
+          <span class="line gsap-bloom per-char">fancy bedroom—we see too much</span><br>
+          <span class="line gsap-bloom per-char">of myself, everywhere, all the time—</span><br>
+          <span class="line">at least, mirrors used to contain light</span><br>
+          <span class="line">now they carry hydrocarbon stains</span>
+        </p>
 
-      <br><br>
+        <br><br>
 
-      <!-- Stanza 2 -->
-      <p class="reveal">
-        <span class="line gsap-bloom per-char">maybe I should take off my clothes</span><br>
-        <span class="line gsap-bloom per-char">and perhaps you’d like me better</span><br>
-        <span class="line">terrified to grow old but no filters</span><br>
-        <span class="line"><span class="burst-line per-char">just fillers</span>: glycerin and matrixyl</span><br>
-        <span class="line">argireline solutions and caffeine</span><br>
-        <span class="line">organic cold-pressed rose hip oil</span>
+        <!-- Stanza 2 -->
+        <p class="reveal">
+          <span class="line gsap-bloom per-char">maybe I should take off my clothes</span><br>
+          <span class="line gsap-bloom per-char">and perhaps you’d like me better</span><br>
+          <span class="line">terrified to grow old but no filters</span><br>
+          <span class="line"><span class="burst-line per-char">just fillers</span>: glycerin and matrixyl</span><br>
+          <span class="line">argireline solutions and caffeine</span><br>
+          <span class="line">organic cold-pressed rose hip oil</span>
 
-        <!-- Blank product sidenote #1 -->
-        <label for="sn-1" class="margin-toggle sidenote-number"></label>
-        <input type="checkbox" id="sn-1" class="margin-toggle"/>
-        <span class="marginnote"></span>
-      </p>
+          <!-- Product sidenote #1 with video -->
+          <label for="sn-1" class="margin-toggle sidenote-number"></label>
+          <input type="checkbox" id="sn-1" class="margin-toggle"/>
+          <span class="marginnote">
+            <div class="note-media">
+              <video
+                src="https://cdn.media.amplience.net/v/deciem/desktop_loopha_July2025/mp4_720p"
+                muted
+                playsinline
+                autoplay
+                loop
+                preload="metadata"
+              ></video>
+            </div>
+          </span>
+        </p>
 
-      <br><br>
+        <br><br>
 
-      <!-- Stanza 3 -->
-      <p class="reveal">
-        <span class="line droop per-char">none of it will save my sagging skin</span><br>
-        <span class="line gsap-bloom per-char">although maybe if we just keep buying</span><br>
-        <span class="line gsap-bloom per-char">and staring at the vials and dispensers</span><br>
-        <span class="line gsap-bloom per-char">on the shelves, the reflections change</span><br>
-        <span class="line gsap-bloom per-char">not ours, but the ones in my brain</span><br>
-        <span class="line gsap-bloom per-char">rewilding pathways to youth within</span>
-      </p>
+        <!-- Stanza 3 -->
+        <p class="reveal">
+          <span class="line droop per-char">none of it will save my sagging skin</span><br>
+          <span class="line gsap-bloom per-char">although maybe if we just keep buying</span><br>
+          <span class="line gsap-bloom per-char">and staring at the vials and dispensers</span><br>
+          <span class="line gsap-bloom per-char">on the shelves, the reflections change</span><br>
+          <span class="line gsap-bloom per-char">not ours, but the ones in my brain</span><br>
+          <span class="line gsap-bloom per-char">rewilding pathways to youth within</span>
+        </p>
 
-      <br><br>
+        <br><br>
 
-      <!-- Stanza 4 -->
-      <p class="reveal">
-        <span class="line slow-float">why would I take a long bath and risk</span><br>
-        <span class="line slow-float">wrinkling everything, on purpose?</span><br>
-        <span class="line">
-          <span class="thicker">thiccer,</span>
-          <span class="lifter">lifter,</span>
-          <span class="thinner">fitter,</span>
-          <span> triple-action,</span>
-        </span><br>
-        <span class="line">day-and-night serums, cleansers,</span>
+        <!-- Stanza 4 -->
+        <p class="reveal">
+          <span class="line slow-float">why would I take a long bath and risk</span><br>
+          <span class="line slow-float">wrinkling everything, on purpose?</span><br>
+          <span class="line">
+            <span class="thicker">thiccer,</span>
+            <span class="lifter">lifter,</span>
+            <span class="thinner">fitter,</span>
+            <span> triple-action,</span>
+          </span><br>
+          <span class="line">day-and-night serums, cleansers,</span>
 
-        <!-- Blank product sidenote #2 -->
-        <label for="sn-2" class="margin-toggle sidenote-number"></label>
-        <input type="checkbox" id="sn-2" class="margin-toggle"/>
-        <span class="marginnote"></span>
+          <!-- Product sidenote #2 with video -->
+          <label for="sn-2" class="margin-toggle sidenote-number"></label>
+          <input type="checkbox" id="sn-2" class="margin-toggle"/>
+          <span class="marginnote">
+            <div class="note-media">
+              <video
+                src="https://cdn.media.amplience.net/v/deciem/D50285_LipExfoliator_Homepage_Desktop/mp4_720p"
+                muted
+                playsinline
+                autoplay
+                loop
+                preload="metadata"
+              ></video>
+            </div>
+          </span>
 
-        <br>
-        <span class="line">exfoliators, moisturising suspensions,</span><br>
-        <span class="line">organic cold-pressed Moroccan argan oil</span>
-      </p>
+          <br>
+          <span class="line">exfoliators, moisturising suspensions,</span><br>
+          <span class="line">organic cold-pressed Moroccan argan oil</span>
+        </p>
 
-      <br><br>
+        <br><br>
 
-      <!-- Final couplet + click-to-reveal sidenote with autoplay video -->
-      <p class="reveal">
-        <span class="line"><span id="pc-trigger" class="pc-trigger">‘Postmodern Cynicism’</span> exists only online,</span><br>
-        <span class="line">you should go on his Facebook sometime</span>
+        <!-- Final couplet + click-to-reveal sidenote with autoplay video -->
+        <p class="reveal">
+          <span class="line"><span id="pc-trigger" class="pc-trigger">‘Postmodern Cynicism’</span> exists only online,</span><br>
+          <span class="line">you should go on his Facebook sometime</span>
 
-        <!-- Hidden toggle + sidenote (appears on click) -->
-        <input type="checkbox" id="sn-final" class="margin-toggle" />
-        <span class="marginnote final-note">
-          <div style="margin-top:.25rem;">
-            <iframe id="final-yt"
-              width="300" height="169"
-              title="YouTube video player" frameborder="0"
-              allow="autoplay; encrypted-media; picture-in-picture; web-share"
-              allowfullscreen
-              data-src="https://www.youtube.com/embed/Do7B74dyEVs?autoplay=1&mute=1&controls=0&playsinline=1&rel=0">
-            </iframe>
-          </div>
-        </span>
-      </p>
-    </article>
+          <!-- Hidden toggle + sidenote (appears on click) -->
+          <input type="checkbox" id="sn-final" class="margin-toggle" />
+          <span class="marginnote final-note">
+            <div style="margin-top:.25rem;">
+              <iframe id="final-yt"
+                width="300" height="169"
+                title="YouTube video player" frameborder="0"
+                allow="autoplay; encrypted-media; picture-in-picture; web-share"
+                allowfullscreen
+                data-src="https://www.youtube.com/embed/Do7B74dyEVs?autoplay=1&mute=1&controls=0&playsinline=1&rel=0">
+              </iframe>
+            </div>
+          </span>
+        </p>
+      </article>
+      <!-- Overlay (auto-cloned) goes here -->
+    </div>
   </main>
 
   <script>
-    // Fallback: if GSAP/ScrollTrigger not available, page still reads fine.
-    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-      // nothing animated, everything already visible
-    } else {
+    // Fallback if GSAP unavailable: page still readable.
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
       gsap.registerPlugin(ScrollTrigger);
     }
 
-    /* per-char splitter for bloom/droop/burst lines only */
-    function splitCharsIn(root){
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-        acceptNode(n){ return /\S/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.REJECT; }
-      });
-      const nodes = [];
-      while (walker.nextNode()) nodes.push(walker.currentNode);
-      nodes.forEach(node=>{
-        const parent = node.parentElement;
-        if (parent && (parent.closest('.marginnote') || parent.closest('label') || parent.closest('input'))) return;
-        const frag = document.createDocumentFragment();
-        for (const ch of node.nodeValue){
-          if (ch===' '){ frag.appendChild(document.createTextNode(' ')); continue; }
-          const span = document.createElement('span'); span.className='char'; span.textContent=ch;
-          frag.appendChild(span);
-        }
-        node.parentNode.replaceChild(frag, node);
-      });
-    }
-    document.querySelectorAll('.per-char').forEach(splitCharsIn);
+    /* ---------- Scroll-fill overlay ---------- */
+    (function(){
+      var wrap = document.getElementById('poemWrap');
+      var base = document.getElementById('poemBase');
+      if (!wrap || !base) return;
 
+      var clip = document.createElement('div');
+      clip.className = 'poem-fill-clip';
+
+      // clone the base
+      var fill = base.cloneNode(true);
+      fill.classList.remove('poem-base');
+      fill.classList.add('poem', 'poem-fill');
+      fill.removeAttribute('id');
+
+      // remove IDs + sidenote UI in overlay
+      var withId = fill.querySelectorAll('[id]');
+      for (var i=0;i<withId.length;i++) withId[i].removeAttribute('id');
+      var ui = fill.querySelectorAll('.marginnote, .margin-toggle, input[type="checkbox"]');
+      for (i=0;i<ui.length;i++) ui[i].parentNode.removeChild(ui[i]);
+
+      clip.appendChild(fill);
+      wrap.appendChild(clip);
+
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function clamp(v,a,b){ return Math.min(b, Math.max(a,v)); }
+      function updateFill(){
+        if (reduce) { clip.style.height = '100%'; return; }
+        var r = wrap.getBoundingClientRect();
+        var vh = window.innerHeight || 1;
+        var total = r.height + vh;                 // enter → leave
+        var p = clamp((vh - r.top) / total, 0, 1); // 0..1
+        clip.style.height = (p*100).toFixed(2) + '%';
+      }
+      updateFill();
+      window.addEventListener('scroll', updateFill, {passive:true});
+      window.addEventListener('resize', updateFill);
+    })();
+
+    /* ---------- per-char splitter for bloom/droop/burst lines ---------- */
+    (function(){
+      function splitCharsIn(root){
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+          acceptNode:function(n){ return /\S/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.REJECT; }
+        });
+        var nodes = [], current;
+        while ((current = walker.nextNode())) nodes.push(current);
+        nodes.forEach(function(node){
+          var parent = node.parentElement;
+          if (parent && (parent.closest('.marginnote') || parent.closest('label') || parent.closest('input'))) return;
+          var frag = document.createDocumentFragment();
+          for (var i=0;i<node.nodeValue.length;i++){
+            var ch = node.nodeValue[i];
+            if (ch === ' '){ frag.appendChild(document.createTextNode(' ')); continue; }
+            var span = document.createElement('span'); span.className='char'; span.textContent=ch;
+            frag.appendChild(span);
+          }
+          node.parentNode.replaceChild(frag, node);
+        });
+      }
+      var per = document.querySelectorAll('.per-char');
+      for (var i=0;i<per.length;i++) splitCharsIn(per[i]);
+    })();
+
+    /* ---------- GSAP animations (only if available) ---------- */
     if (typeof ScrollTrigger !== 'undefined') {
-      /* reveal-on-scroll (subtle) */
-      document.querySelectorAll('.reveal').forEach((el)=>{
-        const chars = el.querySelectorAll('.char');
-        const tl = gsap.timeline({
+      /* reveal-on-scroll (scrubbed per block) */
+      document.querySelectorAll('.reveal').forEach(function(el){
+        var chars = el.querySelectorAll('.char');
+        var tl = gsap.timeline({
           scrollTrigger:{ trigger: el, start:"top 85%", end:"bottom 60%", scrub:true }
         });
         if (chars.length){
@@ -217,7 +301,7 @@
 
       /* mirrored opener faint fade */
       (function(){
-        const wrap = document.querySelector('.mirror-wrap');
+        var wrap = document.querySelector('.mirror-wrap');
         if(!wrap) return;
         gsap.to(wrap.querySelectorAll('.opener'), {
           opacity: 0.15, duration: 1.6,
@@ -225,23 +309,23 @@
         });
       })();
 
-      /* just fillers — balloon burst */
+      /* “just fillers” balloon burst */
       (function(){
-        const line = document.querySelector('.burst-line');
+        var line = document.querySelector('.burst-line');
         if(!line) return;
-        let burstDone = false;
+        var burstDone = false;
         function runBurst(){
           if(burstDone) return;
           burstDone = true;
-          const chars = line.querySelectorAll('.char');
-          const tl = gsap.timeline();
+          var chars = line.querySelectorAll('.char');
+          var tl = gsap.timeline();
           tl.to(chars, {color:"var(--bloom-grey)", duration:0.25, ease:"power2.out"})
             .to(chars, {scale:2.4, duration:0.5, ease:"back.out(2)"}, "<")
             .to(chars, {
               duration:0.7, opacity:0,
-              rotate:()=>gsap.utils.random(-35,35),
-              x:()=>gsap.utils.random(-40,40),
-              y:()=>gsap.utils.random(-60,-20),
+              rotate:function(){ return gsap.utils.random(-35,35); },
+              x:function(){ return gsap.utils.random(-40,40); },
+              y:function(){ return gsap.utils.random(-60,-20); },
               ease:"power2.in"
             }, ">-0.05");
         }
@@ -251,27 +335,27 @@
 
       /* droop */
       (function(){
-        const droop = document.querySelector('.droop');
+        var droop = document.querySelector('.droop');
         if(!droop) return;
-        const chars = droop.querySelectorAll('.char');
+        var chars = droop.querySelectorAll('.char');
         ScrollTrigger.create({
           trigger: droop, start:"top 85%", once:true,
-          onEnter(){
-            const n = chars.length, center = (n-1)/2;
-            chars.forEach((ch, i)=>{
-              const dist = Math.abs(i-center);
-              const drop = 14 * (1 - (dist/center || 1)) + gsap.utils.random(-2,2);
+          onEnter:function(){
+            var n = chars.length, center = (n-1)/2;
+            chars.forEach(function(ch, i){
+              var dist = Math.abs(i-center);
+              var drop = 14 * (1 - (dist/(center || 1))) + gsap.utils.random(-2,2);
               gsap.to(ch, { y: drop, rotate: gsap.utils.random(-2,2), duration: 1.25, ease: "sine.out", delay: i*0.005 });
             });
           }
         });
       })();
 
-      /* slow float (NOT bubbles) for the two bath lines */
-      document.querySelectorAll('.slow-float').forEach(line=>{
+      /* slow float for the two bath/wrinkling lines */
+      document.querySelectorAll('.slow-float').forEach(function(line){
         gsap.to(line, {
           y: -6,
-          duration: 8,   /* significantly slower */
+          duration: 12,
           yoyo: true,
           repeat: -1,
           ease: "sine.inOut",
@@ -281,11 +365,13 @@
 
       /* thiccer / lifter / fitter */
       (function(){
-        const stanza = document.querySelector('.thicker')?.closest('p');
+        var any = document.querySelector('.thicker');
+        if(!any) return;
+        var stanza = any.closest('p');
         if(!stanza) return;
         ScrollTrigger.create({
           trigger: stanza, start:"top 85%", once:true,
-          onEnter(){
+          onEnter:function(){
             gsap.to('.thicker', { fontWeight: 900, duration: .5, ease: 'power2.out' });
             gsap.to('.lifter', { y: -8, duration: .6, ease: 'sine.out' });
             gsap.to('.thinner', { fontWeight: 200, duration: .5, ease: 'power2.out' });
@@ -295,27 +381,27 @@
 
       /* click-to-reveal final sidenote + autoplay */
       (function(){
-        const trigger = document.getElementById('pc-trigger');
-        const checkbox = document.getElementById('sn-final');
-        const yt = document.getElementById('final-yt');
+        var trigger = document.getElementById('pc-trigger');
+        var checkbox = document.getElementById('sn-final');
+        var yt = document.getElementById('final-yt');
         if(!trigger || !checkbox || !yt) return;
-        const showNote = () => {
+        function showNote(){
           if (!checkbox.checked){
             checkbox.checked = true;
-            const note = checkbox.nextElementSibling;
+            var note = checkbox.nextElementSibling;
             if (note) gsap.fromTo(note, {opacity:0, y:8}, {opacity:1, y:0, duration:0.5, ease:"power2.out"});
-            if (!yt.src) yt.src = yt.dataset.src; // lazy-load + autoplay
+            if (!yt.src) yt.src = yt.getAttribute('data-src');
           }
-        };
+        }
         trigger.addEventListener('click', showNote);
-        trigger.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); showNote(); }});
+        trigger.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); showNote(); }});
       })();
 
       /* bloom (light grey) — only on marked lines */
       (function(){
-        const blooms = Array.from(document.querySelectorAll('.gsap-bloom'));
+        var blooms = [].slice.call(document.querySelectorAll('.gsap-bloom'));
         function bloom(line){
-          const chars = line.querySelectorAll('.char');
+          var chars = line.querySelectorAll('.char');
           if (!chars.length) return;
           gsap.killTweensOf(chars);
           gsap.to(chars, {
@@ -328,15 +414,15 @@
             stagger: 0.04
           });
         }
-        blooms.forEach(p=>{
+        blooms.forEach(function(p){
           p.tabIndex = 0;
-          p.addEventListener('pointerenter', ()=>bloom(p));
-          p.addEventListener('click', ()=>bloom(p));
-          p.addEventListener('focus', ()=>bloom(p));
+          p.addEventListener('pointerenter', function(){ bloom(p); });
+          p.addEventListener('click', function(){ bloom(p); });
+          p.addEventListener('focus', function(){ bloom(p); });
         });
       })();
 
-      window.addEventListener('load', ()=>{ try{ ScrollTrigger.refresh(); }catch(e){} });
+      window.addEventListener('load', function(){ try{ ScrollTrigger.refresh(); }catch(e){} });
     }
   </script>
     <!-- Back link -->
