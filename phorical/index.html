@@ -11,7 +11,7 @@
   <style>
     :root {
       --lh: 1.45;
-      --glow-r: 255; --glow-g: 0; --glow-b: 0; /* red bloom color */
+      --glow-r: 255; --glow-g: 0; --glow-b: 0; /* red bloom */
       --final-indent: 34ch;                     /* further right */
     }
 
@@ -19,40 +19,32 @@
     .poem { line-height: var(--lh); font-size: 1.1rem; margin: 0 1rem; }
     .poem p { margin: 0.85rem 0; }
 
-    /* 10 "lines" of whitespace before and after */
+    /* 10 lines of whitespace before and after */
     .vspace { height: calc(10 * 1em * var(--lh)); }
 
-    /* ===== Bracketed block tuned to screenshot spacing ===== */
+    /* ===== Bracketed block laid out like your screenshot ===== */
     .bracketed {
-      --gapY: 10vh;     /* vertical spacing between bracketed lines */
-      --indent1: 0ch;   /* just vibes, */
-      --indent2: 8ch;   /* and slides, */
-      --indent3: 16ch;  /* you know, */
-      --indent4: 30ch;  /* metaphorical?* adjusted to fit better on mobile screen, 32ch originally */
+      position: relative;       /* for the SVG overlay */
+      --gapY: 10vh;             /* vertical spacing between lines */
+      --indent1: 0ch;           /* just vibes, */
+      --indent2: 8ch;           /* and slides, */
+      --indent3: 16ch;          /* you know, */
+      --indent4: 30ch;          /* metaphorical?* */
       display: grid;
       row-gap: var(--gapY);
       margin: 2rem 0 2rem;
     }
-    .bracket-open,
-    .bracket-close {
-      font-size: 1.35rem;
-      color: #444;
-      user-select: none;
+    .bracket-open, .bracket-close {
+      font-size: 1.35rem; color: #444; user-select: none;
     }
 
-    /* Interactive lines: look like text, behave like buttons */
+    /* Interactive lines: text-like buttons */
     .line {
-      opacity: 0;
-      transform: translateY(-0.6em);
+      opacity: 0; transform: translateY(-0.6em);
       will-change: transform, opacity;
       display: inline-block;
-      border: 0;
-      background: none;
-      padding: 0;
-      margin: 0;
-      text-align: left;
-      cursor: default;      /* becomes pointer when active */
-      font: inherit;
+      border: 0; background: none; padding: 0; margin: 0;
+      text-align: left; cursor: default; font: inherit;
     }
     .line-1 { margin-left: var(--indent1); }
     .line-2 { margin-left: var(--indent2); }
@@ -62,21 +54,23 @@
     .line.is-active { cursor: pointer; }
     .line[disabled] { pointer-events: none; }
 
-    /* Post-bracket lines: stay hidden until click-chain completes */
+    /* The SVG overlay that draws/animates curved text between lines */
+    .slide-overlay {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; overflow: visible; z-index: 2;
+    }
+
+    /* After-bracket lines are hidden until chain finishes */
     .reveal { opacity: 0; transform: translateY(12px); will-change: transform, opacity; }
 
     /* Final line: smaller, further right, with hover/click bloom */
     .final-line {
-      font-size: 0.95rem;           /* smaller than main body */
-      margin-left: var(--final-indent);
-      position: relative;
-      outline: none;
-      cursor: pointer;              /* for hover/click affordance */
+      font-size: 0.95rem; margin-left: var(--final-indent);
+      position: relative; outline: none; cursor: pointer;
     }
-    /* Make the sidenote slightly smaller than the final line */
+    /* Sidenote slightly smaller than final line */
     .poem .sidenote { font-size: 0.9em; max-width: 22rem; }
 
-    /* Bloom target */
     .final-line .hot {
       transition: text-shadow 200ms ease, color 160ms ease, filter 200ms ease;
     }
@@ -92,7 +86,7 @@
 
     @media (max-width: 760px) {
       .poem .sidenote { max-width: 100%; }
-      .final-line { margin-left: 0; } /* prevent crowding on phones */
+      .final-line { margin-left: 0; }
     }
 
     /* Reduced motion */
@@ -109,8 +103,10 @@
 
       <p>maybe it’s all</p>
 
-      <!-- Bracketed block -->
+      <!-- Bracket block -->
       <div class="bracketed" id="call-and-slide" aria-live="polite">
+        <svg class="slide-overlay" id="slide-overlay" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+
         <div class="bracket-open" aria-hidden="true">[</div>
 
         <button class="line line-1" type="button"><span>just vibes,</span></button>
@@ -121,7 +117,7 @@
         <div class="bracket-close" id="bracket-close" aria-hidden="true" style="opacity:0; transform:translateY(-0.4em);">]</div>
       </div>
 
-      <!-- After the bracket: only enabled once the chain is finished -->
+      <!-- After the bracket: enabled only once the chain is finished -->
       <p class="reveal">*Fuck off, most days I’m just barely phorical±</p>
 
       <p class="reveal final-line" id="final-line" tabindex="0" aria-label="± φορά — fine, I’ll carry this meta-shit (click to glow)">
@@ -138,16 +134,16 @@
     </section>
   </article>
 
-  <!-- GSAP + plugins -->
+  <!-- GSAP -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
   <script>
     (function () {
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
+      gsap.registerPlugin(ScrollTrigger);
 
       const wrap   = document.getElementById('call-and-slide');
+      const overlay = document.getElementById('slide-overlay');
       const closeB = document.getElementById('bracket-close');
       const finalLine = document.getElementById('final-line');
 
@@ -158,14 +154,21 @@
         document.querySelector('.line-4')
       ].filter(Boolean);
 
-      const afterEls = gsap.utils.toArray('.reveal');   // post-bracket paragraphs
+      const afterEls = gsap.utils.toArray('.reveal');
       let afterEnabled = false;
 
-      /* Attach scroll triggers for after-lines ONLY after chain done */
+      /* ---------- fit overlay viewBox to wrapper ---------- */
+      function sizeOverlay() {
+        const r = wrap.getBoundingClientRect();
+        overlay.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+      }
+      sizeOverlay();
+      window.addEventListener('resize', sizeOverlay);
+
+      /* ---------- After-lines only get scroll triggers once chain is done ---------- */
       function enableAfterScroll() {
         if (afterEnabled) return;
         afterEnabled = true;
-
         afterEls.forEach(el => {
           gsap.fromTo(el,
             { opacity: 0, y: 12 },
@@ -177,7 +180,7 @@
         });
       }
 
-      /* Auto-reveal the first line on scroll-in */
+      /* ---------- Auto-reveal first line on scroll-in ---------- */
       if (reduce) {
         lines.forEach((el, i) => {
           el.style.opacity = i === 0 ? 1 : 0;
@@ -188,67 +191,111 @@
         gsap.fromTo(lines[0],
           { opacity: 0, y: -14 },
           {
-            opacity: 1, y: 0,
-            duration: 0.6,
+            opacity: 1, y: 0, duration: 0.6,
             scrollTrigger: { trigger: wrap, start: 'top 70%', once: true },
             onComplete: () => lines[0].classList.add('is-active')
           }
         );
       }
 
-      /* Click chain with curvier “slide” + auto-rotate (tilt along curve) */
-      function slideIntoNext(i) {
+      /* ---------- Utilities ---------- */
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+      let pathCounter = 0;
+
+      function computedFont(el) {
+        const cs = getComputedStyle(el);
+        return `${cs.fontStyle} ${cs.fontVariant} ${cs.fontWeight} ${cs.fontSize}/${cs.lineHeight} ${cs.fontFamily}`;
+      }
+
+      function slideTextBetween(fromEl, toEl) {
+        // Build a curvy cubic Bézier path from the baseline of fromEl to toEl
+        const wrapRect = wrap.getBoundingClientRect();
+        const r1 = fromEl.getBoundingClientRect();
+        const r2 = toEl.getBoundingClientRect();
+
+        // Start near visual baseline, end near baseline
+        const x0 = r1.left - wrapRect.left + r1.width * 0.06;
+        const y0 = r1.top  - wrapRect.top  + r1.height * 0.72;
+        const x1 = r2.left - wrapRect.left + r2.width * 0.06;
+        const y1 = r2.top  - wrapRect.top  + r2.height * 0.72;
+
+        const dx = x1 - x0, dy = y1 - y0;
+        // Curvy “playground” shape
+        const c1x = x0 + dx * 0.30, c1y = y0 + dy * 0.05;  // gentle ramp-out
+        const c2x = x0 + dx * 0.92, c2y = y0 + dy * 1.08;  // steep then flatten near landing
+
+        // Create path + text
+        const pathId = `p-${Date.now()}-${pathCounter++}`;
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('id', pathId);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'none');
+        path.setAttribute('d', `M${x0},${y0} C ${c1x},${c1y} ${c2x},${c2y} ${x1},${y1}`);
+
+        const text = document.createElementNS(SVG_NS, 'text');
+        const tp = document.createElementNS(SVG_NS, 'textPath');
+        tp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${pathId}`);
+        tp.setAttribute('startOffset', '0');
+
+        // Copy the line’s text + font so it looks identical
+        tp.textContent = fromEl.textContent;
+        text.setAttribute('fill', getComputedStyle(fromEl).color);
+        text.style.font = computedFont(fromEl);
+
+        text.appendChild(tp);
+        overlay.appendChild(path);
+        overlay.appendChild(text);
+
+        // Animate the glyphs along the path, with a tiny overshoot “bump”
+        const len = path.getTotalLength();
+        const tl = gsap.timeline({
+          defaults: { ease: 'power2.out' },
+          onComplete: () => { text.remove(); path.remove(); }
+        });
+
+        // Hide the original while the curved copy travels
+        gsap.set(fromEl, { autoAlpha: 0 });
+
+        tl.to(tp, { attr: { startOffset: len }, duration: 0.95, ease: 'power2.inOut' })
+          .to(tp, { attr: { startOffset: len * 1.03 }, duration: 0.12, ease: 'power1.out' }, '>-0.02')
+          .to(tp, { attr: { startOffset: len }, duration: 0.18, ease: 'power1.inOut' }, '>-0.02')
+          .add(() => gsap.set(fromEl, { autoAlpha: 1 })); // restore original
+
+        return tl;
+      }
+
+      /* ---------- Click chain: true curved text between lines ---------- */
+      function chain(i) {
         const current = lines[i];
         const next    = lines[i + 1];
-
         if (!current || !next || current.disabled) return;
-
-        // current -> next deltas
-        const r1 = current.getBoundingClientRect();
-        const r2 = next.getBoundingClientRect();
-        const dx = (r2.left - r1.left) * 0.98;
-        const dy = (r2.top  - r1.top)  * 0.98;
-
-        // Curvier cubic Bézier path
-        const c1x = dx * 0.32, c1y = dy * 0.06;  // gentle ramp-out
-        const c2x = dx * 0.92, c2y = dy * 1.05;  // steep then flatten near landing
-        const path = `M0,0 C ${c1x},${c1y} ${c2x},${c2y} ${dx},${dy}`;
 
         current.disabled = true;
 
         const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
 
-        // Slide along the curve (down-and-right) with rotation along path
-        tl.to(current, {
-          duration: 0.95,
-          ease: 'power2.inOut',
-          motionPath: { path, autoRotate: true, alignOrigin: [0.5, 0.5] }
-        });
+        // Run the curved text slide overlay
+        tl.add(slideTextBetween(current, next));
 
-        // Small “bump” on contact + reveal next line
-        tl.to(current, { x: dx + 3, y: dy + 12, duration: 0.12, ease: 'power1.out' }, '>-0.02');
-        tl.fromTo(next, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.45, ease: 'back.out(1.6)' }, '<0.02');
-
-        // Return current line to its origin and upright
-        tl.to(current, { x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.9)' })
+        // Reveal the next line as the curve lands
+        tl.fromTo(next, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.45, ease: 'back.out(1.6)' }, '-=0.30')
           .add(() => {
             current.classList.remove('is-active');
             next.disabled = false;
             next.classList.add('is-active');
           });
 
-        // If we just revealed the final bracket line, show closing bracket then enable after-lines
+        // If we just revealed the last bracket line, show ']' and enable after-lines
         if (i === lines.length - 2) {
           tl.fromTo(closeB, { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
             .add(enableAfterScroll);
         }
       }
 
-      lines.forEach((btn, idx) => btn.addEventListener('click', () => slideIntoNext(idx)));
+      lines.forEach((btn, idx) => btn.addEventListener('click', () => chain(idx)));
 
-      /* Final line bloom toggle on click/keyboard (like your italics hover) */
+      /* ---------- Final line bloom toggle (click/keyboard) ---------- */
       finalLine.addEventListener('click', (e) => {
-        // avoid toggling when clicking inside the sidenote controls
         if (e.target.closest('.sidenote') || e.target.matches('label, input')) return;
         finalLine.classList.toggle('bloom-persist');
       });
@@ -259,7 +306,7 @@
         }
       });
 
-      /* Reduced motion: reveal all immediately and allow hover/click bloom */
+      /* ---------- Reduced motion fallback ---------- */
       if (reduce) {
         lines.forEach(el => { el.style.opacity = 1; el.disabled = false; el.classList.remove('is-active'); });
         closeB.style.opacity = 1;
