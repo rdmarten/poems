@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Pinguins are communists!</title>
+
+  <!-- Tufte CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css" integrity="sha512-HH8X7r0Hc8B8hQXg6HHw4VX7rm1zti1+Q6wV8dml1I0QeSBq1+z5zU0n4yFlcJZ2f2O8sX9z8JRU6V2l0Q9zPA==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-+w3c6x6y0M2l7F8fKJx9u1I6QK+3oK9y8h9kZPp0b+kbmZKc4wJjz2b9k7E0m9prwQ0Qm4mQ7o9W5t7aK4HfGQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha512-3K3qfHcQw/Kk6vJ4+Qm1Q3iGq3mH2e5V6b7g8r9j1g/1yD1m2kQ1b4mZs9u7Ywqf1m2tK8m3YQm4p9yQX8j6pA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <style>
+    /* Layout */
+    .pi-tufte { max-width: 70ch; margin: 0 auto; padding: 2rem 1rem 6rem; }
+    .subtitle { font-size: 1rem; color: #666; }
+
+    /* Poem typography */
+    .poem { font-size: 1.05rem; line-height: 1.5; }
+    .poem p { margin: 0.25rem 0; }
+    .italic { font-style: italic; }
+
+    /* Scroll-reveal base state */
+    .line { opacity: 0; transform: translateY(8px); will-change: transform, opacity; }
+
+    /* Small helpers */
+    .spacer { height: 0.5rem; }
+
+    /* Respect prefers-reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+      .line { opacity: 1 !important; transform: none !important; }
+    }
+  </style>
+</head>
+<body class="pi-tufte">
+  <header>
+    <h1>Pinguins are communists!</h1>
+    <p class="subtitle">an interactive poem (Tufte CSS + GSAP scroll‑reveal)</p>
+  </header>
+
+  <article class="poem">
+    <p class="line">Pinguins are communists!</p>
+
+    <p class="line">the Great Auk,
+      <label for="sn-auk" class="margin-toggle sidenote-number"></label>
+      <input type="checkbox" id="sn-auk" class="margin-toggle"/>
+      <span class="sidenote">Pinguinus <em>impennis</em> — the extinct North Atlantic seabird; the original “pinguin,” not a penguin.</span>
+    </p>
+
+    <p class="line">the OG pinguin—</p>
+    <p class="line">do not confuse</p>
+    <p class="line">with penguin, different</p>
+    <p class="line">bird, ask Bonaparte,</p>
+    <p class="line">or Bromelia plants (see Olof, Swede)—
+      <label for="sn-olof" class="margin-toggle sidenote-number"></label>
+      <input type="checkbox" id="sn-olof" class="margin-toggle"/>
+      <span class="sidenote"><em>Bromelia</em> is named for Olof Bromelius (1639–1705), a Swedish botanist and physician.</span>
+    </p>
+    
+    <p class="line">a true comrade&nbsp;&nbsp;&nbsp;&nbsp;
+      <label for="sn-peng" class="margin-toggle sidenote-number"></label>
+      <input type="checkbox" id="sn-peng" class="margin-toggle"/>
+      <span class="sidenote">like PENG-gwin, /ˈpɛŋɡwɪn/<br/>probably from the Welsh<br/><strong>pen</strong> + <strong>gwyn</strong> = white-head</span>
+    </p>
+
+    <p class="line">like PENG-gwin, /ˈpɛŋɡwɪn/</p>
+    <p class="line">probably from the Welsh</p>
+    <p class="line">pen + gwyn = white-head</p>
+
+    <div class="spacer"></div>
+
+    <p class="line">collected by Europeans</p>
+    <p class="line">trophies in cabinets</p>
+    <p class="line">hunted to death</p>
+    <p class="line">by false Americans</p>
+    <p class="line">plucked bare naked</p>
+    <p class="line">like fat chickens</p>
+    <p class="line">flogged for crimes</p>
+    <p class="line">they never committed</p>
+    <p class="line">burnt on stakes</p>
+    <p class="line">screaming for help</p>
+    <p class="line">flesh ripped apart</p>
+    <p class="line">by white teeth</p>
+
+    <div class="spacer"></div>
+
+    <p class="line">males incubate eggs</p>
+    <p class="line">while females forage</p>
+    <p class="line">always switching roles</p>
+    <p class="line">communal clusters cover</p>
+    <p class="line">resources equally shared</p>
+    <p class="line">food, care, nesting</p>
+    <p class="line">huddling for warmth</p>
+    <p class="line">from glacial winds</p>
+    <p class="line">maximising all survival</p>
+
+    <div class="spacer"></div>
+
+    <p class="line">until Iceland’s sons</p>
+
+    <p class="line italic">ég tók hann</p>
+    <p class="line italic">í hálsinn og</p>
+    <p class="line italic">hann blakti vængjunum</p>
+    <p class="line italic">hann grét ekki</p>
+    <p class="line italic">ég kyrkti hann</p>
+
+    <p class="line">3. júní 1844</p>
+
+    <p class="line">the Great Auk</p>
+    <p class="line">martyr of Marx</p>
+    <p class="line">before its time</p>
+
+    <p class="line">Penguins are communists!</p>
+  </article>
+
+  <script>
+    // GSAP Scroll-reveal (as used in previous "Ostende, bonsoir" work)
+    // Fade + gentle rise for each line when it enters the viewport.
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.utils.toArray('.line').forEach((el, i) => {
+      gsap.fromTo(el,
+        { opacity: 0, y: 8 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power2.out',
+          delay: (i % 5) * 0.02, // tiny desync so stacked lines feel organic
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 85%',
+            once: false, // reveal again if scrolled back up
+            toggleActions: 'play none none reverse'
+          }
+        }
+      );
+    });
+  </script>
+    <!-- Back link -->
+  <p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
+</body>
+</html>
