@@ -14,132 +14,87 @@
     .pi-tufte .poem { font-size: 0.50rem; line-height: 1.5; }
     .pi-tufte .poem p { margin: 0.15rem 0; }
 
-    /* Per-character animation */
-    .char { display: inline-block; will-change: transform, color; }
-
     /* Italic helper */
     .pi-ital { font-style: italic; }
 
-    /* Clickable audio word */
-    .pi-audio { text-decoration: underline; cursor: pointer; }
-    .pi-audio[aria-pressed="true"] { text-decoration: underline dotted; }
-
-    /* GSAP blooms in italics */
-    .gsap-bloom { font-style: italic; }
-
-    /* Title layout */
-    .pi-title { font-size: 2.5rem; margin: 0 0 0.8rem; font-style: normal; }
-    .pi-subtitle { font-size: 1.75rem; margin: -0.2rem 0 1.0rem; color: #666; font-style: italic; }
-
     /* Scroll reveal initial state */
-    .reveal { opacity: 0; transform: translateY(12px); }
-
-    /* ===== Scroll-fill (overlay clone with growing height) ===== */
-    .poem-wrap { position: relative; }
-    .poem-base { color: #9a9a9a; }
-    .poem-fill-clip {
-      position: absolute; inset: 0;
-      overflow: hidden;               /* the “mask” */
-      height: 0%;                     /* JS sets 0–100% */
-      pointer-events: none;           /* clicks go to base layer */
-    }
-    .poem-fill { color: #fff; }
-    /* Don’t render sidenote UI in the overlay copy */
-    .poem-fill .sidenote,
-    .poem-fill .margin-toggle,
-    .poem-fill input[type="checkbox"] { display: none !important; }
+    .reveal { opacity: 0; transform: translateY(12px); display: inline-block; }
   </style>
 
-  <!-- Libraries -->
+  <!-- GSAP only (no overlay fill) -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/splitting@1.0.6/dist/splitting.min.js"></script>
-  <script async src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
 
 <article class="pi-tufte">
   <h2 class="pi-title"><i>Pinguins are communists!</i></h2>
 
-  <!-- ===== SCROLL-FILL WRAPPER ===== -->
-  <div class="poem-wrap" id="poemWrap">
-    <!-- Base (interactive) layer -->
-    <div class="poem poem-base" id="poemBase">
+  <div class="poem" id="poem">
+    <p>
+      <span class="reveal">Pinguins are communists!</span><br><br>
 
-      <!-- Opening + requested sidenotes -->
-      <p class="reveal">Pinguins are communists!</p>
-
-      <p class="reveal">the Great Auk,
+      <span class="reveal">the Great Auk,
         <label for="sn-auk" class="margin-toggle sidenote-number"></label>
         <input type="checkbox" id="sn-auk" class="margin-toggle" />
         <span class="sidenote"><em>Pinguinus impennis</em>, the extinct North Atlantic seabird—the original “pinguin.”</span>
-      </p>
+      </span><br><br>
 
-      <p class="reveal">the OG pinguin—</p>
-      <p class="reveal">do not confuse</p>
-      <p class="reveal">with penguin, different</p>
-      <p class="reveal">bird, ask Bonaparte,</p>
-      <p class="reveal">or Bromelia plants (see Olof, Swede)—
+      <span class="reveal">the OG pinguin—</span><br><br>
+      <span class="reveal">do not confuse</span><br><br>
+      <span class="reveal">with penguin, different</span><br><br>
+      <span class="reveal">bird, ask Bonaparte,</span><br><br>
+      <span class="reveal">or Bromelia plants (see Olof, Swede)—
         <label for="sn-olof" class="margin-toggle sidenote-number"></label>
         <input type="checkbox" id="sn-olof" class="margin-toggle" />
         <span class="sidenote">Olof (the Swede) — the botanist linked to the naming of <em>Bromelia</em>.</span>
-      </p>
+      </span><br><br>
 
-      <p class="reveal">a true comrade&nbsp;&nbsp;&nbsp;&nbsp;
+      <span class="reveal">a true comrade&nbsp;&nbsp;&nbsp;&nbsp;
         <label for="sn-peng" class="margin-toggle sidenote-number"></label>
         <input type="checkbox" id="sn-peng" class="margin-toggle" />
-        <span class="sidenote">like PENG-gwin, /ˈpɛŋɡwɪn/<br/>probably from the Welsh<br/><strong>pen</strong> + <strong>gwyn</strong> = white-head</span>
-      </p>
+        <span class="sidenote">like PENG-gwin, /ˈpɛŋɡwɪn/<br>probably from the Welsh<br><strong>pen</strong> + <strong>gwyn</strong> = white-head</span>
+      </span><br><br>
 
-      <!-- etymology lines moved to sidenote per request -->
+      <span class="reveal">collected by Europeans</span><br><br>
+      <span class="reveal">trophies in cabinets</span><br><br>
+      <span class="reveal">hunted to death</span><br><br>
+      <span class="reveal">by false Americans</span><br><br>
+      <span class="reveal">plucked bare naked</span><br><br>
+      <span class="reveal">like fat chickens</span><br><br>
+      <span class="reveal">flogged for crimes</span><br><br>
+      <span class="reveal">they never committed</span><br><br>
+      <span class="reveal">burnt on stakes</span><br><br>
+      <span class="reveal">screaming for help</span><br><br>
+      <span class="reveal">flesh ripped apart</span><br><br>
+      <span class="reveal">by white teeth</span><br><br>
 
-      <br><br>
+      <span class="reveal">males incubate eggs</span><br><br>
+      <span class="reveal">while females forage</span><br><br>
+      <span class="reveal">always switching roles</span><br><br>
+      <span class="reveal">communal clusters cover</span><br><br>
+      <span class="reveal">resources equally shared</span><br><br>
+      <span class="reveal">food, care, nesting</span><br><br>
+      <span class="reveal">huddling for warmth</span><br><br>
+      <span class="reveal">from glacial winds</span><br><br>
+      <span class="reveal">maximising all survival</span><br><br>
 
-      <p class="reveal">collected by Europeans</p>
-      <p class="reveal">trophies in cabinets</p>
-      <p class="reveal">hunted to death</p>
-      <p class="reveal">by false Americans</p>
-      <p class="reveal">plucked bare naked</p>
-      <p class="reveal">like fat chickens</p>
-      <p class="reveal">flogged for crimes</p>
-      <p class="reveal">they never committed</p>
-      <p class="reveal">burnt on stakes</p>
-      <p class="reveal">screaming for help</p>
-      <p class="reveal">flesh ripped apart</p>
-      <p class="reveal">by white teeth</p>
+      <span class="reveal">until Iceland’s sons</span><br><br>
 
-      <br><br>
+      <span class="reveal pi-ital">ég tók hann</span><br><br>
+      <span class="reveal pi-ital">í hálsinn og</span><br><br>
+      <span class="reveal pi-ital">hann blakti vængjunum</span><br><br>
+      <span class="reveal pi-ital">hann grét ekki</span><br><br>
+      <span class="reveal pi-ital">ég kyrkti hann</span><br><br>
 
-      <p class="reveal">males incubate eggs</p>
-      <p class="reveal">while females forage</p>
-      <p class="reveal">always switching roles</p>
-      <p class="reveal">communal clusters cover</p>
-      <p class="reveal">resources equally shared</p>
-      <p class="reveal">food, care, nesting</p>
-      <p class="reveal">huddling for warmth</p>
-      <p class="reveal">from glacial winds</p>
-      <p class="reveal">maximising all survival</p>
+      <span class="reveal">3. júní 1844</span><br><br>
 
-      <br><br>
+      <span class="reveal">the Great Auk</span><br><br>
+      <span class="reveal">martyr of Marx</span><br><br>
+      <span class="reveal">before its time</span><br><br>
 
-      <p class="reveal">until Iceland’s sons</p>
-
-      <p class="pi-ital reveal">ég tók hann</p>
-      <p class="pi-ital reveal">í hálsinn og</p>
-      <p class="pi-ital reveal">hann blakti vængjunum</p>
-      <p class="pi-ital reveal">hann grét ekki</p>
-      <p class="pi-ital reveal">ég kyrkti hann</p>
-
-      <p class="reveal">3. júní 1844</p>
-
-      <p class="reveal">the Great Auk</p>
-      <p class="reveal">martyr of Marx</p>
-      <p class="reveal">before its time</p>
-
-      <p class="reveal">Penguins are communists!</p>
-
-    </div><!-- /.poem-base -->
-    <!-- JS inserts the overlay here -->
-  </div><!-- /.poem-wrap -->
+      <span class="reveal">Penguins are communists!</span>
+    </p>
+  </div>
 </article>
 
 <script>
@@ -147,62 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasGSAP = typeof gsap !== 'undefined';
 
-  /* ---------- SCROLL-FILL overlay clone (Safari-safe) ---------- */
-  const wrap = document.getElementById('poemWrap');
-  const base = document.getElementById('poemBase');
-
-  // Create overlay clip container and clone
-  const clip = document.createElement('div');
-  clip.className = 'poem-fill-clip';
-  const fill = base.cloneNode(true);
-  fill.classList.remove('poem-base');
-  fill.classList.add('poem', 'poem-fill');
-  fill.removeAttribute('id');
-  // remove duplicate IDs + sidenote UI in overlay
-  fill.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-  fill.querySelectorAll('.sidenote, .margin-toggle, input[type="checkbox"]').forEach(el => el.remove());
-  clip.appendChild(fill);
-  wrap.appendChild(clip);
-
-  // Progress function: set clip height directly (0–100%)
-  function clamp(v, a, b){ return Math.min(b, Math.max(a, v)); }
-  function updateFill() {
-    if (reduce) { clip.style.height = '100%'; return; }
-    const r = wrap.getBoundingClientRect();
-    const vh = window.innerHeight || 1;
-    const total = r.height + vh;                   // enter → leave
-    const p = clamp((vh - r.top) / total, 0, 1);   // 0..1
-    clip.style.height = (p * 100).toFixed(2) + '%';
-  }
-  updateFill();
-  addEventListener('scroll', updateFill, { passive: true });
-  addEventListener('resize', updateFill);
-
-  /* ---------- tiny inline character splitter ---------- */
-  function splitCharsIn(el) {
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
-      acceptNode(n) { return /\S/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
-    });
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(node => {
-      const parent = node.parentElement;
-      if (parent && (parent.closest('.sidenote') || parent.closest('label') || parent.closest('input'))) return;
-      const frag = document.createDocumentFragment();
-      for (const ch of node.nodeValue) {
-        if (ch === ' ') { frag.appendChild(document.createTextNode(' ')); continue; }
-        const span = document.createElement('span');
-        span.className = 'char'; span.textContent = ch;
-        frag.appendChild(span);
-      }
-      node.parentNode.replaceChild(frag, node);
-    });
-  }
-  // Split chars for bloom targets + any marked lines in BOTH layers (none required yet but baseline-ready)
-  base.querySelectorAll('.gsap-bloom').forEach(splitCharsIn);
-  fill.querySelectorAll('.gsap-bloom').forEach(splitCharsIn);
-
-  /* ------------------------ scroll reveal ------------------------ */
   const revealEls = Array.from(document.querySelectorAll('.reveal'));
   if (!reduce && 'IntersectionObserver' in window && hasGSAP) {
     const io = new IntersectionObserver((entries) => {
@@ -217,8 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
   }
-
-  if (!hasGSAP) return;
 });
 </script>
 
