@@ -25,6 +25,10 @@
     /* visible-by-default */
     .reveal{ opacity:1; transform:none; }
 
+    /* ensure consistent line sizing everywhere */
+    .poem .line{ font-size:1em; }
+    .poem .line .char{ font-size:inherit; }
+
     /* per-char */
     .char{ display:inline-block; will-change:transform, filter, color, opacity; }
 
@@ -57,9 +61,9 @@
     .note-media{ width:240px; max-width:90vw; }
     .note-media video{ width:100%; height:auto; display:block; border-radius:10px; }
 
-    /* final sidenote (checkbox-driven show/hide) */
+    /* final sidenote (checkbox-driven show/hide) — use inline so Tufte float rules apply */
     #sn-final + .final-note{ display:none; }
-    #sn-final:checked + .final-note{ display:inline-block; }
+    #sn-final:checked + .final-note{ display:inline; }
     .pc-trigger{ text-decoration: underline; text-decoration-thickness:.06em; cursor:pointer; }
 
     .back{ margin:3rem 0 4rem; font-size:.95rem; }
@@ -94,6 +98,11 @@
     <div class="poem-wrap" id="poemWrap">
       <!-- Base (interactive) layer -->
       <article class="poem poem-base" id="poemBase">
+
+        <!-- 10 blank lines at the beginning -->
+        <p class="reveal" aria-hidden="true" style="line-height:1.6">
+          <br><br><br><br><br><br><br><br><br><br>
+        </p>
 
         <!-- Mirrored opener -->
         <div class="mirror-wrap reveal">
@@ -183,8 +192,9 @@
           </span>
 
           <br>
-          <span class="line">exfoliators, moisturising suspensions,</span><br>
-          <span class="line">organic cold-pressed Moroccan argan oil</span>
+          <!-- Force same size as the rest to avoid any Tufte side-effects -->
+          <span class="line same-size">exfoliators, moisturising suspensions,</span><br>
+          <span class="line same-size">organic cold-pressed Moroccan argan oil</span>
         </p>
 
         <br><br>
@@ -194,7 +204,7 @@
           <span class="line"><span id="pc-trigger" class="pc-trigger">‘Postmodern Cynicism’</span> exists only online,</span><br>
           <span class="line">you should go on his Facebook sometime</span>
 
-          <!-- Hidden toggle + sidenote (appears on click) -->
+          <!-- Hidden toggle + sidenote (appears on click in right-hand margin) -->
           <input type="checkbox" id="sn-final" class="margin-toggle" />
           <span class="marginnote final-note">
             <div style="margin-top:.25rem;">
@@ -208,13 +218,19 @@
             </div>
           </span>
         </p>
+
+        <!-- 10 blank lines at the end -->
+        <p class="reveal" aria-hidden="true" style="line-height:1.6">
+          <br><br><br><br><br><br><br><br><br><br>
+        </p>
+
+        <p class="back">← <a href="./">back to poems</a></p>
       </article>
       <!-- Overlay (auto-cloned) goes here -->
     </div>
   </main>
 
   <script>
-    // Fallback if GSAP unavailable: page still readable.
     if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
       gsap.registerPlugin(ScrollTrigger);
     }
@@ -228,7 +244,6 @@
       var clip = document.createElement('div');
       clip.className = 'poem-fill-clip';
 
-      // clone the base
       var fill = base.cloneNode(true);
       fill.classList.remove('poem-base');
       fill.classList.add('poem', 'poem-fill');
@@ -244,14 +259,13 @@
       wrap.appendChild(clip);
 
       var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
       function clamp(v,a,b){ return Math.min(b, Math.max(a,v)); }
       function updateFill(){
         if (reduce) { clip.style.height = '100%'; return; }
         var r = wrap.getBoundingClientRect();
         var vh = window.innerHeight || 1;
-        var total = r.height + vh;                 // enter → leave
-        var p = clamp((vh - r.top) / total, 0, 1); // 0..1
+        var total = r.height + vh;
+        var p = clamp((vh - r.top) / total, 0, 1);
         clip.style.height = (p*100).toFixed(2) + '%';
       }
       updateFill();
@@ -388,9 +402,9 @@
         function showNote(){
           if (!checkbox.checked){
             checkbox.checked = true;
-            var note = checkbox.nextElementSibling;
+            var note = checkbox.nextElementSibling; // .final-note (marginnote)
             if (note) gsap.fromTo(note, {opacity:0, y:8}, {opacity:1, y:0, duration:0.5, ease:"power2.out"});
-            if (!yt.src) yt.src = yt.getAttribute('data-src');
+            if (!yt.src) yt.src = yt.getAttribute('data-src'); // lazy-load + autoplay
           }
         }
         trigger.addEventListener('click', showNote);
@@ -425,7 +439,5 @@
       window.addEventListener('load', function(){ try{ ScrollTrigger.refresh(); }catch(e){} });
     }
   </script>
-    <!-- Back link -->
-  <p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
 </body>
 </html>
