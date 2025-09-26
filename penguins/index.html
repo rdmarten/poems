@@ -18,8 +18,11 @@
     .pi-ital { font-style: italic; }
 
     /* Scroll reveal initial state */
-    .reveal { opacity: 0; transform: translateY(12px); display: inline-block; }
-  </style>
+.reveal { opacity: 0; transform: translateY(12px); display: inline; }
+
+/* Any line that contains a sidenote should be block-level
+   so Tufte’s floated .sidenote aligns in the same margin column */
+.reveal:has(.sidenote) { display: block; }
 
   <!-- GSAP only (no overlay fill) -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
