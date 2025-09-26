@@ -2,144 +2,226 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Pinguins are communists!</title>
 
   <!-- Tufte CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css" integrity="sha512-HH8X7r0Hc8B8hQXg6HHw4VX7rm1zti1+Q6wV8dml1I0QeSBq1+z5zU0n4yFlcJZ2f2O8sX9z8JRU6V2l0Q9zPA==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
-
-  <!-- GSAP + ScrollTrigger -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-+w3c6x6y0M2l7F8fKJx9u1I6QK+3oK9y8h9kZPp0b+kbmZKc4wJjz2b9k7E0m9prwQ0Qm4mQ7o9W5t7aK4HfGQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha512-3K3qfHcQw/Kk6vJ4+Qm1Q3iGq3mH2e5V6b7g8r9j1g/1yD1m2kQ1b4mZs9u7Ywqf1m2tK8m3YQm4p9yQX8j6pA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
 
   <style>
-    /* Layout */
-    .pi-tufte { max-width: 70ch; margin: 0 auto; padding: 2rem 1rem 6rem; }
-    .subtitle { font-size: 1rem; color: #666; }
+    /* Layout + tighter spacing */
+    .pi-tufte { max-width: 70ch; margin: 0 auto; }
+    .pi-tufte .poem { font-size: 0.50rem; line-height: 1.5; }
+    .pi-tufte .poem p { margin: 0.15rem 0; }
 
-    /* Poem typography */
-    .poem { font-size: 1.05rem; line-height: 1.5; }
-    .poem p { margin: 0.25rem 0; }
-    .italic { font-style: italic; }
+    /* Per-character animation */
+    .char { display: inline-block; will-change: transform, color; }
 
-    /* Scroll-reveal base state */
-    .line { opacity: 0; transform: translateY(8px); will-change: transform, opacity; }
+    /* Italic helper */
+    .pi-ital { font-style: italic; }
 
-    /* Small helpers */
-    .spacer { height: 0.5rem; }
+    /* Clickable audio word */
+    .pi-audio { text-decoration: underline; cursor: pointer; }
+    .pi-audio[aria-pressed="true"] { text-decoration: underline dotted; }
 
-    /* Respect prefers-reduced-motion */
-    @media (prefers-reduced-motion: reduce) {
-      .line { opacity: 1 !important; transform: none !important; }
+    /* GSAP blooms in italics */
+    .gsap-bloom { font-style: italic; }
+
+    /* Title layout */
+    .pi-title { font-size: 2.5rem; margin: 0 0 0.8rem; font-style: normal; }
+    .pi-subtitle { font-size: 1.75rem; margin: -0.2rem 0 1.0rem; color: #666; font-style: italic; }
+
+    /* Scroll reveal initial state */
+    .reveal { opacity: 0; transform: translateY(12px); }
+
+    /* ===== Scroll-fill (overlay clone with growing height) ===== */
+    .poem-wrap { position: relative; }
+    .poem-base { color: #9a9a9a; }
+    .poem-fill-clip {
+      position: absolute; inset: 0;
+      overflow: hidden;               /* the “mask” */
+      height: 0%;                     /* JS sets 0–100% */
+      pointer-events: none;           /* clicks go to base layer */
     }
+    .poem-fill { color: #fff; }
+    /* Don’t render sidenote UI in the overlay copy */
+    .poem-fill .sidenote,
+    .poem-fill .margin-toggle,
+    .poem-fill input[type="checkbox"] { display: none !important; }
   </style>
+
+  <!-- Libraries -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/splitting@1.0.6/dist/splitting.min.js"></script>
+  <script async src="https://www.youtube.com/iframe_api"></script>
 </head>
-<body class="pi-tufte">
-  <header>
-    <h1>Pinguins are communists!</h1>
-    <p class="subtitle">an interactive poem (Tufte CSS + GSAP scroll‑reveal)</p>
-  </header>
+<body>
 
-  <article class="poem">
-    <p class="line">Pinguins are communists!</p>
+<article class="pi-tufte">
+  <h2 class="pi-title"><i>Pinguins are communists!</i></h2>
 
-    <p class="line">the Great Auk,
-      <label for="sn-auk" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-auk" class="margin-toggle"/>
-      <span class="sidenote">Pinguinus <em>impennis</em> — the extinct North Atlantic seabird; the original “pinguin,” not a penguin.</span>
-    </p>
+  <!-- ===== SCROLL-FILL WRAPPER ===== -->
+  <div class="poem-wrap" id="poemWrap">
+    <!-- Base (interactive) layer -->
+    <div class="poem poem-base" id="poemBase">
 
-    <p class="line">the OG pinguin—</p>
-    <p class="line">do not confuse</p>
-    <p class="line">with penguin, different</p>
-    <p class="line">bird, ask Bonaparte,</p>
-    <p class="line">or Bromelia plants (see Olof, Swede)—
-      <label for="sn-olof" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-olof" class="margin-toggle"/>
-      <span class="sidenote"><em>Bromelia</em> is named for Olof Bromelius (1639–1705), a Swedish botanist and physician.</span>
-    </p>
-    
-    <p class="line">a true comrade&nbsp;&nbsp;&nbsp;&nbsp;
-      <label for="sn-peng" class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="sn-peng" class="margin-toggle"/>
-      <span class="sidenote">like PENG-gwin, /ˈpɛŋɡwɪn/<br/>probably from the Welsh<br/><strong>pen</strong> + <strong>gwyn</strong> = white-head</span>
-    </p>
+      <!-- Opening + requested sidenotes -->
+      <p class="reveal">Pinguins are communists!</p>
 
-    <p class="line">like PENG-gwin, /ˈpɛŋɡwɪn/</p>
-    <p class="line">probably from the Welsh</p>
-    <p class="line">pen + gwyn = white-head</p>
+      <p class="reveal">the Great Auk,
+        <label for="sn-auk" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-auk" class="margin-toggle" />
+        <span class="sidenote"><em>Pinguinus impennis</em>, the extinct North Atlantic seabird—the original “pinguin.”</span>
+      </p>
 
-    <div class="spacer"></div>
+      <p class="reveal">the OG pinguin—</p>
+      <p class="reveal">do not confuse</p>
+      <p class="reveal">with penguin, different</p>
+      <p class="reveal">bird, ask Bonaparte,</p>
+      <p class="reveal">or Bromelia plants (see Olof, Swede)—
+        <label for="sn-olof" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-olof" class="margin-toggle" />
+        <span class="sidenote">Olof (the Swede) — the botanist linked to the naming of <em>Bromelia</em>.</span>
+      </p>
 
-    <p class="line">collected by Europeans</p>
-    <p class="line">trophies in cabinets</p>
-    <p class="line">hunted to death</p>
-    <p class="line">by false Americans</p>
-    <p class="line">plucked bare naked</p>
-    <p class="line">like fat chickens</p>
-    <p class="line">flogged for crimes</p>
-    <p class="line">they never committed</p>
-    <p class="line">burnt on stakes</p>
-    <p class="line">screaming for help</p>
-    <p class="line">flesh ripped apart</p>
-    <p class="line">by white teeth</p>
+      <p class="reveal">a true comrade&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="sn-peng" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="sn-peng" class="margin-toggle" />
+        <span class="sidenote">like PENG-gwin, /ˈpɛŋɡwɪn/<br/>probably from the Welsh<br/><strong>pen</strong> + <strong>gwyn</strong> = white-head</span>
+      </p>
 
-    <div class="spacer"></div>
+      <!-- etymology lines moved to sidenote per request -->
 
-    <p class="line">males incubate eggs</p>
-    <p class="line">while females forage</p>
-    <p class="line">always switching roles</p>
-    <p class="line">communal clusters cover</p>
-    <p class="line">resources equally shared</p>
-    <p class="line">food, care, nesting</p>
-    <p class="line">huddling for warmth</p>
-    <p class="line">from glacial winds</p>
-    <p class="line">maximising all survival</p>
+      <br><br>
 
-    <div class="spacer"></div>
+      <p class="reveal">collected by Europeans</p>
+      <p class="reveal">trophies in cabinets</p>
+      <p class="reveal">hunted to death</p>
+      <p class="reveal">by false Americans</p>
+      <p class="reveal">plucked bare naked</p>
+      <p class="reveal">like fat chickens</p>
+      <p class="reveal">flogged for crimes</p>
+      <p class="reveal">they never committed</p>
+      <p class="reveal">burnt on stakes</p>
+      <p class="reveal">screaming for help</p>
+      <p class="reveal">flesh ripped apart</p>
+      <p class="reveal">by white teeth</p>
 
-    <p class="line">until Iceland’s sons</p>
+      <br><br>
 
-    <p class="line italic">ég tók hann</p>
-    <p class="line italic">í hálsinn og</p>
-    <p class="line italic">hann blakti vængjunum</p>
-    <p class="line italic">hann grét ekki</p>
-    <p class="line italic">ég kyrkti hann</p>
+      <p class="reveal">males incubate eggs</p>
+      <p class="reveal">while females forage</p>
+      <p class="reveal">always switching roles</p>
+      <p class="reveal">communal clusters cover</p>
+      <p class="reveal">resources equally shared</p>
+      <p class="reveal">food, care, nesting</p>
+      <p class="reveal">huddling for warmth</p>
+      <p class="reveal">from glacial winds</p>
+      <p class="reveal">maximising all survival</p>
 
-    <p class="line">3. júní 1844</p>
+      <br><br>
 
-    <p class="line">the Great Auk</p>
-    <p class="line">martyr of Marx</p>
-    <p class="line">before its time</p>
+      <p class="reveal">until Iceland’s sons</p>
 
-    <p class="line">Penguins are communists!</p>
-  </article>
+      <p class="pi-ital reveal">ég tók hann</p>
+      <p class="pi-ital reveal">í hálsinn og</p>
+      <p class="pi-ital reveal">hann blakti vængjunum</p>
+      <p class="pi-ital reveal">hann grét ekki</p>
+      <p class="pi-ital reveal">ég kyrkti hann</p>
 
-  <script>
-    // GSAP Scroll-reveal (as used in previous "Ostende, bonsoir" work)
-    // Fade + gentle rise for each line when it enters the viewport.
-    gsap.registerPlugin(ScrollTrigger);
+      <p class="reveal">3. júní 1844</p>
 
-    gsap.utils.toArray('.line').forEach((el, i) => {
-      gsap.fromTo(el,
-        { opacity: 0, y: 8 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power2.out',
-          delay: (i % 5) * 0.02, // tiny desync so stacked lines feel organic
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 85%',
-            once: false, // reveal again if scrolled back up
-            toggleActions: 'play none none reverse'
-          }
-        }
-      );
+      <p class="reveal">the Great Auk</p>
+      <p class="reveal">martyr of Marx</p>
+      <p class="reveal">before its time</p>
+
+      <p class="reveal">Penguins are communists!</p>
+
+    </div><!-- /.poem-base -->
+    <!-- JS inserts the overlay here -->
+  </div><!-- /.poem-wrap -->
+</article>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGSAP = typeof gsap !== 'undefined';
+
+  /* ---------- SCROLL-FILL overlay clone (Safari-safe) ---------- */
+  const wrap = document.getElementById('poemWrap');
+  const base = document.getElementById('poemBase');
+
+  // Create overlay clip container and clone
+  const clip = document.createElement('div');
+  clip.className = 'poem-fill-clip';
+  const fill = base.cloneNode(true);
+  fill.classList.remove('poem-base');
+  fill.classList.add('poem', 'poem-fill');
+  fill.removeAttribute('id');
+  // remove duplicate IDs + sidenote UI in overlay
+  fill.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+  fill.querySelectorAll('.sidenote, .margin-toggle, input[type="checkbox"]').forEach(el => el.remove());
+  clip.appendChild(fill);
+  wrap.appendChild(clip);
+
+  // Progress function: set clip height directly (0–100%)
+  function clamp(v, a, b){ return Math.min(b, Math.max(a, v)); }
+  function updateFill() {
+    if (reduce) { clip.style.height = '100%'; return; }
+    const r = wrap.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    const total = r.height + vh;                   // enter → leave
+    const p = clamp((vh - r.top) / total, 0, 1);   // 0..1
+    clip.style.height = (p * 100).toFixed(2) + '%';
+  }
+  updateFill();
+  addEventListener('scroll', updateFill, { passive: true });
+  addEventListener('resize', updateFill);
+
+  /* ---------- tiny inline character splitter ---------- */
+  function splitCharsIn(el) {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) { return /\S/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
     });
-  </script>
-    <!-- Back link -->
-  <p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+      const parent = node.parentElement;
+      if (parent && (parent.closest('.sidenote') || parent.closest('label') || parent.closest('input'))) return;
+      const frag = document.createDocumentFragment();
+      for (const ch of node.nodeValue) {
+        if (ch === ' ') { frag.appendChild(document.createTextNode(' ')); continue; }
+        const span = document.createElement('span');
+        span.className = 'char'; span.textContent = ch;
+        frag.appendChild(span);
+      }
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+  // Split chars for bloom targets + any marked lines in BOTH layers (none required yet but baseline-ready)
+  base.querySelectorAll('.gsap-bloom').forEach(splitCharsIn);
+  fill.querySelectorAll('.gsap-bloom').forEach(splitCharsIn);
+
+  /* ------------------------ scroll reveal ------------------------ */
+  const revealEls = Array.from(document.querySelectorAll('.reveal'));
+  if (!reduce && 'IntersectionObserver' in window && hasGSAP) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(({target, isIntersecting}) => {
+        if (isIntersecting) {
+          io.unobserve(target);
+          gsap.to(target, {opacity: 1, y: 0, duration: 0.6, ease: 'power1.out'});
+        }
+      });
+    }, {root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1});
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+  }
+
+  if (!hasGSAP) return;
+});
+</script>
+
+<p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
 </body>
 </html>
