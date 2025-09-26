@@ -20,9 +20,9 @@
     /* Italic helper */
     .pi-ital { font-style: italic; }
 
-    /* Clickable audio word */
-    .pi-audio { text-decoration: underline; cursor: pointer; }
-    .pi-audio[aria-pressed="true"] { text-decoration: underline dotted; }
+    /* Clickable Icelandic lines */
+    .is-icelandic { cursor: pointer; text-decoration: underline dotted; }
+    .is-icelandic:focus { outline: 2px solid currentColor; outline-offset: 2px; }
 
     /* Title layout */
     .pi-title { font-size: 2.5rem; margin: 0 0 0.8rem; font-style: normal; }
@@ -41,7 +41,7 @@
 <body>
 
 <article class="pi-tufte">
-  <h2 class="pi-title"><i>Pinguins are communists!</i></h2>
+  <h2 class="pi-title"><i>Pinguins are communists!</i></h2><br><br>
 
   <div class="poem" id="poem">
     <p>
@@ -94,22 +94,28 @@
 
       <span class="reveal">until Iceland’s sons</span><br><br>
 
-      <span class="reveal pi-ital">ég tók hann</span><br>
-      <span class="reveal pi-ital">í hálsinn og</span><br>
-      <span class="reveal pi-ital">hann blakti vængjunum</span><br>
-      <span class="reveal pi-ital">hann grét ekki</span><br>
-      <span class="reveal pi-ital">ég kyrkti hann</span><br>
+      <!-- Icelandic lines: add .is-icelandic and a11y -->
+      <span class="reveal pi-ital is-icelandic" role="button" tabindex="0" aria-label="Play Icelandic narration">ég tók hann</span><br>
+      <span class="reveal pi-ital is-icelandic" role="button" tabindex="0" aria-label="Play Icelandic narration">í hálsinn og</span><br>
+      <span class="reveal pi-ital is-icelandic" role="button" tabindex="0" aria-label="Play Icelandic narration">hann blakti vængjunum</span><br>
+      <span class="reveal pi-ital is-icelandic" role="button" tabindex="0" aria-label="Play Icelandic narration">hann grét ekki</span><br>
+      <span class="reveal pi-ital is-icelandic" role="button" tabindex="0" aria-label="Play Icelandic narration">ég kyrkti hann</span><br><br>
 
       <span class="reveal">3. júní 1844</span><br><br>
 
       <span class="reveal">the Great Auk</span><br>
       <span class="reveal">martyr of Marx</span><br>
-      <span class="reveal">before its time</span><br>
+      <span class="reveal">before its time</span><br><br>
 
+      <span class="reveal">Pinguins are communists!</span>
       <span class="reveal">Penguins are communists!</span>
+      <span class="reveal">Rejoice, for the penguins<br>are true communists!</span>
     </p>
   </div>
 </article>
+
+<!-- Single audio source (replace src with your MP3 path) -->
+<audio id="icelandic-voice" src="./icelandic_karl_slow_croaky.mp3" preload="auto"></audio>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -130,6 +136,28 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
   }
+
+  /* ---- Audio: play narration when any Icelandic line is clicked or focused + Enter/Space ---- */
+  const audio = document.getElementById('icelandic-voice');
+  const iceLines = document.querySelectorAll('.is-icelandic');
+
+  function playIcelandic() {
+    try {
+      audio.currentTime = 0;
+      const p = audio.play();
+      if (p && typeof p.catch === 'function') p.catch(()=>{ /* ignore blocked autoplay */ });
+    } catch(e) { /* no-op */ }
+  }
+
+  iceLines.forEach(el => {
+    el.addEventListener('click', playIcelandic);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        playIcelandic();
+      }
+    });
+  });
 });
 </script>
 
