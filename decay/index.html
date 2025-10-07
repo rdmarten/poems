@@ -8,6 +8,9 @@
   <!-- Tufte CSS for typography -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css" />
 
+  <!-- GSAP for animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
   <style>
     :root {
       --box-bg: rgba(255, 255, 255, 0.85);
@@ -72,6 +75,37 @@
     /* Tufte-esque sizing tweaks */
     .poem-box .poem-text { font-size: clamp(1rem, 2.6vw, 1.25rem); line-height: 1.5; }
 
+    /* Single moving text element */
+    .poem-chunk {
+      position: absolute;
+      max-width: var(--max-width-ch);
+      background: transparent;
+      color: var(--box-fg);
+      padding: 0;
+      pointer-events: auto;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      opacity: 0; /* GSAP fades in */
+    }
+
+    /* Back link styling (above overlays) */
+    .backlink {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      padding: 0.25rem 0.5rem;
+      border-radius: 8px;
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+      font-size: 0.9rem;
+      pointer-events: auto;
+    }
+    .backlink a { color: #fff; text-decoration: none; }
+    .backlink a:hover { text-decoration: underline; }
+
     /* Credit box fixed in a corner */
     .credit {
       position: fixed;
@@ -126,24 +160,62 @@
     Video © <a href="https://www.instagram.com/reel/DPPvy3rjlkg/?igsh=MTNodXE4YTRhcTFjeg%3D%3D" target="_blank" rel="noopener">Mailey Horner</a>
   </div>
 
+  <!-- Tiny controls: load a local video -->
+  <div class="controls et-book">
+    <label>Load video <input type="file" id="filePicker" accept="video/*" style="display:none"></label>
+    <span id="status"></span>
+  </div>
+
   <script>
-    // Configuration
+  (function(){
+    // ====== Setup & constants ======
     const video = document.getElementById('bgvid');
     const overlay = document.getElementById('overlay');
+    const statusEl = document.getElementById('status');
+    const filePicker = document.getElementById('filePicker');
 
-    // Slow playback
-    video.playbackRate = 0.1;
-    video.loop = true;
-    video.width = 928; video.height = 720;
+    // Continuous slow playback at 0.2x
+    function ensurePlayback() {
+      // make absolutely sure the right attributes are set for iOS
+      video.muted = true; video.setAttribute('muted', '');
+      video.playsInline = true; video.setAttribute('playsinline', '');
+      video.autoplay = true; video.loop = true; video.playbackRate = 0.2;
 
-    // Timing: first click 6s, then 3s thereafter
-    let nextWindowMs = 6000;
+      const tryPlay = () => {
+        const p = video.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      };
 
-    // Bounds for random placement
-    const MIN_VW = 12, MAX_VW = 88; // horizontal range
-    const MIN_VH = 14, MAX_VH = 86; // vertical range
+      tryPlay();
+      ['loadedmetadata','canplay','canplaythrough','stalled','suspend'].forEach(ev => {
+        video.addEventListener(ev, tryPlay);
+      });
+      document.addEventListener('pointerdown', tryPlay, { once: true });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) tryPlay(); });
+      video.addEventListener('pause', () => { if (!document.hidden) tryPlay(); });
+      video.addEventListener('ratechange', () => { if (video.playbackRate !== 0.2) video.playbackRate = 0.2; });
+    }
+    ensurePlayback();
 
-    // The poem, paragraph-by-paragraph, in strict order
+    // Re-load custom video if user chooses one
+    if (filePicker) {
+      filePicker.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          const url = URL.createObjectURL(file);
+          while (video.firstChild) video.removeChild(video.firstChild);
+          const src = document.createElement('source');
+          src.src = url;
+          src.type = file.type || 'video/mp4';
+          video.appendChild(src);
+          video.load();
+          if (statusEl) statusEl.textContent = 'Video loaded';
+          ensurePlayback();
+        }
+      });
+    }
+
+    // ====== Poem content (strict order) ======
     const lines = [
 `“Palimpsest of decay” - MH `,
 
@@ -176,13 +248,9 @@ carved`,
 `\n\n\n“Mommy might quietly say ‘I like all my babies equally’ if” - MH`
     ];
 
-    // Create a single clickable text element to guarantee chronological order
-    const chunk = document.createElement('div');
-    chunk.className = 'poem-chunk et-book';
-    const textEl = document.createElement('div');
-    textEl.className = 'poem-text';
-    chunk.appendChild(textEl);
-    overlay.appendChild(chunk);
+    // Bounds for random placement
+    const MIN_VW = 12, MAX_VW = 88; // horizontal
+    const MIN_VH = 14, MAX_VH = 86; // vertical
 
     function randomPos() {
       const left = MIN_VW + Math.random() * (MAX_VW - MIN_VW);
@@ -190,47 +258,77 @@ carved`,
       return { left, top };
     }
 
+    // Single clickable text element to guarantee chronology
+    const chunk = document.createElement('div');
+    chunk.className = 'poem-chunk et-book';
+    const textEl = document.createElement('div');
+    textEl.className = 'poem-text';
+    chunk.appendChild(textEl);
+    overlay.appendChild(chunk);
+
+    // Soft fade with GSAP each reveal (opacity only so we don't clobber translate)
+    function fadeInChunk() {
+      if (window.gsap) {
+        gsap.killTweensOf(chunk);
+        gsap.set(chunk, { opacity: 0 });
+        gsap.to(chunk, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+      } else {
+        chunk.style.opacity = 1;
+      }
+    }
+
     let current = 0;
     function showCurrent() {
       const { left, top } = randomPos();
       chunk.style.left = left + 'vw';
       chunk.style.top = top + 'vh';
+      // re-apply translate centering in case any animation changed transform
+      chunk.style.transform = 'translate(-50%, -50%)';
       textEl.textContent = lines[current];
-      requestAnimationFrame(() => chunk.classList.add('show'));
+      fadeInChunk();
     }
 
-    async function playSliceThenAdvance() {
-      try { await video.play(); } catch (e) {}
-      setTimeout(() => {
-        video.pause();
-        current = (current + 1) % lines.length; // always next, then loop
-        nextWindowMs = 3000; // after first click
-        chunk.classList.remove('show');
+    const ADVANCE_DELAY_MS = 2000; // 2 seconds after click
+    let pending = null;
+
+    function advanceAfterDelay() {
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(() => {
+        current = (current + 1) % lines.length;
         showCurrent();
-      }, nextWindowMs);
+      }, ADVANCE_DELAY_MS);
     }
 
-    // Click the text itself to trigger playback/advance
+    // Clicking the text advances (no effect on video)
     chunk.addEventListener('click', (e) => {
       e.stopPropagation();
-      playSliceThenAdvance();
+      advanceAfterDelay();
     });
 
-    // Keep element inside viewport on resize/orientation change
+    // Keep the element inside the viewport on resize/orientation change
     window.addEventListener('resize', () => {
       const { left, top } = randomPos();
       chunk.style.left = left + 'vw';
       chunk.style.top = top + 'vh';
     });
 
-    // Maintain 0.1x rate if browser fiddles with it
-    video.addEventListener('ratechange', () => {
-      if (video.playbackRate !== 0.1) video.playbackRate = 0.1;
-    });
+    // Robust backlink handler for constrained preview environments
+    const backA = document.getElementById('backlink');
+    if (backA) {
+      backA.addEventListener('click', function(e){
+        // In sandboxes/data URLs, default navigation may be blocked
+        if (location.protocol === 'blob:' || location.protocol === 'data:') {
+          e.preventDefault();
+          if (history.length > 1) history.back();
+          else window.location.href = this.getAttribute('href');
+        }
+      });
+    }
 
-    // Start
+    // Initial reveal
     showCurrent();
+  })();
   </script>
-  <p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
+  <div class="backlink et-book"><a id="backlink" href="../index.html">← back to poems</a></div>
 </body>
 </html>
