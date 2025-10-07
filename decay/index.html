@@ -179,7 +179,7 @@
       // make absolutely sure the right attributes are set for iOS
       video.muted = true; video.setAttribute('muted', '');
       video.playsInline = true; video.setAttribute('playsinline', '');
-      video.autoplay = true; video.loop = true; video.playbackRate = 0.1;
+      video.autoplay = true; video.loop = true; video.playbackRate = 0.07;
 
       const tryPlay = () => {
         const p = video.play();
@@ -193,7 +193,7 @@
       document.addEventListener('pointerdown', tryPlay, { once: true });
       document.addEventListener('visibilitychange', () => { if (!document.hidden) tryPlay(); });
       video.addEventListener('pause', () => { if (!document.hidden) tryPlay(); });
-      video.addEventListener('ratechange', () => { if (video.playbackRate !== 0.1) video.playbackRate = 0.1; });
+      video.addEventListener('ratechange', () => { if (video.playbackRate !== 0.07) video.playbackRate = 0.07; });
     }
     ensurePlayback();
 
@@ -271,7 +271,7 @@ carved`,
       if (window.gsap) {
         gsap.killTweensOf(chunk);
         gsap.set(chunk, { opacity: 0 });
-        gsap.to(chunk, { opacity: 1, duration: 1.7, ease: 'power2.out' });
+        gsap.to(chunk, { opacity: 1, duration: 2, ease: 'power2.out' });
       } else {
         chunk.style.opacity = 1;
       }
@@ -288,7 +288,7 @@ carved`,
       fadeInChunk();
     }
 
-    const ADVANCE_DELAY_MS = 1500; // 2 seconds after click
+    const ADVANCE_DELAY_MS = 1200; // 2 seconds after click
     let pending = null;
 
     function advanceAfterDelay() {
