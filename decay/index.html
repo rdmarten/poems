@@ -5,77 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Book of Decay</title>
 
-  <!-- Tufte CSS for typography -->
+  <!-- Tufte CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css" />
 
-  <!-- GSAP for animations -->
+  <!-- GSAP for fade animations -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
   <style>
     :root {
-      --box-bg: rgba(255, 255, 255, 0.85);
-      --box-fg: #111;
-      --credit-bg: rgba(0, 0, 0, 0.55);
-      --credit-fg: #fff;
-      --max-width-ch: 38ch; /* narrow, to feel poetic */
+      --box-fg: #fff;
+      --max-width-ch: 38ch;
     }
 
     html, body {
       height: 100%;
       margin: 0;
-      overflow: hidden; /* keep the experience contained */
+      overflow: hidden;
       background: #000;
     }
 
-    /* Full-viewport video */
     #bgvid {
       position: fixed;
       inset: 0;
       width: 100vw;
       height: 100vh;
-      object-fit: cover;           /* fill on mobile */
-      opacity: 0.85;               /* 85% as requested */
+      object-fit: cover;
+      opacity: 0.85;
       z-index: 0;
-      background: #000;            /* in case video is transparent */
+      background: #000;
     }
 
-    /* Overlay layer for text boxes */
     .overlay {
       position: fixed;
       inset: 0;
       z-index: 2;
-      pointer-events: none; /* child boxes turn this back on */
+      pointer-events: none;
     }
 
-    .poem-box {
-      position: absolute;
-      max-width: var(--max-width-ch);
-      background: transparent; /* fully transparent box */
-      color: var(--box-fg);
-      border-radius: 14px;
-      padding: 0.85rem 1rem;
-      box-shadow: none; /* no visible box */
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      pointer-events: auto; /* clickable */
-      cursor: pointer;
-      transform: translate(-50%, -50%); /* center from its anchor point */
-      transition: opacity 180ms ease, transform 220ms ease;
-      opacity: 0;
-    }
-
-    .poem-box.show {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1.015);
-    }
-
-    /* Preserve whitespace and line breaks of each stanza */
-    .poem-text { white-space: pre-wrap; font-family: et-book, Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
-
-    /* Tufte-esque sizing tweaks */
-    .poem-box .poem-text { font-size: clamp(1rem, 2.6vw, 1.25rem); line-height: 1.5; }
-
-    /* Single moving text element */
     .poem-chunk {
       position: absolute;
       max-width: var(--max-width-ch);
@@ -85,43 +51,32 @@
       pointer-events: auto;
       cursor: pointer;
       transform: translate(-50%, -50%);
-      opacity: 0; /* GSAP fades in */
+      opacity: 0;
     }
 
-    /* Back link styling (above overlays) */
-    .backlink {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 9999;
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-      padding: 0.25rem 0.5rem;
-      border-radius: 8px;
-      -webkit-backdrop-filter: blur(2px);
-      backdrop-filter: blur(2px);
-      font-size: 0.9rem;
-      pointer-events: auto;
+    .poem-text {
+      white-space: pre-wrap;
+      font-family: et-book, Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      line-height: 1.5;
+      font-size: clamp(1rem, 2.6vw, 1.25rem);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
     }
-    .backlink a { color: #fff; text-decoration: none; }
-    .backlink a:hover { text-decoration: underline; }
 
-    /* Credit box fixed in a corner */
     .credit {
       position: fixed;
       right: 10px;
       bottom: 10px;
       z-index: 3;
-      background: var(--credit-bg);
-      color: var(--credit-fg);
+      background: rgba(0,0,0,0.55);
+      color: #fff;
       padding: 0.4rem 0.6rem;
       border-radius: 10px;
       font-size: 0.9rem;
       font-weight: 500;
     }
+
     .credit a { color: #fff; text-decoration: underline; }
 
-    /* Small unobtrusive controls to load a local video file */
     .controls {
       position: fixed;
       left: 10px;
@@ -138,66 +93,61 @@
       -webkit-backdrop-filter: blur(2px);
       font-size: 0.85rem;
     }
+
     .controls label { cursor: pointer; }
 
-    /* Safety: if viewport is very small, widen boxes a bit */
-    @media (max-width: 420px) {
-      :root { --max-width-ch: 88vw; }
+    .backlink {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      padding: 0.25rem 0.5rem;
+      border-radius: 8px;
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+      font-size: 0.9rem;
+      pointer-events: auto;
     }
+
+    .backlink a { color: #fff; text-decoration: none; }
+    .backlink a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <!-- Background video (replace source below or use the loader at bottom-left) -->
-  <video id="bgvid" playsinline muted loop preload="auto">
+  <video id="bgvid" autoplay muted playsinline loop preload="auto">
     <source src="./Book-of-Decay.mp4" type="video/mp4" />
   </video>
 
-  <!-- Text overlay layer -->
   <div class="overlay" id="overlay"></div>
 
-  <!-- Fixed credit box in the corner -->
   <div class="credit et-book">
     Video © <a href="https://www.instagram.com/reel/DPPvy3rjlkg/?igsh=MTNodXE4YTRhcTFjeg%3D%3D" target="_blank" rel="noopener">Mailey Horner</a>
   </div>
 
-  <!-- Tiny controls: load a local video -->
   <div class="controls et-book">
     <label>Load video <input type="file" id="filePicker" accept="video/*" style="display:none"></label>
     <span id="status"></span>
   </div>
 
+  <div class="backlink et-book"><a id="backlink" href="../index.html">← back to poems</a></div>
+
   <script>
   (function(){
-    // ====== Setup & constants ======
     const video = document.getElementById('bgvid');
     const overlay = document.getElementById('overlay');
     const statusEl = document.getElementById('status');
     const filePicker = document.getElementById('filePicker');
 
-    // Continuous slow playback at 0.2x
-    function ensurePlayback() {
-      // make absolutely sure the right attributes are set for iOS
-      video.muted = true; video.setAttribute('muted', '');
-      video.playsInline = true; video.setAttribute('playsinline', '');
-      video.autoplay = true; video.loop = true; video.playbackRate = 0.2;
+    // Ensure continuous playback at 0.05x speed
+    video.playbackRate = 0.05;
+    video.addEventListener('canplay', () => video.play());
+    video.addEventListener('ratechange', () => {
+      if (video.playbackRate !== 0.05) video.playbackRate = 0.05;
+    });
 
-      const tryPlay = () => {
-        const p = video.play();
-        if (p && typeof p.catch === 'function') p.catch(() => {});
-      };
-
-      tryPlay();
-      ['loadedmetadata','canplay','canplaythrough','stalled','suspend'].forEach(ev => {
-        video.addEventListener(ev, tryPlay);
-      });
-      document.addEventListener('pointerdown', tryPlay, { once: true });
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) tryPlay(); });
-      video.addEventListener('pause', () => { if (!document.hidden) tryPlay(); });
-      video.addEventListener('ratechange', () => { if (video.playbackRate !== 0.05) video.playbackRate = 0.05; });
-    }
-    ensurePlayback();
-
-    // Re-load custom video if user chooses one
+    // Load local file
     if (filePicker) {
       filePicker.addEventListener('change', (e) => {
         const file = e.target.files && e.target.files[0];
@@ -209,13 +159,13 @@
           src.type = file.type || 'video/mp4';
           video.appendChild(src);
           video.load();
+          video.playbackRate = 0.05;
+          video.play();
           if (statusEl) statusEl.textContent = 'Video loaded';
-          ensurePlayback();
         }
       });
     }
 
-    // ====== Poem content (strict order) ======
     const lines = [
 `“Palimpsest of decay” - MH `,
 
@@ -248,9 +198,8 @@ carved`,
 `\n\n\n“Mommy might quietly say ‘I like all my babies equally’ if” - MH`
     ];
 
-    // Bounds for random placement
-    const MIN_VW = 12, MAX_VW = 88; // horizontal
-    const MIN_VH = 14, MAX_VH = 86; // vertical
+    const MIN_VW = 12, MAX_VW = 88;
+    const MIN_VH = 14, MAX_VH = 86;
 
     function randomPos() {
       const left = MIN_VW + Math.random() * (MAX_VW - MIN_VW);
@@ -258,7 +207,6 @@ carved`,
       return { left, top };
     }
 
-    // Single clickable text element to guarantee chronology
     const chunk = document.createElement('div');
     chunk.className = 'poem-chunk et-book';
     const textEl = document.createElement('div');
@@ -266,12 +214,11 @@ carved`,
     chunk.appendChild(textEl);
     overlay.appendChild(chunk);
 
-    // Soft fade with GSAP each reveal (opacity only so we don't clobber translate)
     function fadeInChunk() {
       if (window.gsap) {
         gsap.killTweensOf(chunk);
         gsap.set(chunk, { opacity: 0 });
-        gsap.to(chunk, { opacity: 1, duration: 0.8, ease: 'power2.out' });
+        gsap.to(chunk, { opacity: 1, duration: 0.4, ease: 'power2.out' });
       } else {
         chunk.style.opacity = 1;
       }
@@ -282,13 +229,12 @@ carved`,
       const { left, top } = randomPos();
       chunk.style.left = left + 'vw';
       chunk.style.top = top + 'vh';
-      // re-apply translate centering in case any animation changed transform
       chunk.style.transform = 'translate(-50%, -50%)';
       textEl.textContent = lines[current];
       fadeInChunk();
     }
 
-    const ADVANCE_DELAY_MS = 1500; // 2 seconds after click
+    const ADVANCE_DELAY_MS = 2000;
     let pending = null;
 
     function advanceAfterDelay() {
@@ -299,24 +245,20 @@ carved`,
       }, ADVANCE_DELAY_MS);
     }
 
-    // Clicking the text advances (no effect on video)
     chunk.addEventListener('click', (e) => {
       e.stopPropagation();
       advanceAfterDelay();
     });
 
-    // Keep the element inside the viewport on resize/orientation change
     window.addEventListener('resize', () => {
       const { left, top } = randomPos();
       chunk.style.left = left + 'vw';
       chunk.style.top = top + 'vh';
     });
 
-    // Robust backlink handler for constrained preview environments
     const backA = document.getElementById('backlink');
     if (backA) {
       backA.addEventListener('click', function(e){
-        // In sandboxes/data URLs, default navigation may be blocked
         if (location.protocol === 'blob:' || location.protocol === 'data:') {
           e.preventDefault();
           if (history.length > 1) history.back();
@@ -325,10 +267,8 @@ carved`,
       });
     }
 
-    // Initial reveal
     showCurrent();
   })();
   </script>
-  <div class="backlink et-book"><a id="backlink" href="../index.html">← back to poems</a></div>
 </body>
 </html>
