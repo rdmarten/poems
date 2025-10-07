@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interactive Video Poem</title>
+
+  <!-- Tufte CSS for typography -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css" />
+
+  <style>
+    :root {
+      --box-bg: rgba(255, 255, 255, 0.85);
+      --box-fg: #111;
+      --credit-bg: rgba(0, 0, 0, 0.55);
+      --credit-fg: #fff;
+      --max-width-ch: 38ch; /* narrow, to feel poetic */
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden; /* keep the experience contained */
+      background: #000;
+    }
+
+    /* Full-viewport video */
+    #bgvid {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;           /* fill on mobile */
+      opacity: 0.85;               /* 85% as requested */
+      z-index: 0;
+      background: #000;            /* in case video is transparent */
+    }
+
+    /* Overlay layer for text boxes */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none; /* child boxes turn this back on */
+    }
+
+    .poem-box {
+      position: absolute;
+      max-width: var(--max-width-ch);
+      background: var(--box-bg);
+      color: var(--box-fg);
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      pointer-events: auto; /* clickable */
+      cursor: pointer;
+      transform: translate(-50%, -50%); /* center from its anchor point */
+      transition: opacity 180ms ease, transform 220ms ease;
+      opacity: 0;
+    }
+
+    .poem-box.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.015);
+    }
+
+    /* Preserve whitespace and line breaks of each stanza */
+    .poem-text { white-space: pre-wrap; }
+
+    /* Tufte-esque sizing tweaks */
+    .poem-box .poem-text { font-size: clamp(1rem, 2.6vw, 1.25rem); line-height: 1.5; }
+
+    /* Credit box fixed in a corner */
+    .credit {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      z-index: 3;
+      background: var(--credit-bg);
+      color: var(--credit-fg);
+      padding: 0.4rem 0.6rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .credit a { color: #fff; text-decoration: underline; }
+
+    /* Small unobtrusive controls to load a local video file */
+    .controls {
+      position: fixed;
+      left: 10px;
+      bottom: 10px;
+      z-index: 3;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 0.35rem 0.5rem;
+      border-radius: 8px;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      font-size: 0.85rem;
+    }
+    .controls label { cursor: pointer; }
+
+    /* Safety: if viewport is very small, widen boxes a bit */
+    @media (max-width: 420px) {
+      :root { --max-width-ch: 88vw; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background video (replace source below or use the loader at bottom-left) -->
+  <video id="bgvid" playsinline muted loop preload="auto">
+    <!-- Replace src with your uploaded video path if desired -->
+    <!-- <source src="/path/to/your-video.mp4" type="video/mp4" /> -->
+  </video>
+
+  <!-- Text overlay layer -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Fixed credit box in the corner -->
+  <div class="credit et-book">
+    Video © <a href="https://www.instagram.com/reel/DPPvy3rjlkg/?igsh=MTNodXE4YTRhcTFjeg%3D%3D" target="_blank" rel="noopener">Mailey Horner</a>
+  </div>
+
+  <!-- Tiny controls: load a local file -->
+  <div class="controls et-book">
+    <label>Load video <input type="file" id="filePicker" accept="video/*" style="display:none"></label>
+    <span id="status"></span>
+  </div>
+
+  <script>
+    // --- Configuration ---
+    const PLAY_WINDOW_MS = 5000; // 5 seconds real time
+    const MIN_VW = 12, MAX_VW = 88; // horizontal range for box anchors
+    const MIN_VH = 14, MAX_VH = 86; // vertical range for box anchors
+
+    const video = document.getElementById('bgvid');
+    const overlay = document.getElementById('overlay');
+    const statusEl = document.getElementById('status');
+    const filePicker = document.getElementById('filePicker');
+
+    // Set slow playback speed
+    video.playbackRate = 0.5; // 0.5x as requested
+
+    // If the video ends during the 5 second window, loop back automatically
+    video.loop = true;
+
+    // Provide dimensions hint (not strictly required, but informative)
+    video.width = 928; video.height = 720;
+
+    // --- The poem content, each paragraph becomes a separate box ---
+    const lines = [
+`“Palimpsest of decay” - MH `,
+
+` 
+
+see that tree, with
+its fibrous body
+carved`,
+
+`as I age  
+in time
+on time
+older every day
+than the last`,
+
+`waning reeds
+drawing lines
+on my skin
+that no longer
+fade, but scar`,
+
+`dad is breaking
+a wanderer
+who stopped`,
+
+`did he forget
+or was it always
+forgotten, white
+noise in the dark`,
+
+`
+
+i’m here, still
+in the margins`,
+
+`
+
+
+“Mommy might quietly say ‘I like all my babies equally’ if” - MH`
+    ];
+
+    // Utility: random position within bounds
+    function randomPos() {
+      const left = MIN_VW + Math.random() * (MAX_VW - MIN_VW);
+      const top  = MIN_VH + Math.random() * (MAX_VH - MIN_VH);
+      return { left, top };
+    }
+
+    // Create boxes and keep references
+    const boxes = lines.map((text, idx) => {
+      const div = document.createElement('div');
+      div.className = 'poem-box et-book';
+
+      // content
+      const pre = document.createElement('pre');
+      pre.className = 'poem-text';
+      pre.textContent = text; // preserves whitespace and line breaks
+      div.appendChild(pre);
+
+      // random anchoring
+      const { left, top } = randomPos();
+      div.style.left = left + 'vw';
+      div.style.top = top + 'vh';
+
+      // click-to-advance behavior
+      div.addEventListener('click', async (ev) => {
+        ev.stopPropagation();
+        await playSliceThenAdvance(idx);
+      });
+
+      overlay.appendChild(div);
+      return div;
+    });
+
+    let current = 0;
+    function showBox(i) {
+      boxes.forEach((b, j) => {
+        if (j === i) {
+          // re-randomize position each time it appears
+          const { left, top } = randomPos();
+          b.style.left = left + 'vw';
+          b.style.top = top + 'vh';
+          requestAnimationFrame(() => b.classList.add('show'));
+        } else {
+          b.classList.remove('show');
+        }
+      });
+    }
+
+    async function playSliceThenAdvance(i) {
+      // Play slowed video for 5s, then pause and advance the stanza.
+      try {
+        statusEl.textContent = 'Playing…';
+        await video.play();
+      } catch (e) {
+        // Autoplay policy might block; user click should have allowed. Ignore.
+      }
+      const timer = setTimeout(() => {
+        video.pause();
+        statusEl.textContent = '';
+        // advance
+        current = i + 1;
+        if (current < boxes.length) {
+          showBox(current);
+        } else {
+          // end reached: keep last box visible but paused; you can tap to restart from first
+          current = 0;
+          // Optionally: flash a tiny cue
+          statusEl.textContent = 'End — tap a box to start again';
+        }
+      }, PLAY_WINDOW_MS);
+    }
+
+    // Initial state: show first box
+    showBox(current);
+
+    // Clicking anywhere outside a box also plays a 5-second slice (but does not advance)
+    overlay.addEventListener('click', async () => {
+      try { await video.play(); } catch {}
+      setTimeout(() => video.pause(), PLAY_WINDOW_MS);
+    });
+
+    // Handle local file selection
+    filePicker.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        // Clear existing sources
+        while (video.firstChild) video.removeChild(video.firstChild);
+        const src = document.createElement('source');
+        src.src = url;
+        src.type = file.type || 'video/mp4';
+        video.appendChild(src);
+        video.load();
+        statusEl.textContent = 'Video loaded';
+      }
+    });
+
+    // Ensure the video rate stays at 0.5x even if browser resets it
+    video.addEventListener('ratechange', () => {
+      if (video.playbackRate !== 0.5) video.playbackRate = 0.5;
+    });
+
+    // Keep boxes within viewport if orientation changes
+    window.addEventListener('resize', () => {
+      boxes.forEach(b => {
+        const { left, top } = randomPos();
+        b.style.left = left + 'vw';
+        b.style.top = top + 'vh';
+      });
+    });
+  </script>
+</body>
+</html>
