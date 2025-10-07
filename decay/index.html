@@ -44,29 +44,33 @@
       pointer-events: none; /* child boxes turn this back on */
     }
 
-    .poem-chunk {
-  position: absolute;
-  max-width: var(--max-width-ch);
-  background: transparent;
-  color: var(--box-fg);
-  padding: 0;
-  pointer-events: auto;
-  cursor: pointer;
-  transform: translate(-50%, -50%) scale(0.985);
-  transition: opacity 380ms ease-out, transform 420ms ease-out;
-  opacity: 0;
-}
+    .poem-box {
+      position: absolute;
+      max-width: var(--max-width-ch);
+      background: transparent; /* fully transparent box */
+      color: var(--box-fg);
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      box-shadow: none; /* no visible box */
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      pointer-events: auto; /* clickable */
+      cursor: pointer;
+      transform: translate(-50%, -50%); /* center from its anchor point */
+      transition: opacity 180ms ease, transform 220ms ease;
+      opacity: 0;
+    }
 
-    .poem-chunk.show {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
+    .poem-box.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.015);
+    }
 
     /* Preserve whitespace and line breaks of each stanza */
     .poem-text { white-space: pre-wrap; font-family: et-book, Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
 
     /* Tufte-esque sizing tweaks */
-    .poem-chunk .poem-text { font-size: clamp(1rem, 2.6vw, 1.25rem); line-height: 1.5; }
+    .poem-box .poem-text { font-size: clamp(1rem, 2.6vw, 1.25rem); line-height: 1.5; }
 
     /* Credit box fixed in a corner */
     .credit {
@@ -133,7 +137,7 @@
     video.width = 928; video.height = 720;
 
     // Timing: first click 6s, then 3s thereafter
-    let nextWindowMs = 2000; // first click 3s; subsequent clicks 2s
+    let nextWindowMs = 6000;
 
     // Bounds for random placement
     const MIN_VW = 12, MAX_VW = 88; // horizontal range
@@ -149,36 +153,27 @@ see that tree, with
 its fibrous body
 carved`,
 
-`as I age  
-in time
-on time
-older every day
-than the last`,
+`as I age  \nin time\non time\nolder every day\nthan the last`,
 
-`waning reeds
-drawing lines
-on my skin
-that no longer
-fade, but scar`,
+`waning reeds\ndrawing lines\non my skin\nthat no longer\nfade, but scar`,
 
-`dad is breaking
-a wanderer
-who stopped`,
+`dad is breaking\na wanderer\nwho stopped`,
 
-`did he forget
-or was it always
-forgotten, white
-noise in the dark`,
+`did he forget\nor was it always\nforgotten, white\nnoise in the dark`,
 
-`
+`\n\ni’m here, still\nin the margins`,
 
-I’m here, still
-in the margins`,
+`her face firmly\nclinched, gluteus\nmaximus perked\nweeping rivulets`,
 
-`
+`mid-flight crisis\nmeh-lancholy`,
 
+`why did it\nbreak: did\nyou hurt your\nbody –—`,
 
-“Mommy might quietly say ‘I like all my babies equally’ if” - MH`
+`in the bathroom\nreflections hurt\nbones, skin\nhair, teeth`,
+
+`am i here, still\nin the margins?`,
+
+`\n\n\n“Mommy might quietly say ‘I like all my babies equally’ if” - MH`
     ];
 
     // Create a single clickable text element to guarantee chronological order
@@ -205,11 +200,11 @@ in the margins`,
     }
 
     async function playSliceThenAdvance() {
-      try { video.play(); } catch (e) {}
+      try { await video.play(); } catch (e) {}
       setTimeout(() => {
         video.pause();
         current = (current + 1) % lines.length; // always next, then loop
-        nextWindowMs = 2000; // after first click
+        nextWindowMs = 3000; // after first click
         chunk.classList.remove('show');
         showCurrent();
       }, nextWindowMs);
