@@ -41,25 +41,22 @@
       position: fixed;
       inset: 0;
       z-index: 2;
-      pointer-events: none; /* child boxes turn this back on */
+      pointer-events: none; /* only the text element will handle clicks */
     }
 
-    .poem-box {
+    .poem-chunk {
       position: absolute;
       max-width: var(--max-width-ch);
-      background: transparent; /* fully transparent box */
+      background: transparent; /* no box */
       color: var(--box-fg);
-      border-radius: 14px;
-      padding: 0.85rem 1rem;
-      box-shadow: none; /* no visible box */
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
+      padding: 0; /* text only */
       pointer-events: auto; /* clickable */
       cursor: pointer;
-      transform: translate(-50%, -50%); /* center from its anchor point */
+      transform: translate(-50%, -50%);
       transition: opacity 180ms ease, transform 220ms ease;
       opacity: 0;
     }
+    .poem-chunk.show { opacity: 1; transform: translate(-50%, -50%) scale(1.01); }
 
     .poem-box.show {
       opacity: 1;
@@ -67,7 +64,7 @@
     }
 
     /* Preserve whitespace and line breaks of each stanza */
-    .poem-text { white-space: pre-wrap; font-family: et-book, Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+    .poem-text { white-space: pre-wrap; font-family: et-book, Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif; line-height: 1.5; font-size: clamp(1rem, 2.6vw, 1.25rem); text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
 
     /* Tufte-esque sizing tweaks */
     .poem-box .poem-text { font-size: clamp(1rem, 2.6vw, 1.25rem); line-height: 1.5; }
@@ -115,8 +112,7 @@
 <body>
   <!-- Background video (replace source below or use the loader at bottom-left) -->
   <video id="bgvid" playsinline muted loop preload="auto">
-    <!-- Replace src with your uploaded video path if desired -->
-    <source src="./Book-of-Decay.mp4" type="video/mp4" /> -->
+    <source src="./Book-of-Decay.mp4" type="video/mp4" />
   </video>
 
   <!-- Text overlay layer -->
@@ -127,33 +123,24 @@
     Video © <a href="https://www.instagram.com/reel/DPPvy3rjlkg/?igsh=MTNodXE4YTRhcTFjeg%3D%3D" target="_blank" rel="noopener">Mailey Horner</a>
   </div>
 
-  <!-- Tiny controls: load a local file -->
-  <div class="controls et-book">
-    <label>Load video <input type="file" id="filePicker" accept="video/*" style="display:none"></label>
-    <span id="status"></span>
-  </div>
-
   <script>
-    // --- Configuration ---
-    const PLAY_WINDOW_MS = 4000; // 4 seconds real time
-    const MIN_VW = 12, MAX_VW = 88; // horizontal range for box anchors
-    const MIN_VH = 14, MAX_VH = 86; // vertical range for box anchors
-
+    // Configuration
     const video = document.getElementById('bgvid');
     const overlay = document.getElementById('overlay');
-    const statusEl = document.getElementById('status');
-    const filePicker = document.getElementById('filePicker');
 
-    // Set slow playback speed
-    video.playbackRate = 0.1; // 0.1x as requested
-
-    // If the video ends during the 5 second window, loop back automatically
+    // Slow playback
+    video.playbackRate = 0.1;
     video.loop = true;
-
-    // Provide dimensions hint (not strictly required, but informative)
     video.width = 928; video.height = 720;
 
-    // --- The poem content, each paragraph becomes a separate box ---
+    // Timing: first click 6s, then 3s thereafter
+    let nextWindowMs = 6000;
+
+    // Bounds for random placement
+    const MIN_VW = 12, MAX_VW = 88; // horizontal range
+    const MIN_VH = 14, MAX_VH = 86; // vertical range
+
+    // The poem, paragraph-by-paragraph, in strict order
     const lines = [
 `“Palimpsest of decay” - MH `,
 
@@ -163,149 +150,73 @@ see that tree, with
 its fibrous body
 carved`,
 
-`as I age  
-in time
-on time
-older every day
-than the last`,
+`as I age  \nin time\non time\nolder every day\nthan the last`,
 
-`waning reeds
-drawing lines
-on my skin
-that no longer
-fade, but scar`,
+`waning reeds\ndrawing lines\non my skin\nthat no longer\nfade, but scar`,
 
-`dad is breaking
-a wanderer
-who stopped`,
+`dad is breaking\na wanderer\nwho stopped`,
 
-`did he forget
-or was it always
-forgotten, white
-noise in the dark`,
+`did he forget\nor was it always\nforgotten, white\nnoise in the dark`,
 
-`
+`\n\nI’m here, still\nin the margins`,
 
-i’m here, still
-in the margins`,
-
-`
-
-
-“Mommy might quietly say 
-‘I like all my babies equally’ if” - MH`
+`\n\n\n“Mommy might quietly say ‘I like all my babies equally’ if” - MH`
     ];
 
-    // Utility: random position within bounds
+    // Create a single clickable text element to guarantee chronological order
+    const chunk = document.createElement('div');
+    chunk.className = 'poem-chunk et-book';
+    const textEl = document.createElement('div');
+    textEl.className = 'poem-text';
+    chunk.appendChild(textEl);
+    overlay.appendChild(chunk);
+
     function randomPos() {
       const left = MIN_VW + Math.random() * (MAX_VW - MIN_VW);
       const top  = MIN_VH + Math.random() * (MAX_VH - MIN_VH);
       return { left, top };
     }
 
-    // Create boxes and keep references
-    const boxes = lines.map((text, idx) => {
-      const div = document.createElement('div');
-      div.className = 'poem-box et-book';
-
-      // content
-      const pre = document.createElement('div');
-      pre.className = 'poem-text';
-      pre.textContent = text; // preserves whitespace and line breaks
-      div.appendChild(pre);
-
-      // random anchoring
-      const { left, top } = randomPos();
-      div.style.left = left + 'vw';
-      div.style.top = top + 'vh';
-
-      // click-to-advance behavior
-      div.addEventListener('click', async (ev) => {
-        ev.stopPropagation();
-        await playSliceThenAdvance(idx);
-      });
-
-      overlay.appendChild(div);
-      return div;
-    });
-
     let current = 0;
-    function showBox(i) {
-      boxes.forEach((b, j) => {
-        if (j === i) {
-          // re-randomize position each time it appears
-          const { left, top } = randomPos();
-          b.style.left = left + 'vw';
-          b.style.top = top + 'vh';
-          requestAnimationFrame(() => b.classList.add('show'));
-        } else {
-          b.classList.remove('show');
-        }
-      });
+    function showCurrent() {
+      const { left, top } = randomPos();
+      chunk.style.left = left + 'vw';
+      chunk.style.top = top + 'vh';
+      textEl.textContent = lines[current];
+      requestAnimationFrame(() => chunk.classList.add('show'));
     }
 
-    async function playSliceThenAdvance(i) {
-      // Play slowed video for 5s, then pause and advance the stanza.
-      try {
-        statusEl.textContent = 'Playing…';
-        await video.play();
-      } catch (e) {
-        // Autoplay policy might block; user click should have allowed. Ignore.
-      }
-      const timer = setTimeout(() => {
+    async function playSliceThenAdvance() {
+      try { await video.play(); } catch (e) {}
+      setTimeout(() => {
         video.pause();
-        statusEl.textContent = '';
-        // advance
-        current = i + 1;
-        if (current < boxes.length) {
-          showBox(current);
-        } else {
-          // end reached: keep last box visible but paused; you can tap to restart from first
-          current = 0;
-          // Optionally: flash a tiny cue
-          statusEl.textContent = 'End — tap a box to start again';
-        }
-      }, PLAY_WINDOW_MS);
+        current = (current + 1) % lines.length; // always next, then loop
+        nextWindowMs = 3000; // after first click
+        chunk.classList.remove('show');
+        showCurrent();
+      }, nextWindowMs);
     }
 
-    // Initial state: show first box
-    showBox(current);
-
-    // Clicking anywhere outside a box also plays a 5-second slice (but does not advance)
-    overlay.addEventListener('click', async () => {
-      try { await video.play(); } catch {}
-      setTimeout(() => video.pause(), PLAY_WINDOW_MS);
+    // Click the text itself to trigger playback/advance
+    chunk.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playSliceThenAdvance();
     });
 
-    // Handle local file selection
-    filePicker.addEventListener('change', (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        // Clear existing sources
-        while (video.firstChild) video.removeChild(video.firstChild);
-        const src = document.createElement('source');
-        src.src = url;
-        src.type = file.type || 'video/mp4';
-        video.appendChild(src);
-        video.load();
-        statusEl.textContent = 'Video loaded';
-      }
-    });
-
-    // Ensure the video rate stays at 0.1x even if browser resets it
-    video.addEventListener('ratechange', () => {
-      if (video.playbackRate !== 0.1) video.playbackRate = 0.1;
-    });
-
-    // Keep boxes within viewport if orientation changes
+    // Keep element inside viewport on resize/orientation change
     window.addEventListener('resize', () => {
-      boxes.forEach(b => {
-        const { left, top } = randomPos();
-        b.style.left = left + 'vw';
-        b.style.top = top + 'vh';
-      });
+      const { left, top } = randomPos();
+      chunk.style.left = left + 'vw';
+      chunk.style.top = top + 'vh';
     });
+
+    // Maintain 0.2x rate if browser fiddles with it
+    video.addEventListener('ratechange', () => {
+      if (video.playbackRate !== 0.2) video.playbackRate = 0.2;
+    });
+
+    // Start
+    showCurrent();
   </script>
   <p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
 </body>
