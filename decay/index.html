@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Interactive Video Poem</title>
+  <title>Book of Decay</title>
 
   <!-- Tufte CSS for typography -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css" />
@@ -47,13 +47,13 @@
     .poem-box {
       position: absolute;
       max-width: var(--max-width-ch);
-      background: var(--box-bg);
+      background: transparent; /* fully transparent box */
       color: var(--box-fg);
       border-radius: 14px;
       padding: 0.85rem 1rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
+      box-shadow: none; /* no visible box */
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
       pointer-events: auto; /* clickable */
       cursor: pointer;
       transform: translate(-50%, -50%); /* center from its anchor point */
@@ -67,7 +67,7 @@
     }
 
     /* Preserve whitespace and line breaks of each stanza */
-    .poem-text { white-space: pre-wrap; }
+    .poem-text { white-space: pre-wrap; font-family: et-book, Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
 
     /* Tufte-esque sizing tweaks */
     .poem-box .poem-text { font-size: clamp(1rem, 2.6vw, 1.25rem); line-height: 1.5; }
@@ -116,7 +116,7 @@
   <!-- Background video (replace source below or use the loader at bottom-left) -->
   <video id="bgvid" playsinline muted loop preload="auto">
     <!-- Replace src with your uploaded video path if desired -->
-    <source src="./Book-of-Decay.mp4" type="video/mp4" />
+    <source src="./Book-of-Decay.mp4" type="video/mp4" /> -->
   </video>
 
   <!-- Text overlay layer -->
@@ -135,7 +135,7 @@
 
   <script>
     // --- Configuration ---
-    const PLAY_WINDOW_MS = 5000; // 5 seconds real time
+    const PLAY_WINDOW_MS = 4000; // 4 seconds real time
     const MIN_VW = 12, MAX_VW = 88; // horizontal range for box anchors
     const MIN_VH = 14, MAX_VH = 86; // vertical range for box anchors
 
@@ -145,7 +145,7 @@
     const filePicker = document.getElementById('filePicker');
 
     // Set slow playback speed
-    video.playbackRate = 0.5; // 0.5x as requested
+    video.playbackRate = 0.1; // 0.1x as requested
 
     // If the video ends during the 5 second window, loop back automatically
     video.loop = true;
@@ -209,7 +209,7 @@ in the margins`,
       div.className = 'poem-box et-book';
 
       // content
-      const pre = document.createElement('pre');
+      const pre = document.createElement('div');
       pre.className = 'poem-text';
       pre.textContent = text; // preserves whitespace and line breaks
       div.appendChild(pre);
@@ -293,9 +293,9 @@ in the margins`,
       }
     });
 
-    // Ensure the video rate stays at 0.5x even if browser resets it
+    // Ensure the video rate stays at 0.1x even if browser resets it
     video.addEventListener('ratechange', () => {
-      if (video.playbackRate !== 0.5) video.playbackRate = 0.5;
+      if (video.playbackRate !== 0.1) video.playbackRate = 0.1;
     });
 
     // Keep boxes within viewport if orientation changes
@@ -307,5 +307,6 @@ in the margins`,
       });
     });
   </script>
+  <p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
 </body>
 </html>
