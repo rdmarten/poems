@@ -17,7 +17,7 @@
       --box-fg: #111;
       --credit-bg: rgba(0, 0, 0, 0.55);
       --credit-fg: #fff;
-      --max-width-ch: 38ch; /* narrow, to feel poetic */
+      --max-width-ch: 32ch; /* narrow, to feel poetic - 38 default */
     }
 
     html, body {
@@ -179,7 +179,7 @@
       // make absolutely sure the right attributes are set for iOS
       video.muted = true; video.setAttribute('muted', '');
       video.playsInline = true; video.setAttribute('playsinline', '');
-      video.autoplay = true; video.loop = true; video.playbackRate = 0.07;
+      video.autoplay = true; video.loop = true; video.playbackRate = 0.08;
 
       const tryPlay = () => {
         const p = video.play();
@@ -193,7 +193,7 @@
       document.addEventListener('pointerdown', tryPlay, { once: true });
       document.addEventListener('visibilitychange', () => { if (!document.hidden) tryPlay(); });
       video.addEventListener('pause', () => { if (!document.hidden) tryPlay(); });
-      video.addEventListener('ratechange', () => { if (video.playbackRate !== 0.07) video.playbackRate = 0.07; });
+      video.addEventListener('ratechange', () => { if (video.playbackRate !== 0.08) video.playbackRate = 0.08; });
     }
     ensurePlayback();
 
@@ -245,7 +245,9 @@ carved`,
 
 `am i here, still\nin the margins?`,
 
-`\n\n\n“Mommy might quietly say ‘I like all my babies equally’ if” - MH`
+`print the ink\nsubdermally\nmake me art\nbefore we fade`,
+
+`\n\n\n“Mommy might quietly say\n‘I like all my babies equally’ if” - MH`
     ];
 
     // Bounds for random placement
