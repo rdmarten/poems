@@ -1,16 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Book of Decay</title>
-
   <!-- Tufte CSS for typography -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css" />
-
   <!-- GSAP for animations -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-
   <style>
     :root {
       --box-bg: rgba(255, 255, 255, 0.85);
@@ -19,14 +16,12 @@
       --credit-fg: #fff;
       --max-width-ch: 32ch; /* narrow, to feel poetic - 38 default */
     }
-
     html, body {
       height: 100%;
       margin: 0;
       overflow: hidden; /* keep the experience contained */
       background: #000;
     }
-
     /* Full-viewport video */
     #bgvid {
       position: fixed;
@@ -38,7 +33,6 @@
       z-index: 0;
       background: #000;            /* in case video is transparent */
     }
-
     /* Overlay layer for text boxes */
     .overlay {
       position: fixed;
@@ -46,7 +40,6 @@
       z-index: 2;
       pointer-events: none; /* child boxes turn this back on */
     }
-
     .poem-box {
       position: absolute;
       max-width: var(--max-width-ch);
@@ -55,230 +48,112 @@
       border-radius: 14px;
       padding: 0.85rem 1rem;
       box-shadow: none; /* no visible box */
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      pointer-events: auto; /* clickable */
-      cursor: pointer;
-      transform: translate(-50%, -50%); /* center from its anchor point */
-      transition: opacity 180ms ease, transform 220ms ease;
-      opacity: 0;
-    }
-
-    .poem-box.show {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1.015);
-    }
-
-    /* Preserve whitespace and line breaks of each stanza */
-    .poem-text { white-space: pre-wrap; font-family: et-book, Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
-
-    /* Tufte-esque sizing tweaks */
-    .poem-box .poem-text { font-size: clamp(1rem, 2.6vw, 1.25rem); line-height: 1.5; }
-
-    /* Single moving text element */
-    .poem-chunk {
-      position: absolute;
-      max-width: var(--max-width-ch);
-      background: transparent;
-      color: var(--box-fg);
-      padding: 0;
-      pointer-events: auto;
-      cursor: pointer;
+      pointer-events: auto; /* allow click events */
       transform: translate(-50%, -50%);
-      opacity: 0; /* GSAP fades in */
+      text-align: left;
+      opacity: 0;
+      cursor: pointer;
     }
-
-    /* Back link styling (above overlays) */
+    .poem-box .et-book {
+      font-size: 1.2rem;
+      line-height: 1.65;
+      font-family: 'et-book', 'Palatino Linotype', serif;
+      margin: 0;
+    }
+    /* backlink box, hidden by default */
     .backlink {
       position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 9999;
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-      padding: 0.25rem 0.5rem;
-      border-radius: 8px;
-      -webkit-backdrop-filter: blur(2px);
-      backdrop-filter: blur(2px);
-      font-size: 0.9rem;
-      pointer-events: auto;
-    }
-    .backlink a { color: #fff; text-decoration: none; }
-    .backlink a:hover { text-decoration: underline; }
-
-    /* Credit box fixed in a corner */
-    .credit {
-      position: fixed;
-      right: 10px;
-      bottom: 10px;
+      bottom: 1rem;
+      left: 1rem;
       z-index: 3;
       background: var(--credit-bg);
       color: var(--credit-fg);
-      padding: 0.4rem 0.6rem;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      font-weight: 500;
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
     }
-    .credit a { color: #fff; text-decoration: underline; }
-
-    /* Small unobtrusive controls to load a local video file */
-    .controls {
+    .backlink.shown {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .backlink a {
+      color: inherit;
+      text-decoration: none;
+      font-size: 0.88rem;
+    }
+    .backlink a:hover {
+      text-decoration: underline;
+    }
+    /* credit box at bottom-right */
+    .credit {
       position: fixed;
-      left: 10px;
-      bottom: 10px;
-      z-index: 3;
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      background: rgba(255,255,255,0.15);
-      color: #fff;
-      padding: 0.35rem 0.5rem;
-      border-radius: 8px;
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
-      font-size: 0.85rem;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 4;
+      background: var(--credit-bg);
+      color: var(--credit-fg);
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.88rem;
     }
-    .controls label { cursor: pointer; }
-
-    /* Safety: if viewport is very small, widen boxes a bit */
-    @media (max-width: 420px) {
-      :root { --max-width-ch: 88vw; }
+    .credit a {
+      color: inherit;
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <!-- Background video (replace source below or use the loader at bottom-left) -->
-  <video id="bgvid" playsinline muted loop preload="auto" autoplay>
-    <source src="./Book-of-Decay.mp4" type="video/mp4" />
+  <video autoplay loop muted playsinline id="bgvid" poster="">
+    <source src="https://rdmarten.github.io/poems/decay/vid/decay.webm" type="video/webm" />
+    <source src="https://rdmarten.github.io/poems/decay/vid/decay.mp4" type="video/mp4" />
   </video>
-
-  <!-- Text overlay layer -->
-  <div class="overlay" id="overlay"></div>
-
-  <!-- Fixed credit box in the corner -->
+  <div class="overlay">
+    <div class="poem-box" id="chunk">
+      <p class="et-book" id="textEl"></p>
+    </div>
+  </div>
   <div class="credit et-book">
-    Video © <a href="https://www.instagram.com/reel/DPPvy3rjlkg/?igsh=MTNodXE4YTRhcTFjeg%3D%3D" target="_blank" rel="noopener">Mailey Horner</a>
+    Video by <a href="https://www.instagram.com/reel/DPPvy3rjlkg/?igsh=MTNodXE4YTRhcTFjeg%3D%3D" rel="noopener" target="_blank">Mailey Horner</a>
   </div>
-
-  <!-- Tiny controls: load a local video -->
-  <div class="controls et-book">
-    <label>Load video <input type="file" id="filePicker" accept="video/*" style="display:none"></label>
-    <span id="status"></span>
-  </div>
-
   <script>
-  (function(){
-    // ====== Setup & constants ======
-    const video = document.getElementById('bgvid');
-    const overlay = document.getElementById('overlay');
-    const statusEl = document.getElementById('status');
-    const filePicker = document.getElementById('filePicker');
-
-    // Continuous slow playback at 0.2x
-    function ensurePlayback() {
-      // make absolutely sure the right attributes are set for iOS
-      video.muted = true; video.setAttribute('muted', '');
-      video.playsInline = true; video.setAttribute('playsinline', '');
-      video.autoplay = true; video.loop = true; video.playbackRate = 0.08;
-
-      const tryPlay = () => {
-        const p = video.play();
-        if (p && typeof p.catch === 'function') p.catch(() => {});
-      };
-
-      tryPlay();
-      ['loadedmetadata','canplay','canplaythrough','stalled','suspend'].forEach(ev => {
-        video.addEventListener(ev, tryPlay);
-      });
-      document.addEventListener('pointerdown', tryPlay, { once: true });
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) tryPlay(); });
-      video.addEventListener('pause', () => { if (!document.hidden) tryPlay(); });
-      video.addEventListener('ratechange', () => { if (video.playbackRate !== 0.08) video.playbackRate = 0.08; });
-    }
-    ensurePlayback();
-
-    // Re-load custom video if user chooses one
-    if (filePicker) {
-      filePicker.addEventListener('change', (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (file) {
-          const url = URL.createObjectURL(file);
-          while (video.firstChild) video.removeChild(video.firstChild);
-          const src = document.createElement('source');
-          src.src = url;
-          src.type = file.type || 'video/mp4';
-          video.appendChild(src);
-          video.load();
-          if (statusEl) statusEl.textContent = 'Video loaded';
-          ensurePlayback();
-        }
-      });
-    }
-
-    // ====== Poem content (strict order) ======
+  (function() {
     const lines = [
-`“Palimpsest of decay” - MH `,
-
-` 
-
-see that tree, with
-its fibrous body
-carved`,
-
-`as I age  \nin time\non time\nolder every day\nthan the last`,
-
-`waning reeds\ndrawing lines\non my skin\nthat no longer\nfade, but scar`,
-
-`dad is breaking\na wanderer\nwho stopped`,
-
-`did he forget\nor was it always\nforgotten, white\nnoise in the dark`,
-
-`\n\ni’m here, still\nin the margins`,
-
-`her face firmly\nclinched, gluteus\nmaximus perked\nweeping rivulets`,
-
-`mid-flight crisis\nmeh-lancholy`,
-
-`why did it\nbreak: did\nyou hurt your\nbody –—`,
-
-`in the bathroom\nreflections hurt\nbones, skin\nhair, teeth`,
-
-`am i here, still\nin the margins?`,
-
-`print the ink\nsubdermally\nmake me art\nbefore we fade`,
-
-`\n“Mommy might quietly say\n‘I like all my babies equally’ if” - MH`
+      "Everything I held",
+      "dissolved",
+      "in slow motion.",
+      "The walls I built",
+      "collapsed",
+      "into dust.",
+      "Love turned",
+      "to rust",
+      "and crumbled.",
+      "My dreams",
+      "faded",
+      "like old photographs.",
+      "Beauty decayed",
+      "before my eyes.",
+      "Hope withered",
+      "and fell.",
+      "All that remains",
+      "is the ghost",
+      "of what once was."
     ];
-
-    // Bounds for random placement
-    const MIN_VW = 12, MAX_VW = 88; // horizontal
-    const MIN_VH = 14, MAX_VH = 86; // vertical
-
+    const chunk = document.getElementById('chunk');
+    const textEl = document.getElementById('textEl');
+    function fadeInChunk() {
+      gsap.to(chunk, { opacity: 0.9, duration: 1.2, ease: 'power2.out' });
+    }
+    function fadeOutChunk() {
+      gsap.to(chunk, { opacity: 0, duration: 0.85, ease: 'power2.in' });
+    }
     function randomPos() {
-      const left = MIN_VW + Math.random() * (MAX_VW - MIN_VW);
-      const top  = MIN_VH + Math.random() * (MAX_VH - MIN_VH);
+      const margin = 15;
+      const left  = margin + Math.random() * (100 - 2 * margin);
+      const top   = margin + Math.random() * (100 - 2 * margin);
       return { left, top };
     }
-
-    // Single clickable text element to guarantee chronology
-    const chunk = document.createElement('div');
-    chunk.className = 'poem-chunk et-book';
-    const textEl = document.createElement('div');
-    textEl.className = 'poem-text';
-    chunk.appendChild(textEl);
-    overlay.appendChild(chunk);
-
-    // Soft fade with GSAP each reveal (opacity only so we don't clobber translate)
-    function fadeInChunk() {
-      if (window.gsap) {
-        gsap.killTweensOf(chunk);
-        gsap.set(chunk, { opacity: 0 });
-        gsap.to(chunk, { opacity: 1, duration: 2, ease: 'power2.out' });
-      } else {
-        chunk.style.opacity = 1;
-      }
-    }
-
     let current = 0;
     function showCurrent() {
       const { left, top } = randomPos();
@@ -289,10 +164,8 @@ carved`,
       textEl.textContent = lines[current];
       fadeInChunk();
     }
-
     const ADVANCE_DELAY_MS = 1200; // 2 seconds after click
     let pending = null;
-
     function advanceAfterDelay() {
       if (pending) clearTimeout(pending);
       pending = setTimeout(() => {
@@ -300,20 +173,17 @@ carved`,
         showCurrent();
       }, ADVANCE_DELAY_MS);
     }
-
     // Clicking the text advances (no effect on video)
     chunk.addEventListener('click', (e) => {
       e.stopPropagation();
       advanceAfterDelay();
     });
-
     // Keep the element inside the viewport on resize/orientation change
     window.addEventListener('resize', () => {
       const { left, top } = randomPos();
       chunk.style.left = left + 'vw';
       chunk.style.top = top + 'vh';
     });
-
     // Robust backlink handler for constrained preview environments
     const backA = document.getElementById('backlink');
     if (backA) {
@@ -326,11 +196,10 @@ carved`,
         }
       });
     }
-
     // Initial reveal
     showCurrent();
   })();
   </script>
-  <div class="backlink et-book"><a id="backlink" href="../index.html">← back to poems</a></div>
+  <div class="backlink et-book"><a href="../index.html" id="backlink">← back to poems</a></div>
 </body>
 </html>
