@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<title>Aros: una tragedia in tre atti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#f4efe2;
+    font-family:'Cormorant Garamond',Garamond,Georgia,serif;}
+  #stage{position:fixed;inset:0;display:block;cursor:crosshair;touch-action:none;}
+
+  /* ---------- surtitle (libretto) ---------- */
+  #libretto{position:fixed;top:2.2vh;left:50%;transform:translateX(-50%);
+    width:min(720px,92vw);text-align:center;pointer-events:none;color:#1c1812;
+    text-shadow:0 0 14px rgba(244,239,226,.9),0 0 4px rgba(244,239,226,.9);}
+  #libretto .act{font-variant:small-caps;letter-spacing:.18em;font-size:1.05rem;
+    margin-bottom:.35rem;opacity:0;transition:opacity 1.6s;}
+  #libretto .coords{font-size:.78rem;letter-spacing:.1em;opacity:0;transition:opacity 1.6s;color:#4a4438;}
+  #libretto .line{font-size:1.28rem;line-height:1.5;opacity:0;transition:opacity 1.4s;}
+  #libretto .line.it{font-style:italic;}
+  #libretto.dark{color:#ece5d0;text-shadow:0 0 14px rgba(10,9,7,.9);}
+
+  /* ---------- hint ---------- */
+  #hint{position:fixed;bottom:3.4vh;left:50%;transform:translateX(-50%);
+    font-style:italic;font-size:1.02rem;color:#5c5546;text-align:center;width:92vw;
+    opacity:0;transition:opacity 1.2s;pointer-events:none;
+    text-shadow:0 0 10px rgba(244,239,226,.9);}
+  #hint.dark{color:#cfc6ad;text-shadow:none;}
+
+  /* ---------- overlays ---------- */
+  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(244,239,226,.96);transition:opacity 2.2s;z-index:10;}
+  .overlay.hidden{opacity:0;pointer-events:none;}
+  .card{max-width:34rem;padding:2rem 2.4rem;text-align:center;color:#1c1812;}
+  .card h1{font-weight:500;font-size:1.9rem;margin:0 0 .2rem;}
+  .card h2{font-weight:400;font-style:italic;font-size:1.25rem;margin:0 0 1.4rem;color:#4a4438;}
+  .card p{font-size:1.05rem;line-height:1.65;margin:.5rem 0;}
+  .card .ded{font-style:italic;color:#4a4438;}
+  .card .keys{font-size:.92rem;color:#5c5546;margin-top:1.2rem;}
+  .card button{font-family:inherit;font-size:1.08rem;font-style:italic;margin-top:1.6rem;
+    padding:.5rem 1.8rem;background:none;border:1px solid #1c1812;color:#1c1812;
+    cursor:pointer;letter-spacing:.06em;}
+  .card button:hover{background:#1c1812;color:#f4efe2;}
+  .card a{color:#4a4438;}
+  #endcard{background:rgba(13,12,10,.0);transition:background 4s,opacity 2.5s;}
+  #endcard.lit{background:rgba(13,12,10,.74);}
+  #endcard .card{color:#ece5d0;}
+  #endcard .card h2,#endcard .card .ded{color:#b8ae93;}
+  #endcard .card a{color:#b8ae93;}
+  #endcard button{border-color:#ece5d0;color:#ece5d0;}
+  #endcard button:hover{background:#ece5d0;color:#1c1812;}
+  .back{position:fixed;left:1rem;bottom:.8rem;font-size:.85rem;z-index:11;}
+  .back a{color:#7a7260;text-decoration:none;border-bottom:1px solid #b8ae93;}
+</style>
+</head>
+<body>
+
+<canvas id="stage"></canvas>
+<div id="libretto"></div>
+<div id="hint"></div>
+
+<div class="overlay" id="intro">
+  <div class="card">
+    <h1>Aros: una tragedia in tre atti</h1>
+    <h2>Mœurs d&rsquo;un Belge</h2>
+    <p class="ded">pour Mylène</p>
+    <p>An opera for one visitor. A salon, somewhere north.<br>
+       The poem is held by three musicians &mdash; a violin that speaks Dutch,
+       a cello that speaks French, a harpsichord that speaks English.</p>
+    <p class="keys">walk with the arrow keys / WASD, or tap the floor<br>
+       click a lit musician to let them play &middot; watch her</p>
+    <button id="enter">entrer dans le salon</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="endcard">
+  <div class="card">
+    <h1>Aros: una tragedia in tre atti</h1>
+    <h2>Mœurs d&rsquo;un Belge &mdash; fin</h2>
+    <p class="ded">pour Mylène</p>
+    <p style="margin-top:1.4rem"><a href="../">&larr; back to poems</a></p>
+    <button onclick="location.reload()">rejouer</button>
+  </div>
+</div>
+
+<div class="back" id="backlink"><a href="../">&larr; back to poems</a></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   AROS — una tragedia in tre atti / Mœurs d'un Belge
+   an interactive opera-poem · ink on paper, one royal blue dress
+   =====================================================================
+   AUDIO HOOK — to add your own compositions later:
+   give any stanza below an `audio:"./act1-s1.mp3"` property and the
+   file will play for the duration of that stanza's performance.
+   ===================================================================== */
+
+/* ------------------------------ poem ------------------------------ */
+// lang: en = harpsichord · fr = cello · nl = violin
+const ACTS = [
+  {title:"Aros I — About You",        coords:"N 56° 9′ 23.283″ · E 10° 12′ 21.127″"},
+  {title:"Aros II — Part of the Band",coords:"N 56° 10′ 16.536″ · E 10° 12′ 0.716″"},
+  {title:"Aros III — All I Need to Hear",coords:"N 56° 8′ 54.751″ · E 10° 12′ 13.168″"},
+];
+const L=(t,l)=>({t,l});
+const STANZAS=[
+ // ---- Act I ----
+ {act:0,ins:['hps'],lines:[L("at 2.23 am I text Joe","en"),L("later he will say that","en"),L("to live is to be open","en"),L("to this kind of anguish","en")]},
+ {act:0,ins:['vc'],lines:[L("si tu me permets, I hesitate","fr"),L("je dois t’avouer que,","fr"),L("que je ne saurais plus le taire—","fr")]},
+ {act:0,ins:['hps'],lines:[L("I pause for words,","en"),L("words I harboured,","en"),L("kept and left unspoken","en"),L("6 years, 5 months","en"),L("and 19 days,","en"),L("almost two-thirds","en"),L("of a decade","en"),L("my secret, now","en"),L("in lyric irruption—","en")]},
+ {act:0,ins:['vc'],lines:[L("tu dégages quelque chose","fr"),L("de tellement rayonnant,","fr"),L("et ton sourire est si","fr"),L("vraiment envoûtant","fr")]},
+ {act:0,ins:['hps','vc'],lines:[L("for 204,138,435 seconds, or","en"),L("3,402,307 minutes, or","en"),L("56,705 hours, or","en"),L("2362 days, or","en"),L("nonante-cinq millions","fr"),L("de battements de cœur—","fr")]},
+ {act:0,ins:['vc'],lines:[L("pour la première fois,","fr"),L("j'ai l'impression que ça","fr"),L("ira peut-être mieux","fr"),L("quand on est tous les deux","fr")]},
+ // ---- Act II ----
+ {act:1,ins:['hps'],lines:[L("at 6.55 pm I text Joe","en"),L("later he will say that","en"),L("to live is to risk all","en"),L("and feel it fully","en")]},
+ {act:1,ins:['vc'],lines:[L("elle a le véritable esprit d'une salonnière","fr"),L("lorsque ses yeux jettent un regard,","fr"),L("si intense, par-delà son éventail,","fr"),L("l'espace d'un instant,","fr"),L("tout le salon retient son souffle ;","fr"),L("elle, seule, respire","fr")]},
+ {act:1,ins:['hps'],lines:[L("I console myself by remembering","en"),L("the words of Barthes:","en"),L("“the lover’s discourse is","en"),L("of an extreme solitude”","en"),L("and like him, I try","en"),L("to find une figure fondée","en")]},
+ {act:1,ins:['vc'],lines:[L("comme un air magnifique,","fr"),L("arraché à un opéra classique,","fr"),L("elle se blottit dans mes poumons","fr"),L("en attente d'être chantée—","fr"),L("dans l'amoureux, quelque chose","fr"),L("de Bouvard et Pécuchet—","fr")]},
+ {act:1,ins:['hps'],lines:[L("sa tendresse; ask me anything,","en"),L("let me put your body to sleep,","en"),L("but do not omit that I desire","en"),L("you—a little, lightly, without","en"),L("wanting to hold on to anything","en")]},
+ {act:1,ins:['vn'],lines:[L("voor de dans, gaf ik haar","nl"),L("een open roos, al wat te","nl"),L("oud, maar ze nam m aan,","nl"),L("vol sierlijkheid en glimlacht","nl"),L("zoals de nacht daarvoor,","nl"),L("alsof wij alleen bestaan","nl")]},
+ {act:1,ins:['vn'],lines:[L("ik wacht ieder moment af","nl"),L("tot ze haar haar wegstopt,","nl"),L("en haar woorden me zo zacht","nl"),L("strelen; kon ik maar langer","nl"),L("kijken, verlangen, genieten","nl"),L("van haar magistrale kracht","nl")]},
+ {act:1,ins:['hps'],climax:true,lines:[L("stunned, I sense her move","en"),L("around the ballroom,","en"),L("her royal blue lace dress","en"),L("like her eyes, twirling","en"),L("intense, fierce, kind","en")]},
+ {act:1,ins:['vc'],lines:[L("et ainsi elle danse doucement","fr"),L("avec une grâce si naturelle","fr"),L("telle un cygne blanc qui glisse","fr"),L("sur la source d'Urðarbrunnr","fr")]},
+ {act:1,ins:['vc','vn'],lines:[L("malheureusement, je sais que","fr"),L("mon amour n’est pas destiné","fr"),L("à rester solitaire, mais à","fr"),L("coexister avec un autre","fr"),L("doch, ze hield m’n bloem bij","nl")]},
+ // ---- Act III ----
+ {act:2,ins:['hps'],lines:[L("at 8.25 am I text Joe","en"),L("later he will say that","en"),L("to live is to endure","en"),L("love’s cruel timing","en")]},
+ {act:2,ins:['hps'],lines:[L("I got back to the hotel","en"),L("alone; she returned later on,","en"),L("‘goodnight’ waiting elsewhere,","en"),L("mine one of quiet longing,","en"),L("packing bags, to carry on","en")]},
+ {act:2,ins:['hps'],lines:[L("a deep ache to hold you","en"),L("just a little bit longer,","en"),L("for once to return home","en"),L("with a small palimpsest","en"),L("of one’s delicate affection","en"),L("égratigné in my skin","en")]},
+ {act:2,ins:['hps'],lines:[L("somewhere two floors below","en"),L("she smiles, as I put a record","en"),L("on, pour mon soulagement ;","en"),L("I would have regretted it","en"),L("for longer than the days","en"),L("I withheld these words,","en"),L("fragilely kept in amber—","en")]},
+ {act:2,ins:['hps','vc'],lines:[L("now 263,142 seconds, or","en"),L("4385 minutes, or","en"),L("septante-trois heures, or","fr"),L("3 days, or","en"),L("526,284 heartbeats","en"),L("no longer resting","en"),L("against lost time—","en")]},
+ {act:2,ins:['hps','vc','vn'],lines:[L("let me say what I could not,","en"),L("ce que je ne savais pas dire","fr"),L("ook al is dit enkel voor mij:","nl")]},
+ {act:2,ins:['vn'],lines:[L("adembenemend, zingend","nl"),L("was ik je gevolgd naar","nl"),L("het Noorden, de banlieus,","nl"),L("al was het maar een uur","nl"),L("in stilte; ik wil bij je zijn,","nl")]},
+ {act:2,ins:['vn','vc'],lines:[L("ik, een klein Belgje","nl"),L("moi, un demi-Brel","fr"),L("jij, een de Staël,","nl"),L("toi, Zizou plus belle","fr"),L("ik zal voor je vinden","nl"),L("je t'inventerai des","fr"),L("onzinnige woorden","nl"),L("mots insensés que","fr"),L("die jij zal begrijpen","nl"),L("tu comprendras","fr")]},
+ {act:2,ins:['vc'],lines:[L("murmure, si tu pouvais,","fr"),L("que tu m'aimes, moi,","fr"),L("car c'est tout, tout,","fr"),L("ce qu'il me faudra","fr")]},
+];
+
+/* --------------------------- constants ---------------------------- */
+const DH=640;                 // design height (world units)
+const ROOM_W=6600;            // the salon is one long room
+const WALL_TOP=56, WALL_BASE=336, WALK_TOP=356, WALK_BOT=600;
+const DOOR_X=190;             // grand door, back wall, near west end
+const BAL_X=5260, BAL_Y=468;  // ballroom centre (where she dances)
+const INK='#1c1812', PAPER='#f4efe2', BLUE='#2f49c6';
+
+/* ------------------------- seeded random --------------------------- */
+let _s=(Math.random()*2**32)>>>0;
+function rnd(){_s|=0;_s=_s+0x6D2B79F5|0;let t=Math.imul(_s^_s>>>15,1|_s);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+const rr=(a,b)=>a+rnd()*(b-a), ri=(a,b)=>Math.floor(rr(a,b+1));
+
+/* ------------------------------ state ------------------------------ */
+const cv=document.getElementById('stage'), cx=cv.getContext('2d');
+let W=0,H=0,S=1,DPR=1;
+let mode='intro';             // intro|explore|perform|communion|denouement|finale|end
+let stanzaIdx=0;              // next stanza to perform
+let communionOpen=false, communionDone=false;
+let camX=0, camTargetX=0, camLock=null, zoom=1, zoomT=0;
+let T=0, last=0, boil=0;
+let guestsAlpha=1, lightDim=0;
+const player={x:DOOR_X+10,y:520,fx:1,walk:0,moving:false,tx:null,ty:null,spd:150};
+let perform=null;             // {st, t, lineDur, total, audioEl}
+let communion=null;           // {t}
+let finale=null;              // {t, phase}
+const notes=[];               // floating note glyphs
+const keys={};
+let hintTimer=null, hintShown={};
+
+/* --------------------------- world gen ----------------------------- */
+// procedural decor: pilasters, mirrors, portraits, sconces, chandeliers,
+// settees, guest clusters — different every visit.
+const decor=[], chandeliers=[], furniture=[], guests=[];
+function genWorld(){
+  // wall bays
+  let x=420;
+  while(x<ROOM_W-300){
+    const w=rr(230,330);
+    if(x+w>BAL_X-650&&x<BAL_X+650){x=BAL_X+650;continue;} // ballroom wall kept for mirrors
+    const kind=['mirror','portrait','portrait','sconce','tapestry','console'][ri(0,5)];
+    decor.push({x:x+w/2,w:w*0.52,kind,h:rr(120,180),oval:rnd()<0.5,seed:rnd()*99});
+    x+=w+rr(60,140);
+  }
+  // grand mirrors behind the ballroom
+  for(let i=-1;i<=1;i++)decor.push({x:BAL_X+i*330,w:120,kind:'mirror',h:215,oval:false,seed:rnd()*99});
+  // far-end windows (night, a moon)
+  decor.push({x:ROOM_W-180,w:95,kind:'window',h:230,seed:1});
+  decor.push({x:ROOM_W-400,w:95,kind:'window',h:230,seed:2});
+  // chandeliers
+  for(let cxx=520;cxx<ROOM_W-200;cxx+=rr(580,760))chandeliers.push({x:cxx,y:rr(100,128),s:rr(.8,1.05),seed:rnd()*99});
+  chandeliers.push({x:BAL_X,y:108,s:1.45,seed:7});
+  // furniture along the walls
+  for(let fx=560;fx<ROOM_W-400;fx+=rr(420,820)){
+    if(Math.abs(fx-BAL_X)<720)continue;
+    furniture.push({x:fx,y:rr(366,390),kind:rnd()<.5?'settee':'chair',fy:rnd()<.5?1:-1,seed:rnd()*99});
+  }
+  // guest clusters in the long salon
+  for(let gx=700;gx<BAL_X-820;gx+=rr(480,900)){
+    const n=ri(2,4), cy=rr(420,560);
+    for(let i=0;i<n;i++)guests.push(mkGuest(gx+rr(-70,70),cy+rr(-34,34),'chat'));
+  }
+  for(let gx=BAL_X+780;gx<ROOM_W-320;gx+=rr(520,900))
+    guests.push(mkGuest(gx,rr(430,560),'chat'));
+  // ring of onlookers around the dance
+  const N=15;
+  for(let i=0;i<N;i++){
+    const a=Math.PI*2*i/N+rr(-.08,.08);
+    if(Math.cos(a)<-0.55&&Math.abs(Math.sin(a))<0.62)continue; // gap for musicians
+    guests.push(mkGuest(BAL_X+Math.cos(a)*330*rr(.92,1.1),
+                        BAL_Y+Math.sin(a)*128*rr(.9,1.1),'watch'));
+  }
+}
+function mkGuest(x,y,role){
+  return {x,y,role,fem:rnd()<0.5,h:rr(.88,1.06),fx:0,seed:rnd()*99,
+          bob:rnd()*6.28,bow:0,fan:rnd()<.5};
+}
+const MUS={
+  vn:{x:BAL_X-470,y:432,name:'violin', seed:11},
+  vc:{x:BAL_X-512,y:492,name:'cello',  seed:22},
+  hps:{x:BAL_X-520,y:566,name:'harpsichord',seed:33},
+};
+const woman={x:BAL_X,y:BAL_Y,dance:0,spin:0,phase:0,hasRose:false};
+genWorld();
+
+/* --------------------------- ink helpers --------------------------- */
+// hand-drawn line with boil (re-jitters a few times per second)
+function nz(a,b){const v=Math.sin(a*127.1+b*311.7+boil*17.77)*43758.5453;return v-Math.floor(v)-0.5;}
+function ink(w,col){cx.lineWidth=(w||1.3)*S*0.78;cx.strokeStyle=col||INK;cx.lineCap='round';cx.lineJoin='round';}
+function jline(x1,y1,x2,y2,amp){
+  amp=(amp==null?1.1:amp);
+  const d=Math.hypot(x2-x1,y2-y1),n=Math.max(2,Math.min(9,d/26|0));
+  cx.beginPath();cx.moveTo(X(x1),Y(y1));
+  for(let i=1;i<=n;i++){const t=i/n,
+    px=x1+(x2-x1)*t+nz(x1+i*7.3,y1)*amp*(i<n?1:0),
+    py=y1+(y2-y1)*t+nz(y1+i*3.1,x2)*amp*(i<n?1:0);
+    cx.lineTo(X(px),Y(py));}
+  cx.stroke();
+}
+function jpoly(pts,close,amp){
+  cx.beginPath();
+  pts.forEach((p,i)=>{const px=p[0]+(i&&i<pts.length-1?nz(p[0],p[1])*(amp==null?1.1:amp):0),
+    py=p[1]+(i&&i<pts.length-1?nz(p[1],p[0])*(amp==null?1.1:amp):0);
+    i?cx.lineTo(X(px),Y(py)):cx.moveTo(X(px),Y(py));});
+  if(close)cx.closePath();cx.stroke();
+}
+function jellipse(x,y,rx,ry,amp,a0,a1){
+  const n=18;cx.beginPath();
+  for(let i=0;i<=n;i++){const a=(a0==null?0:a0)+((a1==null?Math.PI*2:a1)-(a0==null?0:a0))*i/n,
+    px=x+Math.cos(a)*rx+nz(a*9,x)*(amp==null?1:amp),
+    py=y+Math.sin(a)*ry+nz(a*7,y)*(amp==null?1:amp);
+    i?cx.lineTo(X(px),Y(py)):cx.moveTo(X(px),Y(py));}
+  cx.stroke();
+}
+function hatch(x,y,w,h,gap,ang){
+  cx.save();cx.beginPath();cx.rect(X(x),Y(y),w*S,h*S);cx.clip();
+  const g=gap||5, n=(w+h)/g|0;
+  for(let i=-2;i<n+2;i++){
+    const off=i*g;
+    jline(x+off,y, x+off-h*Math.tan(ang||0.5), y+h, .6);
+  }
+  cx.restore();
+}
+// world→screen
+let _camY=0;
+function X(x){return (x-camX)*S*zoom + _ox;}
+function Y(y){return (y-_camY)*S*zoom + _oy;}
+let _ox=0,_oy=0;
+
+/* ------------------------- scene drawing --------------------------- */
+function drawRoom(){
+  // back wall
+  ink(1.1);jline(0,WALL_BASE,ROOM_W,WALL_BASE,1.4);
+  jline(0,WALL_TOP,ROOM_W,WALL_TOP,1.4);
+  // cornice + wainscot
+  ink(.7);jline(0,WALL_TOP+16,ROOM_W,WALL_TOP+16,.9);
+  jline(0,WALL_BASE-44,ROOM_W,WALL_BASE-44,.9);
+  // pilasters
+  for(let px=320;px<ROOM_W;px+=460){
+    if(Math.abs(px-DOOR_X)<140)continue;
+    ink(.8);jline(px,WALL_TOP+16,px,WALL_BASE,.8);jline(px+14,WALL_TOP+16,px+14,WALL_BASE,.8);
+    jellipse(px+7,WALL_TOP+24,10,6,.8,Math.PI,Math.PI*2);
+  }
+  // parquet — herringbone suggestion
+  ink(.55,'rgba(28,24,18,.5)');
+  for(let fy=WALL_BASE+18;fy<DH+40;fy+=34){
+    const persp=(fy-WALL_BASE)/(DH-WALL_BASE);
+    for(let fx=-(fy*3%72);fx<ROOM_W;fx+=72)
+      jline(fx,fy,fx+30,fy+16*persp+6,.5);
+  }
+  // grand door (entrance / exit)
+  drawDoor(DOOR_X);
+  // decor
+  for(const d of decor)if(vis(d.x,d.w+80))drawDecor(d);
+  for(const c of chandeliers)if(vis(c.x,160))drawChandelier(c);
+}
+function vis(x,m){const vw=W/(S*zoom);return x>camX-(m||100)&&x<camX+vw+(m||100);}
+function drawDoor(dx){
+  ink(1.3);
+  jpoly([[dx-62,WALL_BASE],[dx-62,WALL_TOP+34],[dx,WALL_TOP+18],[dx+62,WALL_TOP+34],[dx+62,WALL_BASE]],false,1.2);
+  ink(.8);jline(dx,WALL_TOP+22,dx,WALL_BASE,.9);
+  jpoly([[dx-48,WALL_BASE-12],[dx-48,WALL_TOP+44],[dx-6,WALL_TOP+38],[dx-6,WALL_BASE-12]],true,.9);
+  jpoly([[dx+48,WALL_BASE-12],[dx+48,WALL_TOP+44],[dx+6,WALL_TOP+38],[dx+6,WALL_BASE-12]],true,.9);
+  jellipse(dx-14,WALL_BASE-86,3,3,.5);jellipse(dx+14,WALL_BASE-86,3,3,.5);
+}
+function drawDecor(d){
+  const top=WALL_TOP+42;
+  if(d.kind==='mirror'){
+    ink(1);
+    if(d.oval)jellipse(d.x,top+d.h/2,d.w/2,d.h/2,1.2);
+    else jpoly([[d.x-d.w/2,top],[d.x+d.w/2,top],[d.x+d.w/2,top+d.h],[d.x-d.w/2,top+d.h]],true,1.2);
+    ink(.55,'rgba(28,24,18,.45)');
+    jline(d.x-d.w/4,top+d.h*0.18,d.x+d.w/5,top+d.h*0.62,.8);
+    jline(d.x-d.w/6,top+d.h*0.12,d.x+d.w/4,top+d.h*0.5,.8);
+  }else if(d.kind==='portrait'){
+    ink(1);
+    if(d.oval)jellipse(d.x,top+d.h/2,d.w/3,d.h/2,1.2);
+    else jpoly([[d.x-d.w/2.2,top],[d.x+d.w/2.2,top],[d.x+d.w/2.2,top+d.h],[d.x-d.w/2.2,top+d.h]],true,1.2);
+    // a face that has been looking out for three hundred years
+    ink(.7,'rgba(28,24,18,.65)');
+    jellipse(d.x,top+d.h*0.36,d.w/7,d.h/8,.8);
+    jellipse(d.x,top+d.h*0.30,d.w/5.2,d.h/11,.7,Math.PI,Math.PI*2);
+    jpoly([[d.x-d.w/5,top+d.h*0.78],[d.x,top+d.h*0.5],[d.x+d.w/5,top+d.h*0.78]],false,.8);
+  }else if(d.kind==='sconce'){
+    for(const s of [-1,1]){
+      const sx=d.x+s*d.w/2;
+      ink(.8);jline(sx,top+70,sx,top+96,.7);
+      jellipse(sx,top+98,8,4,.6,0,Math.PI);
+      drawFlame(sx,top+62,.8);
+    }
+  }else if(d.kind==='tapestry'){
+    ink(.9);jpoly([[d.x-d.w/2,top],[d.x+d.w/2,top],[d.x+d.w/2-6,top+d.h],[d.x-d.w/2+6,top+d.h]],true,1.3);
+    ink(.5,'rgba(28,24,18,.5)');
+    for(let i=1;i<4;i++)jline(d.x-d.w/2+8,top+d.h*i/4,d.x+d.w/2-8,top+d.h*i/4+nz(i,d.seed)*6,1.6);
+  }else if(d.kind==='console'){
+    const by=WALL_BASE-2;
+    ink(.9);jline(d.x-34,by-46,d.x+34,by-46,.8);
+    jline(d.x-28,by-46,d.x-22,by,.8);jline(d.x+28,by-46,d.x+22,by,.8);
+    drawCandelabrum(d.x,by-48,.9);
+  }else if(d.kind==='window'){
+    ink(1.1);
+    jpoly([[d.x-d.w/2,top],[d.x-d.w/2,top+d.h],[d.x+d.w/2,top+d.h],[d.x+d.w/2,top]],false,1);
+    jellipse(d.x,top+8,d.w/2,26,1,Math.PI,Math.PI*2);
+    ink(.6);jline(d.x,top-14,d.x,top+d.h,.7);
+    jline(d.x-d.w/2,top+d.h/2,d.x+d.w/2,top+d.h/2,.7);
+    if(d.seed===1){ // the moon, far end of the night
+      ink(.9);jellipse(d.x-12,top+44,15,15,.7);
+      cx.save();cx.fillStyle=PAPER;cx.beginPath();
+      cx.ellipse(X(d.x-5),Y(top+40),13*S*zoom,13*S*zoom,0,0,7);cx.fill();cx.restore();
+    }
+  }
+}
+function drawFlame(x,y,s){
+  const f=Math.sin(T*9+x)*1.6;
+  ink(.7,'rgba(28,24,18,.85)');
+  jpoly([[x-2*s,y+6*s],[x+f*0.4,y-6*s],[x+2*s,y+6*s]],true,.8);
+}
+function drawCandelabrum(x,y,s){
+  ink(.8);jline(x,y,x,y-22*s,.7);
+  jline(x-14*s,y-14*s,x+14*s,y-14*s,.8);
+  jline(x-14*s,y-14*s,x-14*s,y-22*s,.6);jline(x+14*s,y-14*s,x+14*s,y-22*s,.6);
+  drawFlame(x,y-28*s,s);drawFlame(x-14*s,y-26*s,s*.9);drawFlame(x+14*s,y-26*s,s*.9);
+}
+function drawChandelier(c){
+  const sway=Math.sin(T*0.7+c.seed)*2;
+  ink(.8);jline(c.x,WALL_TOP-40,c.x+sway,c.y,.8);
+  ink(.9);jellipse(c.x+sway,c.y+14*c.s,30*c.s,10*c.s,1);
+  jellipse(c.x+sway,c.y+4*c.s,18*c.s,6*c.s,.8);
+  for(let i=-2;i<=2;i++){
+    const ax=c.x+sway+i*14*c.s;
+    jline(ax,c.y+4*c.s,ax,c.y-4*c.s,.6);
+    drawFlame(ax,c.y-9*c.s,.85*c.s);
+  }
+  // hanging crystal hints
+  ink(.5,'rgba(28,24,18,.5)');
+  for(let i=-1;i<=1;i++)jline(c.x+sway+i*18*c.s,c.y+14*c.s,c.x+sway+i*14*c.s,c.y+24*c.s,.5);
+}
+
+/* --------------------------- figures ------------------------------- */
+function depthScale(y){return 0.78+0.5*(y-WALK_TOP)/(WALK_BOT-WALK_TOP);}
+function shadow(x,y,r){
+  cx.save();cx.fillStyle='rgba(28,24,18,.10)';cx.beginPath();
+  cx.ellipse(X(x),Y(y+2),r*S*zoom,r*0.32*S*zoom,0,0,7);cx.fill();cx.restore();
+}
+// a little man in salon dress: justaucorps, breeches, periwig
+function drawMan(x,y,sc,o){
+  o=o||{};const s=sc*(o.flat?1:depthScale(y)), f=o.fx==null?1:o.fx, w=o.walk||0;
+  const inkC=o.col||INK;
+  if(!o.flat)shadow(x,y,16*s);
+  const lg=Math.sin(w)*9*s*(o.moving?1:0);
+  ink(1.2,inkC);
+  // legs: stockings
+  jline(x-4*s,y-34*s,x-4*s+lg*0.6,y-2*s,.9);
+  jline(x+4*s,y-34*s,x+4*s-lg*0.6,y-2*s,.9);
+  // shoes
+  jline(x-4*s+lg*0.6,y-2*s,x-4*s+lg*0.6+6*s*f,y,.6);
+  jline(x+4*s-lg*0.6,y-2*s,x+4*s-lg*0.6+6*s*f,y,.6);
+  // breeches
+  jpoly([[x-6*s,y-46*s],[x-7*s,y-32*s],[x+7*s,y-32*s],[x+6*s,y-46*s]],true,.9);
+  // justaucorps — long coat, flared, buttons
+  jpoly([[x-7*s,y-72*s],[x-12*s,y-36*s],[x-4*s,y-34*s],[x,y-44*s],[x+4*s,y-34*s],[x+12*s,y-36*s],[x+7*s,y-72*s]],true,1);
+  ink(.6,inkC);for(let i=1;i<5;i++)jellipse(x+f*1.5,y-72*s+i*7*s,.9,.9,.3);
+  // arms (one may hold a rose / gesture)
+  ink(1.1,inkC);
+  const armA=o.armUp?-1.9:0.5+Math.sin(w+Math.PI)*0.35*(o.moving?1:0);
+  jline(x-7*s,y-68*s, x-7*s-9*s*Math.cos(armA*0.4), y-68*s+16*s*Math.sin(0.9+armA*0.2),.9);
+  jline(x+7*s,y-68*s, x+7*s+11*s*Math.cos(armA), y-68*s+15*s*Math.sin(Math.max(.2,armA)),.9);
+  if(o.rose)drawRose(x+7*s+11*s*Math.cos(armA)+2*s*f, y-68*s+15*s*Math.sin(Math.max(.2,armA)),s,inkC);
+  // jabot
+  ink(.6,inkC);jline(x,y-72*s,x,y-64*s,.5);
+  // head + periwig
+  ink(1.1,inkC);jellipse(x+f*1.2,y-80*s,6.4*s,7*s,.8);
+  ink(.8,inkC);
+  jellipse(x-6*s,y-78*s,3*s,6*s,.8);jellipse(x+6*s,y-78*s,3*s,6*s,.8);
+  jellipse(x,y-87*s,6*s,3.4*s,.8,Math.PI*0.9,Math.PI*2.1);
+  if(o.fem)return; // (unused)
+}
+// a woman: bodice, grand bell gown, fan
+function drawWoman(x,y,sc,o){
+  o=o||{};const s=sc*(o.flat?1:depthScale(y)), blue=o.blue, inkC=o.col||INK;
+  const flare=1+(o.flare||0);
+  if(!o.flat)shadow(x,y,20*s*flare);
+  // gown
+  const gx=x, gy=y, gw=20*s*flare, gh=46*s;
+  cx.save();
+  if(blue){
+    cx.fillStyle=BLUE;cx.beginPath();
+    cx.moveTo(X(gx-5*s),Y(gy-gh));
+    cx.bezierCurveTo(X(gx-gw*0.9),Y(gy-gh*0.45),X(gx-gw),Y(gy-2*s),X(gx-gw*0.96),Y(gy));
+    cx.lineTo(X(gx+gw*0.96),Y(gy));
+    cx.bezierCurveTo(X(gx+gw),Y(gy-2*s),X(gx+gw*0.9),Y(gy-gh*0.45),X(gx+5*s),Y(gy-gh));
+    cx.closePath();cx.fill();
+  }
+  cx.restore();
+  ink(1.2,inkC);
+  jpoly([[gx-5*s,gy-gh],[gx-gw*0.95,gy-gh*0.3],[gx-gw,gy],[gx+gw,gy],[gx+gw*0.95,gy-gh*0.3],[gx+5*s,gy-gh]],true,1.2);
+  // lace / pleats
+  ink(.55, blue?'rgba(238,236,248,.8)':'rgba(28,24,18,.45)');
+  for(let i=-2;i<=2;i++)jline(gx+i*5*s,gy-gh+4*s, gx+i*gw*0.42, gy-2*s,1.3);
+  if(blue){ink(.5,'rgba(238,236,248,.65)');jellipse(gx,gy-gh*0.55,gw*0.62,gh*0.3,1.4,Math.PI*0.15,Math.PI*0.85);}
+  // bodice
+  ink(1.1,inkC);
+  jpoly([[gx-5*s,gy-gh],[gx-6.5*s,gy-gh-16*s],[gx+6.5*s,gy-gh-16*s],[gx+5*s,gy-gh]],true,.9);
+  if(blue){cx.save();cx.fillStyle=BLUE;cx.beginPath();
+    cx.moveTo(X(gx-5*s),Y(gy-gh));cx.lineTo(X(gx-6.5*s),Y(gy-gh-16*s));
+    cx.lineTo(X(gx+6.5*s),Y(gy-gh-16*s));cx.lineTo(X(gx+5*s),Y(gy-gh));cx.closePath();cx.fill();cx.restore();}
+  // arms
+  ink(1,inkC);
+  const up=o.armsUp?1:0, sw=Math.sin(o.phase||0);
+  jline(gx-6*s,gy-gh-12*s, gx-(13+up*5)*s, gy-gh-(up?26:2)*s+sw*2*s,.9);
+  jline(gx+6*s,gy-gh-12*s, gx+(13+up*5)*s, gy-gh-(up?26:2)*s-sw*2*s,.9);
+  if(o.fan&&!o.armsUp){ // fan, half-open
+    const fx2=gx+(13)*s, fy2=gy-gh-2*s-sw*2*s;
+    ink(.7,inkC);
+    for(let i=0;i<4;i++){const a=-0.5-i*0.28+sw*0.06;
+      jline(fx2,fy2,fx2+Math.cos(a)*10*s,fy2+Math.sin(a)*10*s,.5);}
+  }
+  if(o.rose)drawRose(gx-(13)*s,gy-gh-(up?26:2)*s,s,inkC);
+  // head + coiffure
+  ink(1.1,inkC);jellipse(gx,gy-gh-23*s,5.6*s,6.2*s,.8);
+  ink(.8,inkC);jellipse(gx,gy-gh-30*s,4.4*s,3.4*s,.8);
+  jellipse(gx-5*s,gy-gh-27*s,2*s,3*s,.6);jellipse(gx+5*s,gy-gh-27*s,2*s,3*s,.6);
+}
+function drawRose(x,y,s,col){
+  ink(.8,col||INK);
+  jellipse(x,y,2.6*s,2.4*s,.5);
+  jellipse(x,y,1.2*s,1.1*s,.4);
+  jline(x,y+2*s,x-1.5*s,y+7*s,.5);
+  jline(x-1*s,y+4.5*s,x-3.5*s,y+4*s,.4);
+}
+function drawGuest(g){
+  if(guestsAlpha<=0.01)return;
+  cx.save();cx.globalAlpha=guestsAlpha;
+  const bob=Math.sin(T*1.3+g.bob)*1.2, lean=g.bow*6;
+  const o={fx:g.fx||((g.x<player.x)?1:-1),phase:T+g.bob,fan:g.fan};
+  if(g.role==='watch'){o.fx=(g.x<woman.x)?1:-1;}
+  cx.translate(0,bob*S*zoom);
+  if(g.bow>0.02){cx.translate(X(g.x),Y(g.y));cx.rotate(lean*0.02*o.fx);cx.translate(-X(g.x),-Y(g.y));}
+  g.fem?drawWoman(g.x,g.y,g.h,o):drawMan(g.x,g.y,g.h,o);
+  cx.restore();
+}
+
+/* --------------------------- musicians ----------------------------- */
+function drawMusHps(){
+  const ready=readyInstruments(), t=T;
+  {
+    const m=MUS.hps, s=depthScale(m.y), act=isPlaying('hps');
+    shadow(m.x+10,m.y,46*s);
+    ink(1.2);
+    // wing body, side view, lid open
+    jpoly([[m.x-40*s,m.y-34*s],[m.x+44*s,m.y-34*s],[m.x+52*s,m.y-26*s],[m.x+18*s,m.y-22*s],[m.x-40*s,m.y-26*s]],true,1.2);
+    jline(m.x+44*s,m.y-34*s,m.x+6*s,m.y-62*s,1);  // lid
+    jline(m.x+6*s,m.y-62*s,m.x-38*s,m.y-35*s,1);
+    jline(m.x+18*s,m.y-30*s,m.x+16*s,m.y-48*s,.7); // prop stick
+    // legs
+    jline(m.x-34*s,m.y-26*s,m.x-36*s,m.y,1);jline(m.x+12*s,m.y-22*s,m.x+12*s,m.y,1);jline(m.x+46*s,m.y-26*s,m.x+48*s,m.y,1);
+    // keyboard
+    ink(.6);for(let i=0;i<9;i++)jline(m.x-38*s+i*4*s,m.y-26*s,m.x-38*s+i*4*s,m.y-22*s,.3);
+    // the player, seated, hands at keys
+    const hb=act?Math.sin(t*10)*2.2:0;
+    ink(1.1);
+    jellipse(m.x-52*s,m.y-44*s,5.6*s,6.2*s,.8);            // head
+    jellipse(m.x-57*s,m.y-43*s,2.6*s,5*s,.7);              // wig
+    jpoly([[m.x-56*s,m.y-38*s],[m.x-60*s,m.y-16*s],[m.x-46*s,m.y-16*s],[m.x-47*s,m.y-38*s]],true,.9);
+    jline(m.x-48*s,m.y-32*s,m.x-37*s,m.y-24*s+hb,.8);      // arms
+    jline(m.x-50*s,m.y-30*s,m.x-39*s,m.y-23*s-hb,.8);
+    jline(m.x-58*s,m.y-16*s,m.x-58*s,m.y,.9);jline(m.x-47*s,m.y-16*s,m.x-47*s,m.y,.9); // bench legs+his
+    markReady('hps',m.x-10*s,m.y-92*s,ready);
+  }
+}
+function drawMusVc(){
+  const ready=readyInstruments(), t=T;
+  {
+    const m=MUS.vc,s=depthScale(m.y),act=isPlaying('vc');
+    shadow(m.x,m.y,26*s);
+    const bow=act?Math.sin(t*6)*10:0;
+    ink(1.1);
+    // chair
+    jline(m.x-12*s,m.y-26*s,m.x-12*s,m.y,.9);jline(m.x+10*s,m.y-26*s,m.x+10*s,m.y,.9);
+    // seated player
+    jellipse(m.x-2*s,m.y-62*s,5.8*s,6.4*s,.8);
+    jellipse(m.x-8*s,m.y-60*s,2.6*s,5.4*s,.7);
+    jpoly([[m.x-8*s,m.y-56*s],[m.x-11*s,m.y-28*s],[m.x+9*s,m.y-28*s],[m.x+6*s,m.y-56*s]],true,1);
+    jline(m.x-9*s,m.y-28*s,m.x-13*s,m.y,.9);jline(m.x+7*s,m.y-28*s,m.x+11*s,m.y,.9);
+    // cello
+    ink(1.3);
+    jellipse(m.x+14*s,m.y-26*s,9*s,13*s,1.1);
+    jellipse(m.x+14*s,m.y-40*s,6*s,7*s,.9,Math.PI*0.95,Math.PI*2.05);
+    jline(m.x+14*s,m.y-46*s,m.x+12*s,m.y-72*s,.9);  // neck
+    jellipse(m.x+12*s,m.y-74*s,2*s,3*s,.5);          // scroll
+    jline(m.x+14*s,m.y-13*s,m.x+15*s,m.y,.6);        // endpin
+    ink(.5);jline(m.x+11*s,m.y-36*s,m.x+11*s,m.y-16*s,.4);jline(m.x+17*s,m.y-36*s,m.x+17*s,m.y-16*s,.4);
+    // bow arm
+    ink(1);jline(m.x+6*s,m.y-50*s, m.x+24*s+bow*0.4*s, m.y-34*s+bow*s*0.2,.9);
+    ink(.7);jline(m.x+30*s+bow*0.4*s,m.y-46*s+bow*s*0.3, m.x+12*s+bow*0.4*s, m.y-22*s+bow*s*0.1,.6);
+    markReady('vc',m.x+2*s,m.y-92*s,ready);
+  }
+}
+function drawMusVn(){
+  const ready=readyInstruments(), t=T;
+  {
+    const m=MUS.vn,s=depthScale(m.y),act=isPlaying('vn');
+    shadow(m.x,m.y,15*s);
+    const bow=act?Math.sin(t*7.5)*8:0;
+    drawMan(m.x,m.y,1,{fx:1});
+    ink(1.2);
+    jellipse(m.x+9*s,m.y-76*s,7*s,4*s,.8);          // violin body at chin
+    jline(m.x+15*s,m.y-78*s,m.x+25*s,m.y-83*s,.7);  // neck
+    ink(.9);jline(m.x+4*s+bow*0.3*s,m.y-90*s+bow*0.2*s, m.x+18*s+bow*0.3*s, m.y-66*s+bow*0.2*s,.7); // bow
+    markReady('vn',m.x,m.y-104*s,ready);
+  }
+}
+function isPlaying(id){return perform&&perform.st.ins.includes(id);}
+function readyInstruments(){
+  if(mode!=='explore'||stanzaIdx>=STANZAS.length)return [];
+  return STANZAS[stanzaIdx].ins;
+}
+function markReady(id,x,y,ready){
+  if(!ready.includes(id))return;
+  if(distToPlayer(MUS[id].x,MUS[id].y)>460)return;
+  const a=0.45+0.4*Math.sin(T*2.6);
+  cx.save();cx.globalAlpha=a;
+  cx.fillStyle=INK;cx.font=`${15*S*zoom}px serif`;cx.textAlign='center';
+  cx.fillText('♪',X(x),Y(y-6+Math.sin(T*1.8)*3));
+  cx.restore();
+  cx.save();cx.globalAlpha=a*0.5;ink(.6);
+  jellipse(x,y+8,14,5,.8);cx.restore();
+}
+function distToPlayer(x,y){return Math.hypot(x-player.x,(y-player.y)*2.4);}
+
+/* ----------------------------- woman ------------------------------- */
+function drawTheWoman(){
+  const d=woman.dance; // 0 idle … 1 full dance
+  woman.phase+=0.016*(1+d*2);
+  let wx=woman.x,wy=woman.y;
+  if(woman.curtsy&&T-woman.curtsy<1.2)wy+=Math.sin((T-woman.curtsy)/1.2*Math.PI)*5; // a small curtsy
+  if(d>0.02){ // she turns about the floor
+    woman.spin+=0.016*(0.5+d*1.4);
+    wx+=Math.cos(woman.spin)*46*d;
+    wy+=Math.sin(woman.spin)*17*d;
+  }
+  // swirl strokes around the dance
+  if(d>0.25){
+    cx.save();cx.globalAlpha=(d-0.25)*0.55;ink(.6,'rgba(28,24,18,.6)');
+    for(let i=0;i<3;i++){
+      const a0=woman.spin*1.7+i*2.1;
+      jellipse(wx,wy-12,34+i*13,12+i*5,2.2,a0,a0+2.0);
+    }
+    cx.restore();
+  }
+  // aura when she may be approached
+  if(communionOpen&&!communionDone&&mode==='explore'){
+    const a=0.25+0.18*Math.sin(T*2.2);
+    cx.save();cx.globalAlpha=a;ink(1,BLUE);
+    jellipse(wx,wy+2,30,11,1.6);cx.restore();
+  }
+  drawWoman(wx,wy,1.06,{blue:true,fan:d<0.2,armsUp:d>0.45,flare:d*0.5,
+    phase:woman.phase,rose:woman.hasRose});
+  woman.sx=wx;woman.sy=wy; // remembered for hit-testing
+}
+
+/* ------------------------ notes (visual music) --------------------- */
+function spawnNotes(){
+  if(!perform)return;
+  if(rnd()<0.10){
+    const ids=perform.st.ins, id=ids[ri(0,ids.length-1)], m=MUS[id];
+    notes.push({x:m.x+rr(-8,18),y:m.y-90,vx:rr(8,26),vy:rr(-26,-14),
+      g:['♪','♫','𝅗𝅥','♩'][ri(0,3)],age:0,life:rr(3.5,5.5),ph:rnd()*7});
+  }
+}
+function drawNotes(dt){
+  for(let i=notes.length-1;i>=0;i--){
+    const n=notes[i];n.age+=dt;
+    if(n.age>n.life){notes.splice(i,1);continue;}
+    n.x+=n.vx*dt;n.y+=n.vy*dt;
+    const a=Math.min(1,n.age*2)*(1-n.age/n.life);
+    cx.save();cx.globalAlpha=a*0.8;cx.fillStyle=INK;
+    cx.font=`${13*S*zoom}px serif`;cx.textAlign='center';
+    cx.fillText(n.g,X(n.x+Math.sin(n.age*2+n.ph)*8),Y(n.y));
+    cx.restore();
+  }
+}
+
+/* --------------------------- libretto ------------------------------ */
+const lib=document.getElementById('libretto');
+let libGen=0; // invalidates pending fade-clears when new text arrives
+function startPerformance(){
+  libGen++;
+  const st=STANZAS[stanzaIdx];
+  // the height of the performance has passed once Act III begins
+  if(st.act===2)communionOpen=false;
+  perform={st,t:0,lineDur:2.3,total:st.lines.length*2.3+2.0};
+  mode='perform';
+  lib.innerHTML='';
+  if(isFirstOfAct(stanzaIdx)){
+    const a=document.createElement('div');a.className='act';a.textContent=ACTS[st.act].title;
+    const c=document.createElement('div');c.className='coords';c.textContent=ACTS[st.act].coords;
+    lib.appendChild(a);lib.appendChild(c);
+    requestAnimationFrame(()=>{a.style.opacity=.9;c.style.opacity=.7;});
+    perform.total+=1.6;perform.actPause=1.6;
+  }
+  st.lines.forEach(li=>{
+    const d=document.createElement('div');
+    d.className='line'+(li.l!=='en'?' it':'');
+    d.textContent=li.t;lib.appendChild(d);
+  });
+  /* AUDIO HOOK: if you later add st.audio = "file.mp3", it plays here */
+  if(st.audio){perform.audioEl=new Audio(st.audio);perform.audioEl.play().catch(()=>{});}
+}
+function isFirstOfAct(i){return i===0||STANZAS[i-1].act!==STANZAS[i].act;}
+function updatePerformance(dt){
+  const p=perform;p.t+=dt;
+  const off=p.actPause||0;
+  const lines=lib.querySelectorAll('.line');
+  lines.forEach((el,i)=>{if(p.t>off+i*p.lineDur)el.style.opacity=.95;});
+  // she dances while the music plays
+  woman.dance=Math.min(1,woman.dance+dt*0.5);
+  spawnNotes();
+  if(p.t>=p.total){
+    if(p.audioEl)try{p.audioEl.pause();}catch(e){}
+    const st=p.st;perform=null;mode='explore';
+    fadeLibretto();
+    if(st.climax){communionOpen=true;
+      showHint('elle, seule, respire — she glances at you, par-delà son éventail',8);}
+    stanzaIdx++;
+    if(stanzaIdx>=STANZAS.length)beginDenouement();
+  }
+}
+function fadeLibretto(){
+  const g=++libGen;
+  lib.querySelectorAll('.line,.act,.coords').forEach(el=>el.style.opacity=0);
+  setTimeout(()=>{if(g===libGen)lib.innerHTML='';},1500);
+}
+
+/* --------------------------- communion ------------------------------ */
+function startCommunion(){
+  communion={t:0,manFrom:{x:player.x,y:player.y}};
+  mode='communion';communionOpen=false;communionDone=true;
+  woman.dance=0;
+  libGen++;lib.innerHTML='';lib.classList.add('dark');
+  document.getElementById('hint').classList.add('dark');
+  const d=document.createElement('div');d.className='line it';
+  d.textContent='alsof wij alleen bestaan';lib.appendChild(d);
+  setTimeout(()=>{d.style.opacity=.95;},2600);
+}
+function updateCommunion(dt){
+  const c=communion;c.t+=dt;
+  const tx=woman.x-44,ty=woman.y+6;
+  const k=Math.min(1,c.t/1.4),e=k*k*(3-2*k);
+  player.x=c.manFrom.x+(tx-c.manFrom.x)*e;
+  player.y=c.manFrom.y+(ty-c.manFrom.y)*e;
+  player.fx=1;player.moving=k<1;player.walk+=dt*9*(k<1?1:0);
+  if(c.t>4.6&&!woman.hasRose)woman.hasRose=true; // she keeps the flower
+  if(c.t>3&&!c.hinted){c.hinted=true;showHint('(click once more, and the salon returns)');}
+}
+function endCommunion(){
+  communion=null;mode='explore';
+  lib.classList.remove('dark');document.getElementById('hint').classList.remove('dark');
+  fadeLibretto();
+  showHint('the poem continues — the musicians are waiting');
+}
+function drawCommunion(){
+  // darkness; only the two of them remain
+  cx.fillStyle='#0d0c0a';cx.fillRect(0,0,W,H);
+  const c=communion;
+  // a pool of candlelight
+  const px=X((player.x+woman.x)/2),py=Y(woman.y-40);
+  const g=cx.createRadialGradient(px,py,10,px,py,360*S*zoom);
+  g.addColorStop(0,'rgba(236,229,208,.13)');g.addColorStop(1,'rgba(236,229,208,0)');
+  cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  const pale='#e9e2cf';
+  // the rose passes between them
+  const armUp=c.t>1.6&&c.t<4.6;
+  drawMan(player.x,player.y,1,{fx:1,col:pale,moving:player.moving,walk:player.walk,
+    armUp:armUp,rose:c.t>1.6&&c.t<=4.6});
+  drawWoman(woman.x,woman.y,1.06,{blue:true,col:pale,phase:T*0.6,rose:c.t>4.6});
+  woman.sx=woman.x;woman.sy=woman.y;
+}
+
+/* ------------------------ denouement / finale ----------------------- */
+function beginDenouement(){
+  mode='denouement';
+  showHint('the salon empties — find your way back',6);
+}
+function updateDenouement(dt){
+  guestsAlpha=Math.max(0,guestsAlpha-dt*0.09);
+  lightDim=Math.min(0.32,lightDim+dt*0.03);
+  woman.dance=Math.max(0.12,woman.dance-dt*0.1); // she keeps slowly turning, alone
+  if(player.x<DOOR_X+150)beginFinale();
+}
+function beginFinale(){
+  mode='finale';finale={t:0,phase:0};
+  player.tx=null;player.moving=false;
+  showHint('');
+}
+function updateFinale(dt){
+  const f=finale;f.t+=dt;
+  guestsAlpha=Math.max(0,guestsAlpha-dt*0.18); // the last guests slip away
+  lightDim=Math.min(0.32,lightDim+dt*0.02);
+  if(f.phase===0){ // walk the last steps to the door
+    player.x+=(DOOR_X+26-player.x)*0.06;player.y+=(470-player.y)*0.06;
+    player.moving=true;player.walk+=dt*9;player.fx=-1;
+    if(f.t>1.6){f.phase=1;f.t=0;player.moving=false;}
+  }else if(f.phase===1){ // pause… and look back at her
+    if(f.t>1.2)player.fx=1;
+    // the whole salon slowly comes into view — one long engraving
+    const target=Math.min(1,(W/S)/ROOM_W);
+    zoomT=Math.min(1,f.t/5.5);
+    const e=zoomT*zoomT*(3-2*zoomT);
+    zoom=1+(target-1)*e;
+    if(f.t>8.5){f.phase=2;f.t=0;}
+  }else if(f.phase===2){ // fin
+    if(!f.ended){f.ended=true;
+      const ec=document.getElementById('endcard');
+      ec.classList.remove('hidden');requestAnimationFrame(()=>ec.classList.add('lit'));
+      mode='end';
+    }
+  }
+}
+function drawGaze(){
+  // a faint thread of attention, drawn across the whole salon
+  if(mode!=='finale'&&mode!=='end')return;
+  if(!finale||finale.phase<1)return;
+  const a=Math.min(0.4,(finale.t-1.6)*0.12);
+  if(a<=0)return;
+  cx.save();cx.globalAlpha=a;ink(.5,'rgba(28,24,18,.8)');
+  cx.setLineDash([2*S,7*S]);
+  jline(player.x+10,player.y-80,woman.sx||woman.x,(woman.sy||woman.y)-70,3);
+  cx.setLineDash([]);cx.restore();
+}
+
+/* ------------------------------ hints ------------------------------- */
+function showHint(t,dur){
+  const h=document.getElementById('hint');
+  h.textContent=t;h.style.opacity=t?1:0;
+  clearTimeout(hintTimer);
+  if(t)hintTimer=setTimeout(()=>h.style.opacity=0,(dur||5)*1000);
+}
+
+/* ------------------------------ input ------------------------------- */
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault();});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+cv.addEventListener('pointerdown',e=>{
+  if(mode==='intro'||mode==='end')return;
+  if(mode==='communion'){if(communion.t>2.8)endCommunion();return;}
+  if(mode==='finale')return;
+  const r=cv.getBoundingClientRect();
+  const mx=(e.clientX-r.left)*(W/r.width), my=(e.clientY-r.top)*(H/r.height);
+  const wx=(mx-_ox)/(S*zoom)+camX, wy=(my-_oy)/(S*zoom)+_camY;
+  // the woman
+  if(mode==='explore'&&Math.hypot(wx-(woman.sx||woman.x),wy-((woman.sy||woman.y)-46))<54){
+    if(communionOpen&&!communionDone&&distToPlayer(woman.x,woman.y)<420){startCommunion();return;}
+    woman.curtsy=T;showHint('she curtsies, par-delà son éventail',3);return;
+  }
+  // musicians
+  if(mode==='explore'&&stanzaIdx<STANZAS.length){
+    for(const id of ['vn','vc','hps']){
+      const m=MUS[id];
+      if(Math.hypot(wx-m.x,wy-(m.y-44))<58){
+        if(distToPlayer(m.x,m.y)>460){showHint('come closer — the music is quiet from here',3);return;}
+        if(STANZAS[stanzaIdx].ins.includes(id)){startPerformance();}
+        else{showHint(ttune(id),3);}
+        return;
+      }
+    }
+  }
+  // otherwise: walk
+  if(mode==='explore'||mode==='denouement'||mode==='perform'){
+    player.tx=Math.max(60,Math.min(ROOM_W-60,wx));
+    player.ty=Math.max(WALK_TOP,Math.min(WALK_BOT,wy));
+  }
+});
+function ttune(id){
+  return {vn:'the violinist tunes a string, and waits',
+          vc:'the cellist rosins the bow, and waits',
+          hps:'the harpsichordist folds his hands, and waits'}[id];
+}
+
+/* --------------------------- player update -------------------------- */
+function updatePlayer(dt){
+  if(mode==='communion'||mode==='finale'||mode==='end')return;
+  let dx=0,dy=0;
+  if(keys['arrowleft']||keys['a'])dx-=1;
+  if(keys['arrowright']||keys['d'])dx+=1;
+  if(keys['arrowup']||keys['w'])dy-=1;
+  if(keys['arrowdown']||keys['s'])dy+=1;
+  if(dx||dy){player.tx=null;
+    const n=Math.hypot(dx,dy);dx/=n;dy/=n;
+    player.x+=dx*player.spd*dt;player.y+=dy*player.spd*dt*0.72;
+  }else if(player.tx!=null){
+    const ddx=player.tx-player.x, ddy=(player.ty-player.y);
+    const d=Math.hypot(ddx,ddy);
+    if(d<6){player.tx=null;}
+    else{player.x+=ddx/d*player.spd*dt;player.y+=ddy/d*player.spd*dt*0.85;}
+    dx=ddx;dy=ddy;
+  }
+  player.moving=!!(dx||dy);
+  if(dx)player.fx=dx>0?1:-1;
+  if(player.moving)player.walk+=dt*9;
+  player.x=Math.max(60,Math.min(ROOM_W-60,player.x));
+  player.y=Math.max(WALK_TOP,Math.min(WALK_BOT,player.y));
+  if(!hintShown.bal&&mode==='explore'&&Math.abs(player.x-BAL_X)<760){
+    hintShown.bal=true;
+    showHint('a lit musician holds the next stanza — click, and they will play',7);
+  }
+  // guests bow as you pass
+  for(const g of guests){
+    const near=Math.hypot(g.x-player.x,(g.y-player.y)*2)<70;
+    g.bow+=( (near?1:0)-g.bow )*dt*3;
+  }
+}
+
+/* ------------------------------ frame ------------------------------- */
+function resize(){
+  DPR=Math.min(2,devicePixelRatio||1);
+  cv.width=innerWidth*DPR;cv.height=innerHeight*DPR;
+  W=cv.width;H=cv.height;
+  S=H/DH;_ox=0;_oy=0;
+}
+addEventListener('resize',resize);resize();
+
+function frame(ts){
+  requestAnimationFrame(frame);
+  const t=ts/1000, dt=Math.min(0.05,t-(last||t));last=t;T=t;
+  boil=Math.floor(t*5);   // the hand-drawn boil
+  if(mode==='intro'){drawAll(dt);return;}
+  updatePlayer(dt);
+  if(mode==='perform')updatePerformance(dt);
+  if(mode==='communion')updateCommunion(dt);
+  if(mode==='denouement')updateDenouement(dt);
+  if(mode==='finale'||mode==='end')updateFinale(dt);
+  if(mode!=='perform'&&mode!=='communion')woman.dance=Math.max(0,woman.dance-dt*0.25);
+  // camera
+  if(mode==='finale'||mode==='end'){
+    const vw=W/(S*zoom);
+    camTargetX=Math.max(0,Math.min(ROOM_W-vw,(ROOM_W-vw)/2*(zoomT)));
+    camX+=(camTargetX-camX)*Math.min(1,dt*2);
+    _oy=(H-DH*S*zoom)/2;_camY=0;
+  }else{
+    const vw=W/(S*zoom);
+    let cxx=player.x-vw/2;
+    // during a performance, frame the musicians and the dance together
+    if(mode==='perform')cxx=BAL_X-250-vw/2;
+    camTargetX=Math.max(0,Math.min(ROOM_W-vw,cxx));
+    camX+=(camTargetX-camX)*Math.min(1,dt*(mode==='perform'?1.6:4));
+    _oy=0;_camY=0;
+  }
+  drawAll(dt);
+}
+function drawAll(dt){
+  cx.fillStyle=PAPER;cx.fillRect(0,0,W,H);
+  if(mode==='communion'){drawCommunion();drawNotes(dt);return;}
+  drawRoom();
+  // depth-sorted figures
+  const list=[];
+  for(const g of guests)if(vis(g.x,80))list.push({y:g.y,f:()=>drawGuest(g)});
+  for(const f of furniture)if(vis(f.x,90))list.push({y:f.y,f:()=>drawFurniture(f)});
+  if(vis(BAL_X,700)){
+    list.push({y:MUS.vn.y,f:drawMusVn});
+    list.push({y:MUS.vc.y,f:drawMusVc});
+    list.push({y:MUS.hps.y,f:drawMusHps});
+    list.push({y:woman.y,f:drawTheWoman});
+  }
+  list.push({y:player.y,f:()=>drawMan(player.x,player.y,1,{fx:player.fx,moving:player.moving,walk:player.walk})});
+  list.sort((a,b)=>a.y-b.y);
+  for(const it of list)it.f();
+  drawGaze();
+  drawNotes(dt);
+  // candlelight vignette + dim
+  const g=cx.createRadialGradient(W/2,H*0.45,H*0.2,W/2,H*0.45,H*0.95);
+  g.addColorStop(0,'rgba(28,24,18,0)');g.addColorStop(1,`rgba(28,24,18,${0.10+lightDim})`);
+  cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  if(lightDim>0){cx.fillStyle=`rgba(13,12,10,${lightDim*0.8})`;cx.fillRect(0,0,W,H);}
+}
+function drawFurniture(f){
+  const s=depthScale(f.y);
+  ink(1);
+  if(f.kind==='settee'){
+    shadow(f.x,f.y,34*s);
+    jpoly([[f.x-34*s,f.y-26*s],[f.x-34*s,f.y-40*s],[f.x+34*s,f.y-40*s],[f.x+34*s,f.y-26*s]],false,1);
+    jline(f.x-34*s,f.y-26*s,f.x+34*s,f.y-26*s,1);
+    jline(f.x-30*s,f.y-26*s,f.x-30*s,f.y,.8);jline(f.x+30*s,f.y-26*s,f.x+30*s,f.y,.8);
+    ink(.5,'rgba(28,24,18,.4)');
+    jellipse(f.x-16*s,f.y-33*s,7*s,4*s,.7);jellipse(f.x+16*s,f.y-33*s,7*s,4*s,.7);
+  }else{
+    shadow(f.x,f.y,14*s);
+    jpoly([[f.x-9*s,f.y-26*s],[f.x-9*s,f.y-46*s],[f.x+9*s,f.y-46*s],[f.x+9*s,f.y-26*s]],false,.9);
+    jline(f.x-9*s,f.y-26*s,f.x+9*s,f.y-26*s,.9);
+    jline(f.x-8*s,f.y-26*s,f.x-8*s,f.y,.7);jline(f.x+8*s,f.y-26*s,f.x+8*s,f.y,.7);
+  }
+}
+
+/* ------------------------------ start ------------------------------- */
+document.getElementById('enter').addEventListener('click',()=>{
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('backlink').style.display='none';
+  mode='explore';
+  showHint('somewhere, further in, there is music',6);
+});
+requestAnimationFrame(frame);
+
+/* debug / rehearsal console — e.g. __aros.teleport(5000); __aros.perform();
+   useful for jumping to a stanza when composing its music later */
+window.__aros={
+  teleport(x,y){player.x=x;if(y!=null)player.y=y;camX=Math.max(0,x-300);},
+  perform(){if(mode==='explore'&&stanzaIdx<STANZAS.length)startPerformance();},
+  skip(){if(perform)perform.t=perform.total;},
+  connect(){if(mode==='explore'&&communionOpen&&!communionDone)startCommunion();},
+  leave(){if(mode==='communion')endCommunion();},
+  get info(){return{mode,stanzaIdx,communionOpen,communionDone,zoom:+zoom.toFixed(3),
+    player:{x:Math.round(player.x),y:Math.round(player.y)}};},
+};
+</script>
+</body>
+</html>
