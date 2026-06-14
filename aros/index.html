@@ -24,13 +24,16 @@
   #libretto .line.it{font-style:italic;}
   #libretto.dark{color:#ece5d0;text-shadow:0 0 14px rgba(10,9,7,.95);}
   #libretto.dark .coords{color:#b8ae93;}
+  /* when the poem is shown in the dark letterbox beside the game box */
+  #libretto.margin{color:#e6dcc0;text-shadow:0 0 7px rgba(13,12,10,.9),0 0 2px rgba(13,12,10,.9);}
+  #libretto.margin .act{color:#e6dcc0;}
+  #libretto.margin .coords{color:#b8a274;}
 
-  /* ---------- hint ---------- */
-  #hint{position:fixed;bottom:3.4vh;left:50%;transform:translateX(-50%);
-    font-style:italic;font-size:1.02rem;color:#5c4a30;text-align:center;width:92vw;
-    opacity:0;transition:opacity 1.2s;pointer-events:none;
-    text-shadow:0 0 10px rgba(239,230,208,.95);}
-  #hint.dark{color:#cfc6ad;text-shadow:none;}
+  /* ---------- hint (in-game instructions) ---------- */
+  #hint{position:fixed;font-style:italic;font-weight:600;font-size:1.18rem;color:#3a2c1b;
+    text-align:center;opacity:0;transition:opacity 1.2s;pointer-events:none;
+    text-shadow:0 0 8px rgba(239,230,208,.97),0 0 3px rgba(239,230,208,.97);}
+  #hint.dark{color:#e6dcc0;text-shadow:0 0 8px rgba(13,12,10,.9);}
 
   /* ---------- overlays ---------- */
   .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
@@ -73,7 +76,10 @@
        The poem is held by three musicians &mdash; a violin that speaks Dutch,
        a cello that speaks French, a harpsichord that speaks English.</p>
     <p class="keys">walk with the arrow keys / WASD, or tap the floor<br>
-       click a lit musician to let them play &middot; watch her</p>
+       gather by the three players: they show you a short order to play &mdash;<br>
+       echo it back by clicking them, or tap
+       <b>V</b>&thinsp;violin &middot; <b>C</b>&thinsp;cello &middot; <b>H</b>&thinsp;harpsichord<br>
+       play it through, and watch her dance</p>
     <button id="enter">entrer dans le salon</button>
   </div>
 </div>
@@ -479,12 +485,13 @@ function gdist(a,b){return Math.hypot(a.gx-b.gx,a.gy-b.gy);}
 /* ----------------------------- the woman --------------------------- */
 function drawTheWoman(){
   const d=woman.dance;
-  woman.phase+=0.05*(1+d*2);
+  woman.phase=T*1.3;                       // a gentle, continuous sway for the arms
   let wx=woman.gx, wy=woman.gy;
   if(d>0.02){
-    woman.spin+=0.02*(0.5+d*1.4);
-    wx+=Math.cos(woman.spin)*1.2*d;
-    wy+=Math.sin(woman.spin)*1.0*d;
+    // a slow, wandering floor-path — a sum of harmonics, not a plain circle
+    const a=T*0.42;                        // ~15s to come round once
+    wx += ( Math.cos(a)*0.95 + Math.cos(a*1.7+0.7)*0.40 + Math.sin(a*0.5)*0.22 ) * d;
+    wy += ( Math.sin(a*0.9)*0.70 + Math.sin(a*2.3+1.1)*0.28 + Math.cos(a*0.4)*0.18 ) * d;
   }
   const bx=SX(wx,wy), by=SY(wx,wy);
   // a faint blue aura when she may be approached
@@ -536,7 +543,7 @@ function updateCue(dt){
   if(!armed){cue=null;return;}
   if(!cue||cue.idx!==stanzaIdx){
     cue=makeCue(stanzaIdx);
-    showHint('the players show you the order — watch the score, then echo it',6);
+    showHint('the players show the order — echo it: click them, or tap V · C · H',6);
   }
   const c=cue; c.t+=dt; c.fT+=dt; c.idle+=dt;
   c.pulse=0.5+0.5*Math.cos(Math.min(1,c.t/BEAT)*Math.PI*2);
@@ -781,8 +788,11 @@ function showHint(t,dur){
 }
 
 /* ------------------------------ input ------------------------------- */
-addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;
-  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault();});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
+  // play an instrument by key: V violin · C cello · H harpsichord
+  if(!e.repeat&&mode==='explore'&&cue){const id={v:'vn',c:'vc',h:'hps'}[k];if(id)cueClick(id);}
+});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 cv.addEventListener('pointerdown',e=>{
   if(mode==='intro'||mode==='end')return;
@@ -854,6 +864,34 @@ function resize(){
   if(s>=1)s=Math.floor(s);                 // crisp integer scaling when it fits
   blit.s=s;blit.ox=Math.round((W-GAME_W*s)/2);blit.oy=Math.round((H-GAME_H*s)/2);
   dcx.imageSmoothingEnabled=false;
+  layoutHUD();
+}
+// place the libretto in the letterbox beside the game so it can be read,
+// and keep the instructions centred within the game box
+function layoutHUD(){
+  const gx0=blit.ox, gx1=blit.ox+GAME_W*blit.s, gy1=blit.oy+GAME_H*blit.s;
+  const left=gx0, right=W-gx1, bottom=H-gy1, cxg=(gx0+gx1)/2;
+  const lib=document.getElementById('libretto'), st=lib.style;
+  st.right='auto';
+  if(right>=200||left>=200){                 // a side letterbox: a reading column
+    const useRight=right>=left;
+    st.width=Math.min((useRight?right:left)-28,440)+'px';
+    st.left=(useRight?gx1+14:14)+'px';
+    st.top='50%';st.bottom='auto';st.transform='translateY(-50%)';
+    lib.classList.add('margin');
+  }else if(bottom>=90){                       // letterbox below: a band under the game
+    st.width='min(680px,92vw)';
+    st.left=cxg+'px';st.top=(gy1+8)+'px';st.bottom='auto';st.transform='translateX(-50%)';
+    lib.classList.add('margin');
+  }else{                                       // no room: fall back to over the game
+    st.width='min(680px,92vw)';
+    st.left='50%';st.top='2.4vh';st.bottom='auto';st.transform='translateX(-50%)';
+    lib.classList.remove('margin');
+  }
+  const h=document.getElementById('hint').style;
+  h.left=cxg+'px';h.transform='translateX(-50%)';h.bottom='auto';
+  h.top=(gy1-Math.max(30,GAME_H*blit.s*0.12))+'px';
+  h.width=Math.min(GAME_W*blit.s-18,560)+'px';
 }
 addEventListener('resize',resize);resize();
 
