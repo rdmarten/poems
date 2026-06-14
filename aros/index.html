@@ -152,6 +152,8 @@ const CAM_BIAS=14;                 // nudge the player below screen-centre
 // where things stand, in floor-tile coordinates
 const DOOR_G=2.6;                  // door, along the NW (left) wall
 const WOMAN_GX=13.5, WOMAN_GY=5.4; // the ballroom centre, where she dances
+const BAND={gx:11.37,gy:4.67};     // the musicians' shared centre
+const BEAT=0.6;                    // the tempo of the call-and-response
 
 // four sepia tones + one sacred blue
 const PAL={
@@ -184,6 +186,7 @@ const player={gx:2.0,gy:DOOR_G+0.4,fx:1,walk:0,moving:false,tx:null,ty:null,spd:
 let perform=null;             // {st, t, lineDur, total, audioEl}
 let communion=null;           // {t}
 let finale=null;              // {t, phase}
+let cue=null, actx=null;      // the rhythm mini-game + its audio context
 const notes=[];               // floating note glyphs
 const keys={};
 let hintTimer=null, hintShown={};
@@ -457,12 +460,18 @@ function readyInstruments(){
   return STANZAS[stanzaIdx].ins;
 }
 function markReady(id,x,y){
-  if(!readyInstruments().includes(id))return;
-  if(gdist(MUS[id],player)>4.6)return;
-  const a=0.5+0.4*Math.sin(T*2.6);
-  g.globalAlpha=a;
-  const ny=y+Math.sin(T*1.8)*2;
-  rect(x,ny,1*Z,3*Z,PAL[3]); rect(x-1*Z,ny+2*Z,2*Z,2*Z,PAL[3]); // a little ♪
+  if(!cue||mode!=='explore')return;
+  const c=cue; let glow=0;
+  if(c.phase==='demo'){ if(c.fId===id) glow=Math.max(0,1-c.fT/0.35); }       // the call: lit in turn
+  else{ if(c.seq[c.step]===id) glow=0.4+0.45*c.pulse;                         // the response: next pulses on the beat
+        if(c.fId===id) glow=Math.max(glow,1-c.fT/0.3); }                     // a flash on a correct echo
+  if(glow<=0.05)return;
+  g.globalAlpha=Math.min(1,glow);
+  const r=(6+(1-glow)*5)*Z;
+  g.strokeStyle=PAL[3];g.lineWidth=1;
+  g.beginPath();g.ellipse(x,y+10*Z,r,r*0.5,0,0,7);g.stroke();              // a beckoning halo
+  const ny=y+Math.sin(T*4)*2;
+  rect(x,ny,1*Z,3*Z,PAL[3]); rect(x-1*Z,ny+2*Z,2*Z,2*Z,PAL[3]);           // a little ♪
   g.globalAlpha=1;
 }
 function gdist(a,b){return Math.hypot(a.gx-b.gx,a.gy-b.gy);}
@@ -507,6 +516,117 @@ function drawNotes(dt){
     const x=SX(n.gx,n.gy)+(n.ox+Math.sin(n.age*2+n.ph)*4)*Z, y=SY(n.gx,n.gy)+n.oy*Z;
     rect(x,y,1*Z,3*Z,PAL[3]); rect(x-1*Z,y+2*Z,2*Z,2*Z,PAL[3]);
     g.globalAlpha=1;
+  }
+}
+
+/* --------------------- rhythm: call & response --------------------- */
+// each pending stanza becomes a tiny motif the players demonstrate (the call)
+// and the visitor echoes back by clicking the musicians in order (response).
+function buildSeq(ins){
+  if(ins.length===1)return [ins[0],ins[0],ins[0]];   // a solo: a three-tap figure
+  if(ins.length===2)return [ins[0],ins[1],ins[0]];   // a duet: call, answer, call
+  return ins.slice();                                 // a trio: each in turn
+}
+function makeCue(idx){
+  return {idx, seq:buildSeq(STANZAS[idx].ins), step:0, phase:'demo',
+          t:0, fT:9, fId:null, di:-1, idle:0, pulse:0};
+}
+function updateCue(dt){
+  const armed = mode==='explore' && stanzaIdx<STANZAS.length && gdist(player,BAND)<4.8;
+  if(!armed){cue=null;return;}
+  if(!cue||cue.idx!==stanzaIdx){
+    cue=makeCue(stanzaIdx);
+    showHint('the players show you the order — watch the score, then echo it',6);
+  }
+  const c=cue; c.t+=dt; c.fT+=dt; c.idle+=dt;
+  c.pulse=0.5+0.5*Math.cos(Math.min(1,c.t/BEAT)*Math.PI*2);
+  if(c.phase==='demo'){
+    if(c.t>=BEAT){ c.t-=BEAT; c.di++;
+      if(c.di<c.seq.length){ c.fId=c.seq[c.di]; c.fT=0; blipFor(c.fId); spawnNoteAt(c.fId); }
+      else if(c.di>=c.seq.length+1){ c.phase='await'; c.di=-1; c.step=0; c.idle=0; }
+    }
+  }else{ // await the visitor's echo; re-demonstrate if they hesitate
+    if(c.idle>8){ c.phase='demo'; c.di=-1; c.t=0; c.idle=0; }
+  }
+}
+function cueClick(id){
+  const c=cue; if(!c)return;
+  if(c.phase==='demo'){ c.phase='await'; c.di=-1; c.step=0; } // a click means "my turn"
+  c.idle=0;
+  if(id===c.seq[c.step]){
+    blipFor(id); spawnNoteAt(id); c.fId=id; c.fT=0;
+    c.step++;
+    if(c.step>=c.seq.length){ blipChord(); cue=null; startPerformance(); }
+  }else{
+    blipWrong(); c.step=0; c.phase='demo'; c.di=-1; c.t=0; c.fT=9;
+    showHint('not quite — follow the order they showed you',4);
+  }
+}
+// which musician sprite was clicked (by on-screen body box, not the floor tile)
+function musicianAt(bx,by){
+  let best=null,bd=1e9;
+  for(const id of ['vn','vc','hps']){
+    const m=MUS[id], sx=SX(m.gx,m.gy), sy=SY(m.gx,m.gy);
+    if(bx>=sx-14*Z&&bx<=sx+16*Z&&by>=sy-34*Z&&by<=sy+5*Z){
+      const d=Math.hypot(bx-sx,by-(sy-14*Z));
+      if(d<bd){bd=d;best=id;}
+    }
+  }
+  return best;
+}
+function spawnNoteAt(id){
+  const m=MUS[id];
+  notes.push({gx:m.gx,gy:m.gy,ox:0,oy:-26,vx:rr(-6,8),vy:rr(-16,-10),age:0,life:rr(1.6,2.6),ph:rnd()*7});
+}
+
+/* a few asset-free voices, synthesized — distinct pitch per instrument */
+function audioCtx(){ if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){actx=null;}} return actx; }
+function tone(freq,dur,type,vol){
+  const a=audioCtx(); if(!a)return;
+  try{
+    const o=a.createOscillator(), gn=a.createGain(), t=a.currentTime;
+    o.type=type||'triangle'; o.frequency.value=freq;
+    gn.gain.setValueAtTime(0.0001,t);
+    gn.gain.exponentialRampToValueAtTime(vol||0.16,t+0.008);
+    gn.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(gn);gn.connect(a.destination);o.start(t);o.stop(t+dur+0.02);
+  }catch(e){}
+}
+const INSPITCH={vn:659.25, vc:196.0, hps:392.0};      // violin high, cello low, harpsichord mid
+function blipFor(id){ tone(INSPITCH[id]||440,0.30,id==='vc'?'sawtooth':'triangle',0.15); }
+function blipWrong(){ tone(110,0.18,'square',0.09); }
+function blipChord(){ [392,494,587,784].forEach((f,i)=>setTimeout(()=>tone(f,0.42,'triangle',0.13),i*70)); }
+
+/* the visual score — a row of cells (V / C / H) with a pulsing playhead */
+const GLYPH={vn:["10001","10001","01010","01010","00100"],   // V
+             vc:["01110","10000","10000","10000","01110"],   // C
+             hps:["10001","10001","11111","10001","10001"]};  // H
+function drawGlyph(id,cx,cy,col,ps){
+  const m=GLYPH[id];
+  for(let r=0;r<5;r++)for(let c=0;c<5;c++)
+    if(m[r][c]==='1')rect(cx+(c-2)*ps,cy+(r-2)*ps,ps,ps,col);
+}
+function drawScore(){
+  if(!cue||mode!=='explore')return;
+  const c=cue, n=c.seq.length;
+  const cw=Math.round(16*Z), gp=Math.round(4*Z), tw=n*cw+(n-1)*gp;
+  const x0=Math.round(GAME_W/2-tw/2), y0=Math.round(12*Z), ch=Math.round(15*Z), ps=Math.max(1,Math.round(2*Z));
+  // a beat dot conducting above the strip
+  g.globalAlpha=0.5+0.5*c.pulse; rect(GAME_W/2-1*Z,y0-6*Z,2*Z,2*Z,PAL[3]); g.globalAlpha=1;
+  for(let i=0;i<n;i++){
+    const x=x0+i*(cw+gp);
+    const on=(c.phase==='demo'&&c.fId===c.seq[i]&&i===c.di&&c.fT<0.45);
+    const done=(c.phase==='await'&&i<c.step);
+    const next=(c.phase==='await'&&i===c.step);
+    rect(x,y0,cw,ch,PAL[3]);
+    rect(x+1,y0+1,cw-2,ch-2,(on||done)?PAL[0]:PAL[1]);
+    drawGlyph(c.seq[i],x+cw/2,y0+ch/2,on?PAL.B:PAL[3],ps);
+    if(next){                                   // a pulsing blue frame on the next to play
+      g.globalAlpha=0.4+0.45*c.pulse;
+      rect(x-1,y0-1,cw+2,1,PAL.B); rect(x-1,y0+ch,cw+2,1,PAL.B);
+      rect(x-1,y0-1,1,ch+2,PAL.B); rect(x+cw,y0-1,1,ch+2,PAL.B);
+      g.globalAlpha=1;
+    }
   }
 }
 
@@ -678,16 +798,12 @@ cv.addEventListener('pointerdown',e=>{
     if(communionOpen&&!communionDone&&gdist(woman,player)<4.2){startCommunion();return;}
     woman.curtsy=T;showHint('she curtsies, par-delà son éventail',3);return;
   }
-  // the musicians
+  // the musicians — clicked by their on-screen body; echo the demonstrated order
   if(mode==='explore'&&stanzaIdx<STANZAS.length){
-    for(const id of ['vn','vc','hps']){
-      const m=MUS[id];
-      if(Math.hypot(gx-m.gx,gy-m.gy)<1.0){
-        if(gdist(m,player)>4.6){showHint('come closer — the music is quiet from here',3);return;}
-        if(STANZAS[stanzaIdx].ins.includes(id)){startPerformance();}
-        else{showHint(ttune(id),3);}
-        return;
-      }
+    const id=musicianAt(bx,by);
+    if(id){
+      if(!cue){showHint('come closer — gather by the players',3);return;}
+      cueClick(id);return;
     }
   }
   // otherwise: walk there
@@ -696,12 +812,6 @@ cv.addEventListener('pointerdown',e=>{
     player.ty=Math.max(0.6,Math.min(CH-1.4,gy));
   }
 });
-function ttune(id){
-  return {vn:'the violinist tunes a string, and waits',
-          vc:'the cellist rosins the bow, and waits',
-          hps:'the harpsichordist folds his hands, and waits'}[id];
-}
-
 /* --------------------------- player update -------------------------- */
 function updatePlayer(dt){
   if(mode==='communion'||mode==='finale'||mode==='end')return;
@@ -752,6 +862,7 @@ function frame(ts){
   const t=ts/1000, dt=Math.min(0.05,t-(last||t));last=t;T=t;
   if(mode!=='intro'){
     updatePlayer(dt);
+    if(mode==='explore')updateCue(dt);
     if(mode==='perform')updatePerformance(dt);
     if(mode==='communion')updateCommunion(dt);
     if(mode==='denouement')updateDenouement(dt);
@@ -796,6 +907,7 @@ function drawAll(dt){
   grad.addColorStop(0,'rgba(40,30,18,0)');grad.addColorStop(1,`rgba(40,30,18,${0.14+lightDim})`);
   g.fillStyle=grad;g.fillRect(0,0,GAME_W,GAME_H);
   if(lightDim>0){g.fillStyle=`rgba(13,12,10,${lightDim*0.8})`;g.fillRect(0,0,GAME_W,GAME_H);}
+  drawScore();   // the rhythm score sits above the candlelight, always legible
 }
 function present(){/* communion path draws straight to buffer; nothing extra */}
 
@@ -804,6 +916,7 @@ document.getElementById('enter').addEventListener('click',()=>{
   document.getElementById('intro').classList.add('hidden');
   document.getElementById('backlink').style.display='none';
   mode='explore';
+  audioCtx();   // create/unlock the audio voices within this user gesture
   showHint('somewhere, further in, there is music',6);
 });
 requestAnimationFrame(frame);
@@ -814,6 +927,9 @@ window.__aros={
   toMusic(){player.gx=woman.gx-2.4;player.gy=woman.gy;},
   teleport(gx,gy){player.gx=gx;if(gy!=null)player.gy=gy;},
   perform(){if(mode==='explore'&&stanzaIdx<STANZAS.length)startPerformance();},
+  clickMus(id){if(cue)cueClick(id);},
+  echo(){if(cue){for(const id of cue.seq.slice(cue.step))cueClick(id);}},
+  get cueInfo(){return cue?{idx:cue.idx,seq:cue.seq.slice(),step:cue.step,phase:cue.phase}:null;},
   skip(){if(perform)perform.t=perform.total;},
   connect(){if(mode==='explore'&&communionOpen&&!communionDone)startCommunion();},
   leave(){if(mode==='communion')endCommunion();},
