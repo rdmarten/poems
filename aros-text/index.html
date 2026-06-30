@@ -65,7 +65,7 @@
   <div class="poem">
 
     <h2 class="pi-title"><i>Aros: una tragedia in tre atti</i></h2>
-    <p class="pi-subtitle"><em>Mœurs d'un Belge</em><label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle" /><span class="sidenote"><em>Aros </em>(Old Norse, vaguely Greek):<em> </em>an Italian opera in three parts, not <em>une</em> <em>tragédie—</em>Sophocles, not Racine<em> /</em> a Balzacian observation, with a sample of one odd Belgian specimen</span></p>
+    <p class="pi-subtitle"><em>Mœurs d'un Belge</em><label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle" /><span class="sidenote"><em>Aros</em> (Old Norse, vaguely Greek): an Italian opera in three parts, not <em>une tragédie—</em>Sophocles, not Racine / a Balzacian observation, with a sample of one odd Belgian specimen</span></p>
     <p class="dedication"><em>pour Mylène</em></p>
 
     <br><br>
@@ -133,7 +133,7 @@
     <p class="reveal">“the lover’s discourse is</p>
     <p class="reveal">of an extreme solitude”</p>
     <p class="reveal">and like him, I try</p>
-    <p class="reveal">to find <em>une</em> <em>figure</em> <em>fondée</em><label for="sn-7" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-7" class="margin-toggle" /><span class="sidenote">a found figure (cf. Barthes, <em>Fragments d’un discours amoureux</em>); <em>une figure fondée</em>, grounded, when B's whole discourse refuses grounding. I am showing off, for you, for her, knowing the cleverer the poem the more fictional its comfort—it offers solace for my insecurity. The smartest thing I can write is still only a construct of signs</span></p>
+    <p class="reveal">to find <em>une</em> <em>figure</em> <em>fondée</em><label for="sn-7" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-7" class="margin-toggle" /><span class="sidenote">a found figure (cf. Barthes, <em>Fragments d’un discours amoureux</em>); <em>une figure fondée</em>, grounded, when B's whole discourse refuses grounding / I am showing off, for you, for her, knowing the cleverer the poem the more fictional its comfort—it offers solace for my insecurity / the smartest thing I can write is still only a construct of signs</span></p>
     <br><br>
     <p class="reveal"><em>comme un air magnifique, </em></p>
     <p class="reveal"><em>arraché à un opéra classique,</em></p>
@@ -246,8 +246,6 @@
     <p class="reveal"><em>ce qu'il me faudra</em><label for="sn-19" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-19" class="margin-toggle" /><span class="sidenote">if we are signs yet to be written, I would like to be your mistake (a true <em>Belgicisme</em>)</span></p>
 
   </div>
-
-  <p class="back"><a href="../" id="backlink">&larr; back to poems</a></p>
 </article>
 
 <!-- Re-read prompt (intercepts the first "back to poems") -->
@@ -267,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hasGSAP = typeof gsap !== 'undefined';
   const revealEls = Array.from(document.querySelectorAll('.reveal'));
 
-  /* ---------- appearing-scroll reveal (as in Ostende bonsoir) ---------- */
+  /* ---------- appearing-scroll reveal ---------- */
   function setupReveal() {
     if (!reduce && 'IntersectionObserver' in window && hasGSAP) {
       const io = new IntersectionObserver((entries) => {
@@ -320,5 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.classList.remove('open'); });
 });
 </script>
+    <p class="back"><a href="../" id="backlink">&larr; back to poems</a></p>
 </body>
 </html>
