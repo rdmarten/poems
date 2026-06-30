@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Aros: una tragedia in tre atti</title>
+
+  <!-- Tufte CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
+
+  <style>
+    /* Layout + tighter spacing */
+    .pi-tufte { max-width: 70ch; margin: 0 auto; }
+    .pi-tufte .poem { font-size: 1.0rem; line-height: 1.5; }
+    .pi-tufte .poem p { margin: 0.15rem 0; }
+
+    /* Title block */
+    .pi-title { font-size: 2.5rem; margin: 0 0 0.2rem; font-style: normal; }
+    .pi-subtitle { font-size: 1.5rem; margin: -0.1rem 0 0.2rem; color: #666; font-style: italic; }
+    .dedication { color: #666; margin: 0 0 1.4rem; }
+
+    /* Act headings, coordinates, dividers */
+    .act { font-variant: small-caps; letter-spacing: .10em; font-size: 1.3rem; margin: 0.4rem 0 0.1rem; }
+    .coords { color: #9a9a9a; font-size: 0.68rem; letter-spacing: .06em; margin: 0; }
+    .divider { text-align: center; color: #9a9a9a; letter-spacing: .4em; margin: 0.6rem 0; }
+
+    /* Scroll-reveal initial state (JS animates these in) */
+    .reveal { opacity: 0; transform: translateY(12px); }
+
+    /* First read: the poem appears with no endnotes at all */
+    body.notes-hidden .sidenote,
+    body.notes-hidden .marginnote,
+    body.notes-hidden .sidenote-number,
+    body.notes-hidden label.margin-toggle,
+    body.notes-hidden input.margin-toggle { display: none !important; }
+
+    /* Back link */
+    .back { margin: 2.5rem 0 4rem; font-size: .95rem; }
+    .back a { border-bottom: 1px solid rgba(0,0,0,.25); text-decoration: none; }
+    .back a:hover { border-bottom-color: #000; }
+
+    /* Re-read modal */
+    .modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+             background: rgba(20,18,14,.55); opacity: 0; pointer-events: none;
+             transition: opacity .5s; z-index: 50; }
+    .modal.open { opacity: 1; pointer-events: auto; }
+    .modal-card { max-width: 30rem; margin: 1.5rem; padding: 2rem 2.2rem; background: #fffff8;
+                  color: #111; border: 1px solid rgba(20,18,14,.18);
+                  box-shadow: 0 10px 40px rgba(20,18,14,.28); text-align: center; }
+    .modal-card p { font-size: 1.18rem; line-height: 1.5; font-style: italic; margin: 0 0 1.6rem; }
+    .modal-actions { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
+    .modal-actions button { font-family: inherit; font-size: 1rem; padding: .5rem 1.4rem;
+                            cursor: pointer; background: none; border: 1px solid #111; color: #111; }
+    .modal-actions button:hover { background: #111; color: #fffff8; }
+    .modal-actions .secondary { border-color: #999; color: #666; }
+    .modal-actions .secondary:hover { background: #666; color: #fffff8; border-color: #666; }
+  </style>
+
+  <!-- GSAP for the appearing-scroll effect -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body class="notes-hidden">
+
+<article class="pi-tufte">
+  <div class="poem">
+
+    <h2 class="pi-title"><i>Aros: una tragedia in tre atti</i></h2>
+    <p class="pi-subtitle"><em>Mœurs d'un Belge</em><label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle" /><span class="sidenote"><em>Aros </em>(Old Norse, vaguely Greek):<em> </em>an Italian opera in three parts, not <em>une</em> <em>tragédie—</em>Sophocles, not Racine<em> /</em> a Balzacian observation, with a sample of one odd Belgian specimen</span></p>
+    <p class="dedication"><em>pour Mylène</em></p>
+
+    <br><br>
+
+    <p class="act reveal">Aros I — <em>About You</em></p>
+    <p class="coords reveal">N 56° 9’ 23.283”</p>
+    <p class="coords reveal">E 10° 12’ 21.127”</p>
+    <br><br>
+    <p class="reveal">at 2.23 am I text Joe</p>
+    <p class="reveal">later he will say that</p>
+    <p class="reveal">to live is to be open</p>
+    <p class="reveal">to this kind of anguish</p>
+    <br><br>
+    <p class="reveal"><em>si tu me permets</em>, I hesitate</p>
+    <p class="reveal"><em>je dois t’avouer que,</em></p>
+    <p class="reveal"><em>que je ne saurais plus le taire—</em><label for="sn-2" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-2" class="margin-toggle" /><span class="sidenote">my world is held together / though “love has never been a popular movement” (cf. Baldwin, in Paris) / by <em>mon amour</em> for The Stranger (cf. Bolaño, <em>Tres</em>) / I stumble and hesitate / as an eroticism (cf. Lorde) is revealed in the interplay of our languages / one I can no longer keep to myself (<em>Belgicisme</em>)</span></p>
+    <br><br>
+    <p class="reveal">I pause for words,</p>
+    <p class="reveal">words I harboured,</p>
+    <p class="reveal">kept and left unspoken</p>
+    <p class="reveal">6 years, 5 months </p>
+    <p class="reveal">and 19 days, </p>
+    <p class="reveal">almost two-thirds </p>
+    <p class="reveal">of a decade</p>
+    <p class="reveal">my secret, now</p>
+    <p class="reveal">in lyric irruption—</p>
+    <br><br>
+    <p class="reveal"><em>tu dégages quelque chose</em></p>
+    <p class="reveal"><em>de tellement rayonnant,</em></p>
+    <p class="reveal"><em>et ton sourire est si</em></p>
+    <p class="reveal"><em>vraiment envoûtant</em><label for="sn-3" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-3" class="margin-toggle" /><span class="sidenote">all evening, I have been mesmerised by her radiance / my French revealing imperfections I want to hide / in this niterie, my hands unsure where they need to be, our legs brush, and I dare not hold her gaze</span></p>
+    <br><br>
+    <p class="reveal">for 204,138,435 seconds, or</p>
+    <p class="reveal">3,402,307 minutes, or</p>
+    <p class="reveal">56,705 hours, or</p>
+    <p class="reveal">2362 days, or</p>
+    <p class="reveal"><em>nonante-cinq millions</em> </p>
+    <p class="reveal"><em>de battements de cœur</em>—<label for="sn-4" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-4" class="margin-toggle" /><span class="sidenote">ninety-five million heartbeats (<em>Belgicisme</em>) / slow, so slow, if you care to make the calculations, and then all at once / <em>une canicule de passion s'empare de nous</em></span></p>
+    <br><br>
+    <p class="reveal"><em>pour la première fois, </em></p>
+    <p class="reveal"><em>j'ai l'impression que ça </em></p>
+    <p class="reveal"><em>ira peut-être mieux </em></p>
+    <p class="reveal"><em>quand on est tous les deux</em><label for="sn-5" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-5" class="margin-toggle" /><span class="sidenote">“I’m better at writing, was just a way to get you biting” (cf. Daniel &amp; Healy, <em>When We Are Together</em>)</span></p>
+    <br><br>
+    <p class="divider reveal" aria-hidden="true">⁂</p>
+    <br><br>
+    <p class="act reveal">Aros II — <em>Part of the Band</em></p>
+    <p class="coords reveal">N 56° 10’ 16.536”</p>
+    <p class="coords reveal">E 10° 12’ 0.716”</p>
+    <br><br>
+    <p class="reveal">at 6.55 pm I text Joe</p>
+    <p class="reveal">later he will say that</p>
+    <p class="reveal">to live is to risk all</p>
+    <p class="reveal">and feel it fully</p>
+    <br><br>
+    <p class="reveal"><em>elle a le véritable esprit d'une salonnière</em></p>
+    <p class="reveal"><em>lorsque ses yeux jettent un regard, </em></p>
+    <p class="reveal"><em>si intense, par-delà son éventail, </em></p>
+    <p class="reveal"><em>l'espace d'un instant,</em></p>
+    <p class="reveal"><em>tout le salon retient son souffle ;</em></p>
+    <p class="reveal"><em>elle, seule, respire</em><label for="sn-6" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-6" class="margin-toggle" /><span class="sidenote">“I had forgotten that loving could feel so calming” (cf. McMillan, <em>physical</em>) / the possibility to ask her to dance / to carry her through the turning room and find out if the air bends toward us both / for one stanza I let myself believe it might / I am holding the question the way the room holds its breath / and in that suspension is everything / I would so long to keep</span></p>
+    <br><br>
+    <p class="reveal">I console myself by remembering</p>
+    <p class="reveal">the words of Barthes:</p>
+    <p class="reveal">“the lover’s discourse is</p>
+    <p class="reveal">of an extreme solitude”</p>
+    <p class="reveal">and like him, I try</p>
+    <p class="reveal">to find <em>une</em> <em>figure</em> <em>fondée</em><label for="sn-7" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-7" class="margin-toggle" /><span class="sidenote">a found figure (cf. Barthes, <em>Fragments d’un discours amoureux</em>); <em>une figure fondée</em>, grounded, when B's whole discourse refuses grounding. I am showing off, for you, for her, knowing the cleverer the poem the more fictional its comfort—it offers solace for my insecurity. The smartest thing I can write is still only a construct of signs</span></p>
+    <br><br>
+    <p class="reveal"><em>comme un air magnifique, </em></p>
+    <p class="reveal"><em>arraché à un opéra classique,</em></p>
+    <p class="reveal"><em>elle se blottit dans mes poumons</em></p>
+    <p class="reveal"><em>en attente d'être chantée—</em></p>
+    <p class="reveal"><em>dans l'amoureux, quelque chose </em></p>
+    <p class="reveal"><em>de Bouvard et Pécuchet—</em><label for="sn-8" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-8" class="margin-toggle" /><span class="sidenote">so like Bouvard and Pécuchet (cf. Flaubert), I am always worried I confuse signs with reality / how do I distinguish love from desire, from longing, from the absence of itself I have felt? / <em>je t’aime et tu me manques</em> / is not the same as I love you and I miss you / or <em>ik hou van je en ik mis je</em> / “reading love's grammar in each other’s looks” (cf. نظامی گنجوی) / the French grammatical subjects and objects become truly erotic, magnetic / they stick together, like lovers dancing, no separation between their embracing strokes</span></p>
+    <br><br>
+    <p class="reveal"><em>sa tendresse</em><label for="sn-9" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-9" class="margin-toggle" /><span class="sidenote">foolishly, I wonder, is her tenderness (or its enchantment, the hold it takes over me) meta- or physical? / I’d rather write light-hearted things for you (cf. Bolaño, <em>La Universidad Desconocida</em>)</span>; ask me anything,</p>
+    <p class="reveal">let me put your body to sleep, </p>
+    <p class="reveal">but do not omit that I desire</p>
+    <p class="reveal">you—a little, lightly, without</p>
+    <p class="reveal">wanting to hold on to anything</p>
+    <br><br>
+    <p class="reveal"><em>voor de dans, gaf ik haar</em></p>
+    <p class="reveal"><em>een open roos, al wat te</em></p>
+    <p class="reveal"><em>oud, maar ze nam m aan,</em></p>
+    <p class="reveal"><em>vol sierlijkheid en glimlacht</em></p>
+    <p class="reveal"><em>zoals de nacht daarvoor,</em></p>
+    <p class="reveal"><em>alsof wij alleen bestaan</em></p>
+    <br><br>
+    <p class="reveal"><em>ik wacht ieder moment af</em></p>
+    <p class="reveal"><em>tot ze haar haar wegstopt, </em></p>
+    <p class="reveal"><em>en haar woorden me zo zacht </em></p>
+    <p class="reveal"><em>strelen; kon ik maar langer </em></p>
+    <p class="reveal"><em>kijken, verlangen, genieten</em></p>
+    <p class="reveal"><em>van haar magistrale kracht</em><label for="sn-10" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-10" class="margin-toggle" /><span class="sidenote">You are not supposed to understand this; it is for me, and perhaps for her—exclusion is the realm of the lover’s discourse / the expression of my mother tongue / attempts to ground my thoughts in a reality that is uncertain / one where I can briefly hover, fleetingly, in suspense / anticipating love that is not meant</span></p>
+    <br><br>
+    <p class="reveal">stunned, I sense her move</p>
+    <p class="reveal">around the ballroom,</p>
+    <p class="reveal">her royal blue lace dress</p>
+    <p class="reveal">like her eyes, twirling</p>
+    <p class="reveal">intense, fierce, kind</p>
+    <br><br>
+    <p class="reveal"><em>et ainsi elle danse doucement</em></p>
+    <p class="reveal"><em>avec une grâce si naturelle</em></p>
+    <p class="reveal"><em>telle un cygne blanc qui glisse</em></p>
+    <p class="reveal"><em>sur la source d'Urðarbrunnr</em></p>
+    <br><br>
+    <p class="reveal"><em>malheureusement, je sais que</em></p>
+    <p class="reveal"><em>mon amour n’est pas destiné</em></p>
+    <p class="reveal"><em>à rester solitaire, mais à</em></p>
+    <p class="reveal"><em>coexister avec un autre</em><label for="sn-11" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-11" class="margin-toggle" /><span class="sidenote">Like in the <em>Völundarkviða </em>(cf. Poetic Edda), she appears at the edge of a lake, swan-like in grace and movement, <em>alvitr</em> / in that poem, she leaves nine winters later; here, that luxury of time remains unfulfilled / eroticism arises, not from existence, but unacted possibility / to exist in her timeline, to observe her dance, the flicker of affection in shared language, and soft glances in dimly lit spaces, is what sustains the erotic long beyond what having could</span></p>
+    <p class="reveal"><em>ze hield m’n bloem bij</em><label for="sn-12" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-12" class="margin-toggle" /><span class="sidenote">I should have taken better note of <em>Le Langage des Fleurs</em> (cf. de la Tour) / and perhaps should have offered her peach blossoms / if only to evoke the last half line of Neruda’s <em>Juegas todos los días </em>(my aunt’s old neighbour, of all people) or an <em>Epiphyllum oxypetalum</em> / the orange-red rimmed rose instead, which she took home, I hope</span></p>
+    <br><br>
+    <p class="divider reveal" aria-hidden="true">⁂</p>
+    <br><br>
+    <p class="act reveal">Aros III — <em>All I Need to Hear</em></p>
+    <p class="coords reveal">N 56° 8’ 54.751”</p>
+    <p class="coords reveal">E 10° 12’ 13.168”</p>
+    <br><br>
+    <p class="reveal">at 8.25 am I text Joe</p>
+    <p class="reveal">later he will say that</p>
+    <p class="reveal">to live is to endure</p>
+    <p class="reveal">love’s cruel timing</p>
+    <br><br>
+    <p class="reveal">I got back to the hotel</p>
+    <p class="reveal">alone; she returned later on,</p>
+    <p class="reveal">‘goodnight’ waiting elsewhere,</p>
+    <p class="reveal">mine one of quiet longing,</p>
+    <p class="reveal">packing bags, to carry on</p>
+    <br><br>
+    <p class="reveal">a deep ache to hold you </p>
+    <p class="reveal">just a little bit longer,</p>
+    <p class="reveal">for once to return home </p>
+    <p class="reveal">with a small palimpsest</p>
+    <p class="reveal">of one’s delicate affection </p>
+    <p class="reveal"><em>égratigné</em><label for="sn-13" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-13" class="margin-toggle" /><span class="sidenote">a wound deeper than a graze, with incredible precision / cut to the rhythm of a cibell / carried without demanding anything of her / after Lully’s <em>Atys</em> (Brussels, 19 November 1700)—<em>si belle</em>, I did not want to be spared it</span> in my skin</p>
+    <br><br>
+    <p class="reveal">somewhere two floors below</p>
+    <p class="reveal">she smiles, as I put a record </p>
+    <p class="reveal">on, <em>pour</em> <em>mon</em> <em>soulagement ;</em><label for="sn-14" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-14" class="margin-toggle" /><span class="sidenote">my dancing will not stop because you are not here / I am dancing because we were there / if it wasn’t for the passing <em>inyeon</em> my Layla I’d never have gone home</span></p>
+    <p class="reveal">I would have regretted it</p>
+    <p class="reveal">for longer than the days</p>
+    <p class="reveal">I withheld these words, </p>
+    <p class="reveal">fragilely kept in amber—</p>
+    <br><br>
+    <p class="reveal">now 263,142 seconds, or</p>
+    <p class="reveal">4385 minutes, or</p>
+    <p class="reveal"><em>septante-trois heures</em><label for="sn-15" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-15" class="margin-toggle" /><span class="sidenote">seventy-three hours (<em>Belgicisme</em>) / counted in the only way I can / enough to be wondered, to drift in and out of an aesthetic erotic encounter;</span>, or</p>
+    <p class="reveal">3 days, or</p>
+    <p class="reveal">526,284 heartbeats</p>
+    <p class="reveal">no longer resting</p>
+    <p class="reveal">against lost time—</p>
+    <br><br>
+    <p class="reveal">let me say what I could not,</p>
+    <p class="reveal"><em>ce que je ne savais pas dire</em><label for="sn-16" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-16" class="margin-toggle" /><span class="sidenote">to construct a poetic intrusion into the public sphere of something that is, at base, private (cf. Arendt) / sometimes, the pleasure of being is enough / and you are not meant to read this</span></p>
+    <p class="reveal">ook al is dit enkel voor mij:</p>
+    <br><br>
+    <p class="reveal">adembenemend, zingend</p>
+    <p class="reveal">was ik je gevolgd naar </p>
+    <p class="reveal">het Noorden, de <em>banlieues</em>,</p>
+    <p class="reveal">al was het maar een uur,</p>
+    <p class="reveal">in stilte wil ik bij je zijn,<label for="sn-17" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-17" class="margin-toggle" /><span class="sidenote">translate if you will, and if you must / <em>garde toutes les blagues que tu vas faire / je sais bien que c'est un poème d'amour, je n'ai jamais prétendu le contraire</em></span></p>
+    <br><br>
+    <p class="reveal">ik, een klein Belgje</p>
+    <p class="reveal"><em>moi, un demi-Brel</em></p>
+    <p class="reveal">jij, een de Staël,</p>
+    <p class="reveal"><em>toi, Zizou plus belle</em></p>
+    <p class="reveal">ik zal voor je vinden</p>
+    <p class="reveal"><em>je t'inventerai des </em></p>
+    <p class="reveal">onzinnige woorden</p>
+    <p class="reveal"><em>mots insensés que</em></p>
+    <p class="reveal">die jij zal begrijpen</p>
+    <p class="reveal"><em>tu comprendras</em><label for="sn-18" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-18" class="margin-toggle" /><span class="sidenote">these lines repeat the same <em>signifiants</em>, alternating between my Dutch and her French, as I seek credibility not durability for my stanzas: Jacques Brel (<em>Belgian master of the chanson française</em>), Madame de Staël (<em>French woman of letters</em>), and ‘Zizou’ (<em>Suzanne Gabriello, a French singer and actress</em>)</span></p>
+    <br><br>
+    <p class="reveal"><em>murmure, si tu pouvais,</em></p>
+    <p class="reveal"><em>que tu m'aimes, moi,</em></p>
+    <p class="reveal"><em>car c'est tout, tout,</em></p>
+    <p class="reveal"><em>ce qu'il me faudra</em><label for="sn-19" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-19" class="margin-toggle" /><span class="sidenote">if we are signs yet to be written, I would like to be your mistake (a true <em>Belgicisme</em>)</span></p>
+
+  </div>
+
+  <p class="back"><a href="../" id="backlink">&larr; back to poems</a></p>
+</article>
+
+<!-- Re-read prompt (intercepts the first "back to poems") -->
+<div class="modal" id="reread" role="dialog" aria-modal="true" aria-labelledby="reread-q">
+  <div class="modal-card">
+    <p id="reread-q">Hold on. Are you sure you do not want to read this a second time? Did you actually get it?</p>
+    <div class="modal-actions">
+      <button id="readAgain">Read again</button>
+      <button id="reallyBack" class="secondary">back to poems</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGSAP = typeof gsap !== 'undefined';
+  const revealEls = Array.from(document.querySelectorAll('.reveal'));
+
+  /* ---------- appearing-scroll reveal (as in Ostende bonsoir) ---------- */
+  function setupReveal() {
+    if (!reduce && 'IntersectionObserver' in window && hasGSAP) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(({target, isIntersecting}) => {
+          if (isIntersecting) {
+            io.unobserve(target);
+            gsap.to(target, {opacity: 1, y: 0, duration: 0.6, ease: 'power1.out'});
+          }
+        });
+      }, {root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1});
+      revealEls.forEach(el => io.observe(el));
+    } else {
+      revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+    }
+  }
+  function resetReveal() {
+    if (hasGSAP) revealEls.forEach(el => gsap.set(el, {opacity: 0, y: 12}));
+    else revealEls.forEach(el => { el.style.opacity = 0; el.style.transform = 'translateY(12px)'; });
+  }
+  setupReveal();
+
+  /* ---------- re-read prompt ---------- */
+  const modal     = document.getElementById('reread');
+  const backlink  = document.getElementById('backlink');
+  const readAgain = document.getElementById('readAgain');
+  const reallyBack= document.getElementById('reallyBack');
+
+  const firstRead = () => document.body.classList.contains('notes-hidden');
+
+  backlink.addEventListener('click', (e) => {
+    if (firstRead()) {            // first read: ask before leaving
+      e.preventDefault();
+      modal.classList.add('open');
+    }                             // second read (notes shown): link works normally
+  });
+
+  reallyBack.addEventListener('click', () => { window.location.href = '../'; });
+
+  readAgain.addEventListener('click', () => {
+    modal.classList.remove('open');
+    document.body.classList.remove('notes-hidden');  // reveal the endnotes
+    document.body.classList.add('notes-shown');
+    window.scrollTo({top: 0, behavior: 'auto'});     // back to the beginning
+    resetReveal();
+    setupReveal();                                    // let it appear again, with notes
+  });
+
+  /* allow cancelling the prompt (backdrop click / Esc) to keep reading */
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
