@@ -560,41 +560,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let leaving = false;
 
-  /* stage 1 -> 2 : reveal the endnotes, read again */
+  /* stage 1 -> 2 : reveal the endnotes, read again.
+     From here on, any attempt to leave the annotated read meets the truth. */
   function goStage2() {
     stage = 2;
     document.body.classList.remove('notes-hidden');
     document.body.classList.add('notes-shown');
     toTop(); resetIn(v12); revealIn(v12);
-  }
-  /* stage 2 -> 3 : the final, real version appears */
-  function goStage3() {
-    stage = 3;
-    document.body.classList.add('stage-3');
-    toTop(); resetIn(v3); revealIn(v3);
     armTraps();
   }
-  /* stay in stage 3 : read the final version once more */
-  function replayStage3() { toTop(); resetIn(v3); revealIn(v3); }
+  /* stage 2 -> 3 : the final, real version appears. It is the end — no more prompts. */
+  function goStage3() {
+    stage = 3;
+    disarmTraps();
+    document.body.classList.add('stage-3');
+    toTop(); resetIn(v3); revealIn(v3);
+  }
 
   backlink.addEventListener('click', (e) => {
     if (stage === 1)      { e.preventDefault(); modal1.classList.add('open'); }
-    else if (stage === 2) { e.preventDefault(); modal1.classList.remove('open'); goStage3(); }
-    else if (stage === 3) { e.preventDefault(); modal2.classList.add('open'); }
+    else if (stage === 2) { e.preventDefault(); modal2.classList.add('open'); }
+    /* stage 3: the link leaves for the poems index, as normal */
   });
 
   reallyBack.addEventListener('click',  () => { leaving = true; window.location.href = '../'; });
   readAgain.addEventListener('click',   () => { modal1.classList.remove('open'); goStage2(); });
-  readItAgain.addEventListener('click', () => { modal2.classList.remove('open'); replayStage3(); });
+  readItAgain.addEventListener('click', () => { modal2.classList.remove('open'); goStage3(); });
 
-  /* cancelling prompt 1 (backdrop / Esc) keeps you reading */
+  /* cancelling prompt 1 (backdrop / Esc) keeps you reading; prompt 2 offers only "Read it again" */
   modal1.addEventListener('click', (e) => { if (e.target === modal1) modal1.classList.remove('open'); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && stage !== 3) modal1.classList.remove('open'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && stage === 1) modal1.classList.remove('open'); });
 
-  /* ---------- stage-3 traps: refresh / close / browser-back all meet the truth ---------- */
-  function beforeUnload(e){ if (stage === 3 && !leaving) { e.preventDefault(); e.returnValue = ''; return ''; } }
+  /* ---------- stage-2 traps: back link / refresh / close / browser-back all meet the truth ---------- */
+  function beforeUnload(e){ if (stage === 2 && !leaving) { e.preventDefault(); e.returnValue = ''; return ''; } }
   function onPopState(){
-    if (stage === 3 && !leaving) {
+    if (stage === 2 && !leaving) {
       history.pushState(null, '', location.href);
       modal2.classList.add('open');
     }
@@ -603,6 +603,10 @@ document.addEventListener('DOMContentLoaded', () => {
     history.pushState(null, '', location.href);
     window.addEventListener('popstate', onPopState);
     window.addEventListener('beforeunload', beforeUnload);
+  }
+  function disarmTraps(){
+    window.removeEventListener('popstate', onPopState);
+    window.removeEventListener('beforeunload', beforeUnload);
   }
 });
 </script>
