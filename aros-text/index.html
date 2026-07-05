@@ -617,6 +617,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const readItAgain = document.getElementById('readItAgain');
   const toTop = () => window.scrollTo({top: 0, behavior: 'auto'});
 
+  /* the three parts count up on each read: I–III, then IV–VI, then VII–IX
+     (the word — Aros / Eros — is left as written; only the numerals change) */
+  function setActNumerals(container, roms) {
+    container.querySelectorAll('.act').forEach((el, i) => {
+      const rom = roms[i];
+      if (!rom) return;
+      for (const node of el.childNodes) {
+        if (node.nodeType === 3 && /^\s*(?:Aros|Eros)\s+[IVXLCDM]+\b/.test(node.nodeValue)) {
+          node.nodeValue = node.nodeValue.replace(/^(\s*(?:Aros|Eros)\s+)[IVXLCDM]+\b/, '$1' + rom);
+          break;
+        }
+      }
+    });
+  }
+
   let leaving = false;
 
   /* stage 1 -> 2 : reveal the endnotes, read again.
@@ -626,6 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.remove('notes-hidden');
     document.body.classList.add('notes-shown');
     toTop(); resetIn(v12); revealIn(v12);
+    setActNumerals(v12, ['IV', 'V', 'VI']);
     armTraps();
   }
   /* stage 2 -> 3 : the final, real version appears. It is the end — no more prompts. */
@@ -634,6 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
     disarmTraps();
     document.body.classList.add('stage-3');
     toTop(); resetIn(v3); revealIn(v3);
+    setActNumerals(v3, ['VII', 'VIII', 'IX']);
   }
 
   backlink.addEventListener('click', (e) => {
