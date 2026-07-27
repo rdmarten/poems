@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>objects in the mirror</title>
+
+  <!-- Tufte CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
+
+  <style>
+    .pi-tufte { max-width: 70ch; margin: 0 auto; }
+    .poem { font-size: 1.1rem; line-height: 1.6; }
+    .poem p { margin: 0 0 1.1rem; }
+
+    /* Title layout */
+    .pi-title { font-size: 1.9rem; margin: 2.5rem 0 0.2rem; font-weight: 700; font-style: normal; }
+    .pi-subtitle { font-size: 1.15rem; margin: 0 0 1.8rem; color: #666; font-style: italic; }
+
+    /* Scroll reveal initial state (JS animates these in) */
+    .reveal { opacity: 0; transform: translateY(12px); }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; }
+    }
+
+    .divider { text-align: center; }
+  </style>
+
+  <!-- Libraries -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+
+<article class="pi-tufte">
+  <h2 class="pi-title">objects in the mirror</h2>
+  <p class="pi-subtitle">for E. P.</p>
+
+  <div class="poem" id="poem">
+    <p class="reveal">“you want it too much”, my mum told me as we strolled down her hometown promenade; waves were calmly lapping the sand. the wind has died down, and it feels like everyone heard that i want it too much. the venetian galleries offer shade and protection from her questions, burning more heavily than the mid-summer sun.</p>
+
+    <p class="reveal">”it’s never been easy“, i want to tell her, but i would not know where to begin. it would break her heart to know how, when i was 13, a girl from Year 10 forcibly kissed me (and touched me) on the corner near our school. it was my first time. friends cheered the next day, as if it was supposed to be fun for me. it should be fun, to kiss, and they still laugh about it. i did then too.</p>
+
+    <p class="reveal">“you need to be more assertive”, my dad tells me on the way back to the train station. he reckons i make it too easy for people to walk all over me, as he overtakes a small Fiat on the roundabout. i look at the woman driving the other car, alone in her plastic cage. objects in the mirror are closer than they appear.</p>
+
+    <p class="reveal">“it’s never been easy”, i want to tell him, but i do not know how he will react. i imagine he would be angry, not with me, when I tell him how, when i was 23, my girlfriend hit me in the face in front of a full auditorium. humiliated, i still went on a date with her that night. it might have been the first time she abused me. it was supposed to be fun, a relationship, i thought then.</p>
+
+    <p class="reveal">“you need to meet more people”, mum says as we walked back along the beach, waves now crashing near the edge of our feet. the seagulls scream above, and i struggle to hear what she says next; the lighthouse in the distance stands menacingly tall. i remember the night i was drawn into the sea by its light. i swam back before it disappeared.</p>
+
+    <p class="reveal">“it’s never been easy”, i want to tell her, but she will cry and i will have to console her, when i would say that, when i was 26, i asked my ex-girlfriend to stop, twice, and how she did not. i had driven over because she said she wanted comforting for her dead grandfather. or how i wanted to drive into a light pole that night. it should be fun, sex, but i don’t remember that anymore.</p>
+
+    <p class="reveal">“you just need to move on quicker”, my brother tells me, and i guess he is right. in the restaurant, a waitress drops some menus, and i get on my knees to help her. she smiles, somewhat embarrassed; I apologise that he didn’t thank her properly earlier. in the time i have been down, some eight years, he has had more partners, cars, and flats than me. maybe i am the odd one out.</p>
+
+    <p class="reveal">“it’s never been that easy”, i want to tell him, but he won’t believe me when i would say that, when i was 28, and moved across the ocean, the woman i was ‘seeing’ got a restraining order against me. i did not even know where she lived. i lost everything then, again. i guess mum might be right too, maybe i do want it too much. it should be fun, all of it, but i never told them any of these things.</p>
+
+    <p class="reveal divider">***</p>
+
+    <p class="reveal">on the train back, I receive your texts, and I cannot stop smiling. I think you understand me whilst none of them do. I think this is what love should feel like: safe, comfortable, exciting, but not dangerous. I think that I am no longer afraid. I think I can see meaning again in the words I have not written here.</p>
+
+    <p class="reveal">I rebooked my flight back to Manchester, where you live, home. I have always wanted to do that, but never had a reason to. It heals a part of the romantic in me that died in previous stanzas. To hirundinely fly back to someone. Outside the train window, over a barren field, I observe a murmuration.</p>
+
+    <p class="reveal">I want you to love me.</p>
+  </div>
+</article>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGSAP = typeof gsap !== 'undefined';
+  const revealEls = Array.from(document.querySelectorAll('.reveal'));
+
+  if (!reduce && 'IntersectionObserver' in window && hasGSAP) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(({target, isIntersecting}) => {
+        if (isIntersecting) {
+          io.unobserve(target);
+          gsap.to(target, {opacity: 1, y: 0, duration: 0.6, ease: 'power1.out'});
+        }
+      });
+    }, {root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1});
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+  }
+});
+</script>
+
+<p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
+</body>
+</html>
