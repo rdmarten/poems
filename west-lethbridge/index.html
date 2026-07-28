@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Memories of West Lethbridge</title>
+
+<!-- Tufte CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
+
+<style>
+  .pi-tufte { max-width: 70ch; margin: 0 auto; }
+  .poem { font-size: 1.1rem; line-height: 1.6; }
+  .poem p { margin: 0.15rem 0; }
+
+  /* Title layout */
+  .pi-title { font-size: 1.9rem; margin: 2.5rem 0 0.2rem; font-weight: 700; font-style: normal; }
+  .pi-subtitle { font-size: 1.15rem; margin: 0 0 1.8rem; color: #666; font-style: italic; }
+
+  /* Scroll reveal initial state (JS animates these in) */
+  .reveal { opacity: 0; transform: translateY(12px); }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; }
+  }
+
+  /* the closing line drifts further right, as in the manuscript's tab-stops */
+  .indent-home { margin-left: 8ch; }
+
+  /* the manuscript writes "my" in white-on-white; invisible until selected */
+  .hidden-word { color: #fff; }
+  .hidden-word::selection { color: #111; background: #b3d4fc; }
+  .hidden-word::-moz-selection { color: #111; background: #b3d4fc; }
+</style>
+
+<!-- Libraries -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+
+<article class="pi-tufte">
+  <h2 class="pi-title">Memories of West Lethbridge</h2>
+  <p class="pi-subtitle">for D. W. J.</p>
+
+  <div class="poem" id="poem">
+    <p>
+      <span class="reveal">I could say it is:</span><br><br>
+
+      <span class="reveal">the orange-blue flame</span><br>
+      <span class="reveal">of a BIC lighter</span><br>
+      <span class="reveal">in the dark evenings</span><br>
+      <span class="reveal">on the snowy steps</span><br>
+      <span class="reveal">of your modest house</span><br><br>
+
+      <span class="reveal">the raucous laughter</span><br>
+      <span class="reveal">of Maskandi singer smiles</span><br>
+      <span class="reveal">in the dark evenings</span><br>
+      <span class="reveal">on a dirty brown settee</span><br>
+      <span class="reveal">of your 70s basement</span><br><br>
+
+      <span class="reveal">“so much</span><br>
+      <span class="reveal">has happened</span><br>
+      <span class="reveal">since painting, </span><br>
+      <span class="reveal">do you</span><br>
+      <span class="reveal">not agree?”</span><br><br>
+
+      <span class="reveal">the white quietness</span><br>
+      <span class="reveal">of the Old Man River</span><br>
+      <span class="reveal">in the bright mornings</span><br>
+      <span class="reveal">on an overgrown path</span><br>
+      <span class="reveal">of your old hometown</span><br><br>
+
+      <span class="reveal">the fireball whiskey</span><br>
+      <span class="reveal">of the local owlery</span><br>
+      <span class="reveal">in the bright mornings</span><br>
+      <span class="reveal">on a vintage record player</span><br>
+      <span class="reveal">of your parquet living room</span><br><br>
+
+      <span class="reveal">“it is</span><br>
+      <span class="reveal">the second-best</span><br>
+      <span class="reveal">dog-sledge race,</span><br>
+      <span class="reveal">I swear</span><br>
+      <span class="reveal">on paper”</span><br><br>
+
+      <span class="reveal">the off-key piano</span><br>
+      <span class="reveal">of shared Joni’s melodies </span><br>
+      <span class="reveal">in the dusky afternoon</span><br>
+      <span class="reveal">on a cracking bench</span><br>
+      <span class="reveal">of your splintered sunroom</span><br><br><br><br><br>
+
+      <span class="reveal">I should say it is:</span><br><br>
+
+      <span class="reveal">wherever</span><br>
+      <span class="reveal">we sit</span><br>
+      <span class="reveal">to harmonise</span><br>
+      <span class="reveal">to breathe</span><br>
+      <span class="reveal">to listen</span><br><br>
+
+      <span class="reveal">to the snowflakes</span><br>
+      <span class="reveal">fall and</span><br><br>
+
+      <span class="reveal">you are</span><br>
+      <span class="reveal indent-home"><span class="hidden-word">my</span> <em>home</em></span><br>
+    </p>
+  </div>
+</article>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGSAP = typeof gsap !== 'undefined';
+  const revealEls = Array.from(document.querySelectorAll('.reveal'));
+
+  if (!reduce && 'IntersectionObserver' in window && hasGSAP) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(({target, isIntersecting}) => {
+        if (isIntersecting) {
+          io.unobserve(target);
+          gsap.to(target, {opacity: 1, y: 0, duration: 0.6, ease: 'power1.out'});
+        }
+      });
+    }, {root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1});
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+  }
+});
+</script>
+
+<p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
+</body>
+</html>
