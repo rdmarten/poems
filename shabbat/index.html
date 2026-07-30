@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Shabbat</title>
+
+  <!-- Tufte CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
+
+  <style>
+    .pi-tufte { max-width: 70ch; margin: 0 auto; }
+    .poem { font-size: 1.1rem; line-height: 1.6; }
+
+    /* Title layout */
+    .pi-title { font-size: 1.9rem; margin: 2.5rem 0 0.2rem; font-weight: 700; font-style: italic; }
+    .pi-subtitle { font-size: 1.15rem; margin: 0 0 1.8rem; color: #666; font-style: italic; }
+
+    /* Scroll reveal initial state (JS animates these in) */
+    .reveal { opacity: 0; transform: translateY(12px); }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; }
+    }
+
+    /* Each stanza alternates sides, as outlined in the manuscript */
+    .poem .stanza { margin: 0 0 1.3em; text-align: left; }
+    .poem .stanza.right { text-align: right; }
+
+    /* the manuscript runs these two stanzas together, with no blank line between */
+    .poem .stanza.tight { margin-bottom: 0.15em; }
+
+    /* an extra blank beat before the final movement returns */
+    .poem .stanza.gap-2 { margin-bottom: 2.6em; }
+  </style>
+
+  <!-- Libraries -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+
+<article class="pi-tufte">
+  <h2 class="pi-title">Shabbat</h2>
+  <p class="pi-subtitle">for E.P.</p>
+
+  <div class="poem" id="poem">
+    <p class="stanza">
+      <span class="reveal">on Shabbat, I called</span><br>
+      <span class="reveal">my brother David</span>
+    </p>
+
+    <p class="stanza right">
+      <span class="reveal">strangely, though we are</span><br>
+      <span class="reveal">soulmates but unrelated,</span><br>
+      <span class="reveal">I fall into his footsteps:</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">&lsquo;Dave, what the hell</span><br>
+      <span class="reveal">am I supposed to do?&rsquo;</span>
+    </p>
+
+    <p class="stanza right tight">
+      <span class="reveal">He says: nothing changes,</span><br>
+      <span class="reveal">the stakes are different but</span><br>
+      <span class="reveal">you show up just the same</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">&lsquo;What do I do then, Dave,</span><br>
+      <span class="reveal">if this goes anywhere?&rsquo;</span>
+    </p>
+
+    <p class="stanza right">
+      <span class="reveal">He says: everything changes,</span><br>
+      <span class="reveal">you figure out who you</span><br>
+      <span class="reveal">need to be, to be there</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">&lsquo;I cannot provide, I think,</span><br>
+      <span class="reveal">the things she needs, Dave?&rsquo;</span>
+    </p>
+
+    <p class="stanza right">
+      <span class="reveal">He says: you haven&rsquo;t changed,</span><br>
+      <span class="reveal">so I know you will, but</span><br>
+      <span class="reveal">it is very hard work</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">&lsquo;I&rsquo;m afraid, Dave, that</span><br>
+      <span class="reveal">I am just a fantasy again?&rsquo;</span>
+    </p>
+
+    <p class="stanza right">
+      <span class="reveal">He says: you have changed,</span><br>
+      <span class="reveal">usually so loyal, unguarded,</span><br>
+      <span class="reveal">she is not your fear</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">&lsquo;I need to know when</span><br>
+      <span class="reveal">this, Dave, gets easier?&rsquo;</span>
+    </p>
+
+    <p class="stanza right">
+      <span class="reveal">He says: it always changes,</span><br>
+      <span class="reveal">you only grow closer in</span><br>
+      <span class="reveal">difficulties you overcome</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">&lsquo;How do I love her, David</span><br>
+      <span class="reveal">enough so that she knows?&rsquo;</span>
+    </p>
+
+    <p class="stanza right gap-2">
+      <span class="reveal">He says: my brother,</span><br>
+      <span class="reveal">your purpose was always</span><br>
+      <span class="reveal">to love, never change</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">on Shabbat, I called</span><br>
+      <span class="reveal">my brother David</span>
+    </p>
+
+    <p class="stanza right">
+      <span class="reveal">I cried as he listened</span><br>
+      <span class="reveal">and cared,</span>
+    </p>
+  </div>
+</article>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGSAP = typeof gsap !== 'undefined';
+  const revealEls = Array.from(document.querySelectorAll('.reveal'));
+
+  if (!reduce && 'IntersectionObserver' in window && hasGSAP) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(({target, isIntersecting}) => {
+        if (isIntersecting) {
+          io.unobserve(target);
+          gsap.to(target, {opacity: 1, y: 0, duration: 0.6, ease: 'power1.out'});
+        }
+      });
+    }, {root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1});
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+  }
+});
+</script>
+
+<p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
+</body>
+</html>
