@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>eclipsing</title>
+
+<!-- Tufte CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
+
+<style>
+  :root { --sky: #fffff8; }
+  body { background: var(--sky); }
+
+  .pi-tufte { max-width: 70ch; margin: 0 auto; }
+  .poem { font-size: 1.1rem; line-height: 1.6; }
+
+  /* Title layout */
+  .pi-title { font-size: 1.9rem; margin: 2.5rem 0 0.2rem; font-weight: 700; font-style: normal; }
+  .pi-subtitle { font-size: 1.15rem; margin: 0 0 1.8rem; color: #666; font-style: italic; }
+
+  /* Prose stanzas, as set in the manuscript */
+  .stanza { margin: 0 0 1.5rem; }
+
+  /* Scroll reveal initial state (JS animates these in) */
+  .reveal { opacity: 0; transform: translateY(12px); }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; }
+  }
+
+  /* Halation. Five blurred copies of the letterforms bleed outward: a pearl
+     edge hugging the glyph, then warm amber, then a wide dim corona. The
+     glyphs themselves stay crisp on top of it all, which is what keeps the
+     text readable however deep the halo gets.
+     --bloom runs 0 -> 1 down the poem. Spread and opacity each keep a floor
+     of roughly half, so even the first lit stanza carries a visible halo
+     rather than fading to nothing. */
+  .reveal {
+    --spread: calc(0.45 + 0.55 * var(--bloom));
+    --glow:   calc(0.50 + 0.50 * var(--bloom));
+    text-shadow:
+      0 0 calc(var(--spread) * 0.07em) rgba(255, 251, 240, calc(var(--glow) * 1.00)),
+      0 0 calc(var(--spread) * 0.17em) rgba(255, 214, 140, calc(var(--glow) * 0.90)),
+      0 0 calc(var(--spread) * 0.40em) rgba(228, 137,  32, calc(var(--glow) * 0.50)),
+      0 0 calc(var(--spread) * 0.95em) rgba(198,  98,  12, calc(var(--glow) * 0.24)),
+      0 0 calc(var(--spread) * 2.00em) rgba(180,  86,   6, calc(var(--glow) * 0.10));
+  }
+
+  /* The eclipse deepens: the first stanza is unlit, each one after it carries
+     a stronger corona, strongest at the last. */
+  .stanza:first-child .reveal { text-shadow: none; }
+
+  .stanza              { --bloom: 0.00; }
+  .stanza:nth-child(3) { --bloom: 0.10; }
+  .stanza:nth-child(4) { --bloom: 0.22; }
+  .stanza:nth-child(5) { --bloom: 0.35; }
+  .stanza:nth-child(6) { --bloom: 0.50; }
+  .stanza:nth-child(7) { --bloom: 0.65; }
+  .stanza:nth-child(8) { --bloom: 0.82; }
+  .stanza:nth-child(9) { --bloom: 1.00; }
+
+  /* Marginal figure: the moon crossing the sun, tracking scroll depth */
+  .eclipse-dial {
+    position: fixed; top: 50%; right: 3.5rem; transform: translateY(-50%);
+    width: 120px; margin: 0; padding: 0; max-width: none;
+    opacity: 0; pointer-events: none;
+  }
+  /* Tufte floats figcaption into the margin at 40% width; this one belongs
+     under its figure, so those defaults have to be undone. */
+  .eclipse-dial figcaption {
+    float: none; clear: none; max-width: none; width: 100%;
+    font-family: "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
+    font-size: 0.62rem; line-height: 1.4; letter-spacing: 0.09em;
+    text-transform: uppercase; color: #9a8f79; text-align: center;
+    margin: 0.35rem 0 0;
+  }
+  @media (max-width: 1180px) { .eclipse-dial { display: none; } }
+</style>
+
+<noscript>
+  <style>.reveal { opacity: 1; transform: none; }</style>
+</noscript>
+
+<!-- Libraries -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+
+<figure class="eclipse-dial" id="dial" aria-hidden="true">
+  <svg viewBox="0 0 120 120" width="120" height="120">
+    <defs>
+      <radialGradient id="corona">
+        <stop offset="40%" stop-color="#ffd089" stop-opacity="0.75"/>
+        <stop offset="60%" stop-color="#ff9f34" stop-opacity="0.26"/>
+        <stop offset="100%" stop-color="#ff8a12" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <circle cx="60" cy="60" r="54" fill="url(#corona)"/>
+    <circle cx="60" cy="60" r="26" fill="#f5b02a"/>
+    <circle id="moon" cx="102.6" cy="30.4" r="26" fill="var(--sky)"/>
+  </svg>
+  <figcaption><span id="obsc">0.0</span>% obscured</figcaption>
+</figure>
+
+<article class="pi-tufte">
+  <h2 class="pi-title">eclipsing</h2>
+  <p class="pi-subtitle">for E.P.</p>
+
+  <div class="poem" id="poem">
+    <p class="stanza">
+      <span class="reveal">On the other side of Manchester, I know you are watching the eclipse.</span>
+      <span class="reveal">One flight of the crow away.</span>
+      <span class="reveal">Halation might occur, you taught me.</span>
+      <span class="reveal">I can’t look for it; I don’t have the proper glasses.</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">A stream of implicit liquid trickled down from the back of the bus.</span>
+      <span class="reveal">Slightly concerned heads turned cautiously to look for its source.</span>
+      <span class="reveal">It’s too warm not to be suspicious.</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">Markings on the road.</span>
+      <span class="reveal">The song in my headphones hits <em>C Major</em>; I smile with some proleptic nostalgia.</span>
+      <span class="reveal">I imagine how the humid winds go through your shirt, feeling for your heart.</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">Cosmic thinking requires bravery, my courage.</span>
+      <span class="reveal">Its scale terrifies.</span>
+      <span class="reveal">All that space, dauntingly just 9.917 kilometres to the north.</span>
+      <span class="reveal">I could cycle it in under 50 minutes, and you’d laugh.</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">It is 6.44 pm, and paths are aligning.</span>
+      <span class="reveal">88.6%.</span>
+      <span class="reveal">It feels more.</span>
+      <span class="reveal">A pair of red-rimmed eclipse glasses is tucked away in one of my unpacked boxes.</span>
+      <span class="reveal">I got them from a pharmacy ages ago.</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">Though I am not really supposed to, I stare up.</span>
+      <span class="reveal">Careful, blond blindness might set in, you’d joke.</span>
+      <span class="reveal">I’m unprepared for any of this.</span>
+      <span class="reveal">The sun always uxoriously rises, I’d declare.</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">Curly curved clouds.</span>
+      <span class="reveal">A little rat crosses the field.</span>
+      <span class="reveal">Always comes back to the same spot.</span>
+      <span class="reveal">It’s nice to think they will be around for the next, I’d joke.</span>
+      <span class="reveal">Good cosmic thinking, you’d quip.</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">People are starting to disperse at 7.09 pm.</span>
+      <span class="reveal">I’m still sat here, 9.917 kilometres to the south.</span>
+      <span class="reveal">The alignment should soon start to peak.</span>
+      <span class="reveal">91.4%.</span>
+      <span class="reveal">It’ll grow deeper.</span>
+      <span class="reveal">Picnickers among the daisies.</span>
+    </p>
+
+    <p class="stanza">
+      <span class="reveal">At some point, a dream: I go home and hear children playing in the park.</span>
+      <span class="reveal">Smile with some analeptic nostalgia.</span>
+      <span class="reveal">We sit down, fully prepared, without glasses.</span>
+      <span class="reveal">Boxes all unpacked.</span>
+      <span class="reveal"><em>Close enough</em>.</span>
+    </p>
+  </div>
+</article>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGSAP = typeof gsap !== 'undefined';
+  const revealEls = Array.from(document.querySelectorAll('.reveal'));
+
+  /* ---- 1. scroll reveal, sentence by sentence, each one flaring as it
+          arrives and settling back to its resting halation ---- */
+  if (!reduce && 'IntersectionObserver' in window && hasGSAP) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(({target, isIntersecting}) => {
+        if (isIntersecting) {
+          io.unobserve(target);
+          gsap.to(target, {opacity: 1, y: 0, duration: 0.6, ease: 'power1.out'});
+
+          const stanza = target.closest('.stanza');
+          if (stanza && !stanza.matches(':first-child')) {
+            const rest = parseFloat(getComputedStyle(stanza).getPropertyValue('--bloom')) || 0;
+            const flare = {v: rest + 0.5};
+            gsap.to(flare, {
+              v: rest, duration: 1.3, ease: 'power2.out',
+              onUpdate: () => target.style.setProperty('--bloom', flare.v),
+              onComplete: () => target.style.removeProperty('--bloom')
+            });
+          }
+        }
+      });
+    }, {root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1});
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+  }
+
+  /* ---- 2 & 3. scroll depth drives the marginal eclipse dial and the light
+          draining out of the sky ---- */
+  const poem  = document.getElementById('poem');
+  const dial  = document.getElementById('dial');
+  const moon  = document.getElementById('moon');
+  const obsc  = document.getElementById('obsc');
+
+  const SUN_R  = 26;
+  const D_MAX  = SUN_R * 2;      // moon clear of the sun: 0% obscured
+  const D_MIN  = SUN_R * 0.135;  // closest approach: 91.4%, the poem's peak
+  const DIR    = [0.82, -0.57];  // the moon rides in from the upper right
+  const SKY_LIT = [255, 255, 248];
+  const SKY_DIM = [242, 236, 224];
+
+  // fraction of the sun's disc hidden, for two equal circles d apart
+  const obscuration = (d) => {
+    if (d >= 2 * SUN_R) return 0;
+    const x = d / SUN_R;
+    return (2 * Math.acos(x / 2) - (x / 2) * Math.sqrt(4 - x * x)) / Math.PI;
+  };
+
+  const render = (p) => {
+    const d = D_MAX + (D_MIN - D_MAX) * p;
+    moon.setAttribute('cx', (60 + d * DIR[0]).toFixed(2));
+    moon.setAttribute('cy', (60 + d * DIR[1]).toFixed(2));
+    obsc.textContent = (obscuration(d) * 100).toFixed(1);
+    dial.style.opacity = Math.min(1, Math.max(0, (p - 0.06) * 6)) * 0.9;
+
+    const sky = SKY_LIT.map((v, i) => Math.round(v + (SKY_DIM[i] - v) * p));
+    document.documentElement.style.setProperty('--sky', 'rgb(' + sky.join(',') + ')');
+  };
+
+  /* Alignment tracks the read itself: it begins as the first stanza clears the
+     fold and reaches its peak on the last line, however tall the window is. */
+  const target = () => {
+    const y  = window.scrollY;
+    const vh = window.innerHeight;
+    const r  = poem.getBoundingClientRect();
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
+    const start = Math.max(0, r.top + y - vh * 0.75);
+    const end   = Math.min(maxScroll, Math.max(start + 1, r.bottom + y - vh * 0.85));
+    return Math.min(1, Math.max(0, (y - start) / (end - start)));
+  };
+
+  if (reduce || !hasGSAP) {
+    render(reduce ? 1 : 0);
+    if (!hasGSAP && !reduce) {
+      window.addEventListener('scroll', () => render(target()), {passive: true});
+      render(target());
+    }
+  } else {
+    const state = {p: 0};
+    const follow = () => gsap.to(state, {
+      p: target(), duration: 0.7, ease: 'power2.out', overwrite: true,
+      onUpdate: () => render(state.p)
+    });
+    window.addEventListener('scroll', follow, {passive: true});
+    window.addEventListener('resize', follow, {passive: true});
+    render(0);
+    follow();
+  }
+});
+</script>
+
+<p style="margin:0.5rem 0 1rem"><a href="../">← back to poems</a></p>
+</body>
+</html>
