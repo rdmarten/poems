@@ -17,6 +17,7 @@
     --sky-lit: 255, 255, 248;
     --sky-dim: 242, 236, 224;
     --sky: rgb(var(--sky-lit));
+    --sky-rgb: var(--sky-lit);   /* same colour, bare components, for rgba() */
     --ink: #111;
     --ink-soft: #666;
 
@@ -140,7 +141,32 @@
     text-transform: uppercase; color: var(--dial-label); text-align: center;
     margin: 0.35rem 0 0;
   }
-  @media (max-width: 1180px) { .eclipse-dial { display: none; } }
+  .eclipse-dial svg { display: block; width: 100%; height: auto; }
+
+  /* The dial needs a margin to sit in. Tufte keeps a wide one on desktop, a
+     narrowing one down to about 820px, and none at all on a phone — so below
+     that it becomes a small sun in the bottom corner, on its own patch of
+     sky, and the page reserves the room it stands on. */
+  @media (max-width: 1180px) {
+    .eclipse-dial { right: 0.8rem; width: 96px; }
+  }
+  @media (max-width: 819px) {
+    .eclipse-dial {
+      top: auto; bottom: 0.75rem; right: 0.75rem;
+      transform: none; width: 54px;
+    }
+    /* Its own sky, so lines pass cleanly behind the dial instead of showing
+       through the corona. */
+    .eclipse-dial::before {
+      content: ""; position: absolute; z-index: -1;
+      top: -32%; left: -32%; width: 164%; height: 0; padding-bottom: 164%;
+      background: radial-gradient(circle closest-side,
+                    rgb(var(--sky-rgb)) 54%, rgba(var(--sky-rgb), 0) 100%);
+    }
+    .eclipse-dial figcaption { font-size: 0.52rem; letter-spacing: 0.05em; margin-top: 0.1rem; }
+    .dial-word { display: none; }
+    body { padding-bottom: 5rem; }
+  }
 
   #dial-sun  { fill: var(--sun); }
   #dial-moon { fill: var(--sky); }
@@ -157,7 +183,15 @@
     font-family: "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
     font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase;
     color: var(--dial-label); opacity: 0.8;
+    /* Its own patch of sky, so that on a narrow screen — where the text runs
+       right up under it — lines pass behind rather than through it. On wide
+       screens this sits in empty margin and cannot be seen. */
+    border-radius: 999px;
+    background: rgb(var(--sky-rgb));
+    box-shadow: 0 0 0.9em 0.7em rgb(var(--sky-rgb));
   }
+  /* Widen the tap target well past the small label without moving anything. */
+  .theme-toggle::after { content: ""; position: absolute; inset: -12px; }
   .theme-toggle:hover, .theme-toggle:focus-visible { opacity: 1; color: var(--ink); }
   .theme-toggle-mark {
     width: 0.74em; height: 0.74em; border-radius: 50%;
@@ -221,7 +255,7 @@
     <circle id="dial-sun" cx="60" cy="60" r="26"/>
     <circle id="dial-moon" cx="102.6" cy="30.4" r="26"/>
   </svg>
-  <figcaption><span id="obsc">0.0</span>% obscured</figcaption>
+  <figcaption><span id="obsc">0.0</span>%<span class="dial-word"> obscured</span></figcaption>
 </figure>
 
 <article class="pi-tufte">
@@ -367,6 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dial.style.opacity = Math.min(1, Math.max(0, (p - 0.06) * 6)) * 0.9;
 
     const sky = SKY_LIT.map((v, i) => Math.round(v + (SKY_DIM[i] - v) * p));
+    root.style.setProperty('--sky-rgb', sky.join(','));
     root.style.setProperty('--sky', 'rgb(' + sky.join(',') + ')');
   };
 
