@@ -52,7 +52,7 @@
     --halo-3: 224, 235, 255;
     --halo-4: 198, 217, 250;
     --halo-5: 178, 201, 245;
-    --halo-gain: 0.66;
+    --halo-gain: 0.71;
 
     --sun: #fdfcf8;
     --corona-1: #f2f6ff;
@@ -113,9 +113,10 @@
       0 0 calc(var(--spread) * 2.00em) rgba(var(--halo-5), calc(var(--glow) * 0.10));
   }
 
-  /* The eclipse deepens: the first stanza is unlit, each one after it carries
-     a stronger corona, strongest at the last. */
-  .stanza:first-child .reveal { text-shadow: none; }
+  /* The halation begins where the poem names it: the opening lines are unlit,
+     and the glow arrives on the line after "Halation might occur". From there
+     the eclipse deepens stanza by stanza, strongest at the last. */
+  .reveal.unlit { text-shadow: none; }
 
   .stanza              { --bloom: 0.00; }
   .stanza:nth-child(3) { --bloom: 0.10; }
@@ -264,9 +265,9 @@
 
   <div class="poem" id="poem">
     <p class="stanza">
-      <span class="reveal">On the other side of Manchester, I know you are watching the eclipse.</span>
-      <span class="reveal">One flight of the crow away.</span>
-      <span class="reveal">Halation might occur, you taught me.</span>
+      <span class="reveal unlit">On the other side of Manchester, I know you are watching the eclipse.</span>
+      <span class="reveal unlit">One flight of the crow away.</span>
+      <span class="reveal unlit">Halation might occur, you taught me.</span>
       <span class="reveal">I can’t look for it; I don’t have the proper glasses.</span>
     </p>
 
@@ -347,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
           gsap.to(target, {opacity: 1, y: 0, duration: 0.6, ease: 'power1.out'});
 
           const stanza = target.closest('.stanza');
-          if (stanza && !stanza.matches(':first-child')) {
+          if (stanza && !target.classList.contains('unlit')) {
             const rest = parseFloat(getComputedStyle(stanza).getPropertyValue('--bloom')) || 0;
             const flare = {v: rest + 0.5};
             gsap.to(flare, {
