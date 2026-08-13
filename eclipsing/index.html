@@ -9,15 +9,80 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
 
 <style>
-  :root { --sky: #fffff8; }
-  body { background: var(--sky); }
+  /* Light: Tufte's cream sky, dark ink, a warm amber corona.
+     --sky-lit and --sky-dim are the two ends of the scroll-driven dimming;
+     the script reads them from here, so a theme owns its own light. */
+  :root {
+    color-scheme: light;
+    --sky-lit: 255, 255, 248;
+    --sky-dim: 242, 236, 224;
+    --sky: rgb(var(--sky-lit));
+    --ink: #111;
+    --ink-soft: #666;
+
+    --halo-1: 255, 251, 240;
+    --halo-2: 255, 214, 140;
+    --halo-3: 228, 137,  32;
+    --halo-4: 198,  98,  12;
+    --halo-5: 180,  86,   6;
+    --halo-gain: 1;
+
+    --sun: #f5b02a;
+    --corona-1: #ffd089;
+    --corona-2: #ff9f34;
+    --corona-3: #ff8a12;
+    --dial-label: #9a8f79;
+  }
+
+  /* Dark: the sky goes black, the ink white, and the halation turns to the
+     pearl-white of a real corona. The gain is pulled back because white light
+     on black bleeds far more readily than amber on cream.
+     A small script in the head stamps data-theme before first paint, from the
+     saved choice or the reader's system setting. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --sky-lit: 10, 10, 12;
+    --sky-dim: 0, 0, 0;
+    --ink: #fff;
+    --ink-soft: #8b8b91;
+
+    --halo-1: 255, 255, 255;
+    --halo-2: 247, 250, 255;
+    --halo-3: 224, 235, 255;
+    --halo-4: 198, 217, 250;
+    --halo-5: 178, 201, 245;
+    --halo-gain: 0.66;
+
+    --sun: #fdfcf8;
+    --corona-1: #f2f6ff;
+    --corona-2: #c7d7f2;
+    --corona-3: #b4c8ea;
+    --dial-label: #6e7482;
+  }
+
+  body { background: var(--sky); color: var(--ink); }
+
+  /* Tufte paints its skip-ink underlines with a hardcoded #fffff8 (and a
+     hardcoded #151515 under a dark system setting), which strands cream or
+     charcoal flecks around links once the sky is ours to set. Point both at
+     --sky instead, so they track the theme and the scroll dimming alike. */
+  a:link, .tufte-underline, .hover-tufte-underline:hover {
+    background-image:
+      linear-gradient(var(--sky), var(--sky)),
+      linear-gradient(var(--sky), var(--sky)),
+      linear-gradient(currentColor, currentColor);
+    text-shadow:
+      0.03em 0 var(--sky), -0.03em 0 var(--sky), 0 0.03em var(--sky), 0 -0.03em var(--sky),
+      0.06em 0 var(--sky), -0.06em 0 var(--sky), 0.09em 0 var(--sky), -0.09em 0 var(--sky),
+      0.12em 0 var(--sky), -0.12em 0 var(--sky), 0.15em 0 var(--sky), -0.15em 0 var(--sky);
+  }
 
   .pi-tufte { max-width: 70ch; margin: 0 auto; }
   .poem { font-size: 1.1rem; line-height: 1.6; }
 
   /* Title layout */
   .pi-title { font-size: 1.9rem; margin: 2.5rem 0 0.2rem; font-weight: 700; font-style: normal; }
-  .pi-subtitle { font-size: 1.15rem; margin: 0 0 1.8rem; color: #666; font-style: italic; }
+  .pi-subtitle { font-size: 1.15rem; margin: 0 0 1.8rem; color: var(--ink-soft); font-style: italic; }
 
   /* Prose stanzas, as set in the manuscript */
   .stanza { margin: 0 0 1.5rem; }
@@ -28,22 +93,23 @@
     .reveal { opacity: 1; transform: none; }
   }
 
-  /* Halation. Five blurred copies of the letterforms bleed outward: a pearl
-     edge hugging the glyph, then warm amber, then a wide dim corona. The
-     glyphs themselves stay crisp on top of it all, which is what keeps the
-     text readable however deep the halo gets.
+  /* Halation. Five blurred copies of the letterforms bleed outward: a bright
+     edge hugging the glyph, then the body of the corona, then a wide dim
+     outer ring. The glyphs themselves stay crisp on top of it all, which is
+     what keeps the text readable however deep the halo gets.
      --bloom runs 0 -> 1 down the poem. Spread and opacity each keep a floor
      of roughly half, so even the first lit stanza carries a visible halo
-     rather than fading to nothing. */
+     rather than fading to nothing. The ring colours and the gain come from
+     the theme. */
   .reveal {
     --spread: calc(0.45 + 0.55 * var(--bloom));
-    --glow:   calc(0.50 + 0.50 * var(--bloom));
+    --glow:   calc((0.50 + 0.50 * var(--bloom)) * var(--halo-gain));
     text-shadow:
-      0 0 calc(var(--spread) * 0.07em) rgba(255, 251, 240, calc(var(--glow) * 1.00)),
-      0 0 calc(var(--spread) * 0.17em) rgba(255, 214, 140, calc(var(--glow) * 0.90)),
-      0 0 calc(var(--spread) * 0.40em) rgba(228, 137,  32, calc(var(--glow) * 0.50)),
-      0 0 calc(var(--spread) * 0.95em) rgba(198,  98,  12, calc(var(--glow) * 0.24)),
-      0 0 calc(var(--spread) * 2.00em) rgba(180,  86,   6, calc(var(--glow) * 0.10));
+      0 0 calc(var(--spread) * 0.07em) rgba(var(--halo-1), calc(var(--glow) * 1.00)),
+      0 0 calc(var(--spread) * 0.17em) rgba(var(--halo-2), calc(var(--glow) * 0.90)),
+      0 0 calc(var(--spread) * 0.40em) rgba(var(--halo-3), calc(var(--glow) * 0.50)),
+      0 0 calc(var(--spread) * 0.95em) rgba(var(--halo-4), calc(var(--glow) * 0.24)),
+      0 0 calc(var(--spread) * 2.00em) rgba(var(--halo-5), calc(var(--glow) * 0.10));
   }
 
   /* The eclipse deepens: the first stanza is unlit, each one after it carries
@@ -71,14 +137,65 @@
     float: none; clear: none; max-width: none; width: 100%;
     font-family: "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
     font-size: 0.62rem; line-height: 1.4; letter-spacing: 0.09em;
-    text-transform: uppercase; color: #9a8f79; text-align: center;
+    text-transform: uppercase; color: var(--dial-label); text-align: center;
     margin: 0.35rem 0 0;
   }
   @media (max-width: 1180px) { .eclipse-dial { display: none; } }
+
+  #dial-sun  { fill: var(--sun); }
+  #dial-moon { fill: var(--sky); }
+  #corona-1  { stop-color: var(--corona-1); }
+  #corona-2  { stop-color: var(--corona-2); }
+  #corona-3  { stop-color: var(--corona-3); }
+
+  /* Theme toggle. The mark shows what you get if you press it: a crescent
+     while the page is light, a full disc while it is dark. */
+  .theme-toggle {
+    position: fixed; top: 1.1rem; right: 1.4rem; z-index: 10;
+    display: inline-flex; align-items: center; gap: 0.5em;
+    background: none; border: 0; padding: 0.4em 0.2em; cursor: pointer;
+    font-family: "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
+    font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--dial-label); opacity: 0.8;
+  }
+  .theme-toggle:hover, .theme-toggle:focus-visible { opacity: 1; color: var(--ink); }
+  .theme-toggle-mark {
+    width: 0.74em; height: 0.74em; border-radius: 50%;
+    box-shadow: inset -0.24em -0.06em 0 0 currentColor;
+  }
+  [data-theme="dark"] .theme-toggle-mark { box-shadow: none; background: currentColor; }
+
+  /* Only while the theme is actually changing — a standing transition would
+     fight the per-frame --sky updates the scroll dimming makes. */
+  .theming body, .theming .reveal, .theming .eclipse-dial * {
+    transition: background-color 0.4s ease, color 0.4s ease,
+                text-shadow 0.4s ease, fill 0.4s ease, stop-color 0.4s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .theming body, .theming .reveal, .theming .eclipse-dial * { transition: none; }
+  }
 </style>
 
+<script>
+  /* Before first paint, so the page never flashes the wrong sky. */
+  (function () {
+    try {
+      var saved = localStorage.getItem('eclipsing-theme');
+      if (saved !== 'dark' && saved !== 'light') {
+        saved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.dataset.theme = saved;
+    } catch (e) {
+      document.documentElement.dataset.theme = 'light';
+    }
+  })();
+</script>
+
 <noscript>
-  <style>.reveal { opacity: 1; transform: none; }</style>
+  <style>
+    .reveal { opacity: 1; transform: none; }
+    .theme-toggle { display: none; }
+  </style>
 </noscript>
 
 <!-- Libraries -->
@@ -86,18 +203,23 @@
 </head>
 <body>
 
+<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme">
+  <span class="theme-toggle-mark" aria-hidden="true"></span>
+  <span id="theme-toggle-text">dark</span>
+</button>
+
 <figure class="eclipse-dial" id="dial" aria-hidden="true">
   <svg viewBox="0 0 120 120" width="120" height="120">
     <defs>
       <radialGradient id="corona">
-        <stop offset="40%" stop-color="#ffd089" stop-opacity="0.75"/>
-        <stop offset="60%" stop-color="#ff9f34" stop-opacity="0.26"/>
-        <stop offset="100%" stop-color="#ff8a12" stop-opacity="0"/>
+        <stop id="corona-1" offset="40%" stop-opacity="0.75"/>
+        <stop id="corona-2" offset="60%" stop-opacity="0.26"/>
+        <stop id="corona-3" offset="100%" stop-opacity="0"/>
       </radialGradient>
     </defs>
     <circle cx="60" cy="60" r="54" fill="url(#corona)"/>
-    <circle cx="60" cy="60" r="26" fill="#f5b02a"/>
-    <circle id="moon" cx="102.6" cy="30.4" r="26" fill="var(--sky)"/>
+    <circle id="dial-sun" cx="60" cy="60" r="26"/>
+    <circle id="dial-moon" cx="102.6" cy="30.4" r="26"/>
   </svg>
   <figcaption><span id="obsc">0.0</span>% obscured</figcaption>
 </figure>
@@ -210,17 +332,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ---- 2 & 3. scroll depth drives the marginal eclipse dial and the light
           draining out of the sky ---- */
+  const root  = document.documentElement;
   const poem  = document.getElementById('poem');
   const dial  = document.getElementById('dial');
-  const moon  = document.getElementById('moon');
+  const moon  = document.getElementById('dial-moon');
   const obsc  = document.getElementById('obsc');
 
   const SUN_R  = 26;
   const D_MAX  = SUN_R * 2;      // moon clear of the sun: 0% obscured
   const D_MIN  = SUN_R * 0.135;  // closest approach: 91.4%, the poem's peak
   const DIR    = [0.82, -0.57];  // the moon rides in from the upper right
-  const SKY_LIT = [255, 255, 248];
-  const SKY_DIM = [242, 236, 224];
+
+  // Each theme names its own two ends of the light; read them back from CSS.
+  const readSky = (name) => getComputedStyle(root).getPropertyValue(name)
+                              .split(',').map(n => parseFloat(n));
+  let SKY_LIT = readSky('--sky-lit');
+  let SKY_DIM = readSky('--sky-dim');
 
   // fraction of the sun's disc hidden, for two equal circles d apart
   const obscuration = (d) => {
@@ -229,7 +356,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return (2 * Math.acos(x / 2) - (x / 2) * Math.sqrt(4 - x * x)) / Math.PI;
   };
 
+  let depth = 0;  // how far the alignment has come, kept for theme changes
+
   const render = (p) => {
+    depth = p;
     const d = D_MAX + (D_MIN - D_MAX) * p;
     moon.setAttribute('cx', (60 + d * DIR[0]).toFixed(2));
     moon.setAttribute('cy', (60 + d * DIR[1]).toFixed(2));
@@ -237,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dial.style.opacity = Math.min(1, Math.max(0, (p - 0.06) * 6)) * 0.9;
 
     const sky = SKY_LIT.map((v, i) => Math.round(v + (SKY_DIM[i] - v) * p));
-    document.documentElement.style.setProperty('--sky', 'rgb(' + sky.join(',') + ')');
+    root.style.setProperty('--sky', 'rgb(' + sky.join(',') + ')');
   };
 
   /* Alignment tracks the read itself: it begins as the first stanza clears the
@@ -269,6 +399,45 @@ document.addEventListener('DOMContentLoaded', () => {
     render(0);
     follow();
   }
+
+  /* ---- 4. the theme toggle ---- */
+  const toggle = document.getElementById('theme-toggle');
+  const toggleText = document.getElementById('theme-toggle-text');
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const applyTheme = (theme, animate) => {
+    if (animate && !reduce) {
+      root.classList.add('theming');
+      setTimeout(() => root.classList.remove('theming'), 450);
+    }
+    root.dataset.theme = theme;
+
+    // the new theme brings its own sky, so re-light at the current depth
+    SKY_LIT = readSky('--sky-lit');
+    SKY_DIM = readSky('--sky-dim');
+    render(depth);
+
+    const next = theme === 'dark' ? 'light' : 'dark';
+    toggleText.textContent = next;
+    toggle.setAttribute('aria-label', 'Switch to ' + next + ' theme');
+  };
+
+  applyTheme(root.dataset.theme === 'dark' ? 'dark' : 'light', false);
+
+  toggle.addEventListener('click', () => {
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next, true);
+    try { localStorage.setItem('eclipsing-theme', next); } catch (e) {}
+  });
+
+  // follow the system while the reader has never chosen for themselves
+  systemDark.addEventListener('change', (e) => {
+    let chosen = null;
+    try { chosen = localStorage.getItem('eclipsing-theme'); } catch (err) {}
+    if (chosen !== 'dark' && chosen !== 'light') {
+      applyTheme(e.matches ? 'dark' : 'light', true);
+    }
+  });
 });
 </script>
 
