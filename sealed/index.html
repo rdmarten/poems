@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex, nofollow"/>
+<title>A locked poem</title>
+
+<!-- Tufte CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
+
+<style>
+  .pi-tufte { max-width: 70ch; margin: 0 auto; }
+
+  /* Everything from here to the payload is public. The poem is not. */
+  .gate { margin-top: 4rem; }
+  .gate-title { font-size: 1.9rem; margin: 0 0 0.2rem; font-weight: 700; font-style: normal; }
+  .gate-blurb { font-size: 1.15rem; margin: 0 0 1.8rem; color: #666; font-style: italic; }
+  .gate-form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; }
+  .gate-label { display: block; font-size: 0.8rem; color: #666; margin-bottom: 0.25rem; }
+  .gate input { font-family: inherit; font-size: 1rem; padding: 0.45rem 0.6rem;
+    border: 1px solid #aaa; background: #fffff8; color: inherit; width: 26ch; max-width: 100%; }
+  .gate input:focus { outline: 2px solid #666; outline-offset: 1px; }
+  .gate button { font-family: inherit; font-size: 1rem; padding: 0.45rem 1.1rem;
+    border: 1px solid #111; background: #111; color: #fffff8; cursor: pointer; }
+  .gate button:hover:not(:disabled) { opacity: 0.85; }
+  .gate button:disabled { opacity: 0.45; cursor: default; }
+  .gate-msg { min-height: 1.4rem; margin: 0.9rem 0 0; font-size: 0.9rem; color: #a00; }
+  .gate-hint { font-size: 0.8rem; color: #666; margin-top: 1.8rem; font-style: italic; }
+</style>
+
+<!-- Loaded out here rather than inside the ciphertext: these give nothing away, and it
+     means the poem's own script can use gsap the moment it is decrypted. -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+
+<main class="pi-tufte gate" id="gate">
+  <h2 class="gate-title">A locked poem</h2>
+  <p class="gate-blurb">Locked. This poem is encrypted inside the page and needs a passphrase to read.</p>
+
+  <form class="gate-form" id="gate-form" autocomplete="off">
+    <div>
+      <label class="gate-label" for="pass">Passphrase</label>
+      <input id="pass" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required/>
+    </div>
+    <button id="unlock" type="submit">Read</button>
+  </form>
+
+  <p class="gate-msg" id="gate-msg" role="status" aria-live="polite"></p>
+  <p class="gate-hint">Nothing is sent anywhere. The poem is decrypted in your own browser.</p>
+</main>
+
+<div id="content" hidden></div>
+
+<script type="application/json" id="payload">{"v":1,"kdf":"PBKDF2-SHA256","iter":600000,"salt":"Z/8tpbXxd93lh8Cgy+sgPQ==","iv":"kxuS51oDhYNbz6fk","ct":"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"}</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var gate = $('gate'), form = $('gate-form'), pass = $('pass'),
+      btn = $('unlock'), msg = $('gate-msg'), content = $('content');
+
+  if (!window.crypto || !window.crypto.subtle) {
+    form.hidden = true;
+    msg.textContent = 'This browser will not decrypt the poem: WebCrypto needs a secure context. ' +
+      'Open the page over https rather than from a file path.';
+    return;
+  }
+
+  var payload = JSON.parse($('payload').textContent);
+  var iterations = Number(payload.iter) || 600000;
+
+  function fromBase64(str) {
+    var bin = atob(str), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  function decrypt(passphrase) {
+    return crypto.subtle
+      .importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey'])
+      .then(function (base) {
+        return crypto.subtle.deriveKey(
+          { name: 'PBKDF2', salt: fromBase64(payload.salt), iterations: iterations, hash: 'SHA-256' },
+          base,
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['decrypt']
+        );
+      })
+      .then(function (key) {
+        return crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv: fromBase64(payload.iv) },
+          key,
+          fromBase64(payload.ct)
+        );
+      })
+      .then(function (buf) { return new TextDecoder().decode(buf); });
+  }
+
+  function reveal(html) {
+    content.innerHTML = html;
+    gate.remove();
+    content.hidden = false;
+
+    /* Scripts inserted through innerHTML never run. Re-create each one so it does.
+       querySelectorAll returns a static list, so replacing while iterating is safe. */
+    var stale = content.querySelectorAll('script');
+    for (var i = 0; i < stale.length; i++) {
+      var old = stale[i];
+      var fresh = document.createElement('script');
+      for (var j = 0; j < old.attributes.length; j++) {
+        fresh.setAttribute(old.attributes[j].name, old.attributes[j].value);
+      }
+      fresh.textContent = old.textContent;
+      old.parentNode.replaceChild(fresh, old);
+    }
+
+    /* DOMContentLoaded fired long before anyone typed a passphrase, so a poem script
+       waiting on it would never run and every .reveal span would sit at opacity 0.
+       Listeners registered a moment ago still receive a dispatched event. */
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+  }
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    if (!pass.value) return;
+
+    var phrase = pass.value;
+    pass.disabled = true;
+    btn.disabled = true;
+    btn.textContent = 'Unlocking';
+    msg.textContent = '';
+
+    /* Let that state paint before the key derivation begins, so the one interaction
+       that matters does not look frozen for a second. */
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        decrypt(phrase).then(reveal).catch(function (err) {
+          if (err && err.name !== 'OperationError') console.error(err);
+          pass.disabled = false;
+          btn.disabled = false;
+          btn.textContent = 'Read';
+          msg.textContent = 'That passphrase did not unlock the poem. Check for typos, then try again.';
+          pass.focus();
+          pass.select();
+        });
+      });
+    });
+  });
+
+  pass.focus();
+})();
+</script>
+
+<p style="margin:0.5rem 0 1rem"><a href="../">&larr; back to poems</a></p>
+</body>
+</html>

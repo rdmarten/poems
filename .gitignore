@@ -1,2 +1,6 @@
 node_modules/
 .env
+
+# Plaintext drafts of encrypted poems. Never commit these: git history is permanent,
+# and encrypting a poem only protects it if the plaintext was never committed.
+drafts/

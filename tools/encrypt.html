@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex, nofollow"/>
+<title>Encrypt a poem</title>
+
+<!-- Tufte CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
+
+<style>
+  .pi-tufte { max-width: 70ch; margin: 0 auto 6rem; }
+  .pi-title { font-size: 1.9rem; margin: 2.5rem 0 0.2rem; font-weight: 700; font-style: normal; }
+  .pi-subtitle { font-size: 1.15rem; margin: 0 0 1.8rem; color: #666; font-style: italic; }
+
+  h3 { font-size: 1.2rem; font-style: normal; font-weight: 700; margin: 2.2rem 0 0.6rem; }
+
+  .field { margin: 1.2rem 0; }
+  .field > label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.15rem; }
+  .field .help { display: block; font-size: 0.8rem; color: #666; margin-bottom: 0.4rem; font-style: italic; }
+
+  input[type="text"], input[type="number"], textarea {
+    font-family: inherit; font-size: 0.95rem; width: 100%; box-sizing: border-box;
+    padding: 0.45rem 0.6rem; border: 1px solid #aaa; background: #fffff8; color: inherit;
+  }
+  textarea { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.82rem; line-height: 1.5; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid #666; outline-offset: 1px; }
+
+  button {
+    font-family: inherit; font-size: 0.95rem; padding: 0.45rem 1.1rem;
+    border: 1px solid #111; background: #111; color: #fffff8; cursor: pointer;
+  }
+  button.secondary { background: #fffff8; color: #111; }
+  button:hover:not(:disabled) { opacity: 0.85; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0.6rem 0; }
+
+  .strength { font-size: 0.8rem; color: #666; margin: 0.4rem 0 0; }
+  .strength.weak { color: #a00; }
+  .strength.ok { color: #7a5c00; }
+  .strength.good { color: #1a6b1a; }
+
+  .warn { border-left: 3px solid #a00; padding: 0.4rem 0 0.4rem 1rem; margin: 1.5rem 0; font-size: 0.9rem; }
+  .note { font-size: 0.85rem; color: #666; }
+
+  #out { min-height: 18rem; }
+  #status { min-height: 1.4rem; font-size: 0.9rem; margin: 0.6rem 0 0; }
+  #status.err { color: #a00; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<article class="pi-tufte">
+  <h2 class="pi-title">Encrypt a poem</h2>
+  <p class="pi-subtitle">Turns a poem into a page that only opens with a passphrase.</p>
+
+  <p>
+    This runs entirely in your browser. The poem is encrypted with AES-GCM using a key derived
+    from your passphrase (PBKDF2-SHA256, 600,000 iterations). What you save into the repo is
+    ciphertext: no plaintext, and no passphrase. Anyone who views the source of the published
+    page sees a base64 blob and the routine that decrypts it, which tells them nothing.
+  </p>
+
+  <div class="warn">
+    <strong>Two things this cannot do for you.</strong>
+    The ciphertext is public, so anyone can guess at it offline as fast as their hardware
+    allows &mdash; <em>your passphrase is the entire security model.</em> Use the generator below
+    rather than inventing one. And encryption only protects text that was never committed in
+    the clear: draft in <code>drafts/</code> (already git-ignored), never in a poem folder.
+  </div>
+
+  <h3>1. The poem</h3>
+
+  <div class="field">
+    <label for="pubtitle">Public page title</label>
+    <span class="help">Visible to everyone, in the browser tab and above the passphrase box. Keep it vague if the real title gives too much away &mdash; the poem's own title goes inside the encrypted part, below.</span>
+    <input id="pubtitle" type="text" value="A locked poem"/>
+  </div>
+
+  <div class="row">
+    <button type="button" class="secondary" id="prefill">Start from the house template</button>
+    <span class="note">Fills the three boxes below with the usual poem skeleton.</span>
+  </div>
+
+  <div class="field">
+    <label for="html">Poem HTML &mdash; the <code>&lt;article&gt;</code> block</label>
+    <span class="help">Encrypted. Paste the <code>&lt;article class="pi-tufte"&gt;&hellip;&lt;/article&gt;</code> exactly as it appears in any other poem folder.</span>
+    <textarea id="html" rows="14" spellcheck="false"></textarea>
+  </div>
+
+  <div class="field">
+    <label for="css">Poem CSS &mdash; optional</label>
+    <span class="help">Encrypted, wrapped in a <code>&lt;style&gt;</code>. The contents of the poem's inline style block, without the tags.</span>
+    <textarea id="css" rows="10" spellcheck="false"></textarea>
+  </div>
+
+  <div class="field">
+    <label for="js">Poem JavaScript &mdash; optional</label>
+    <span class="help">Encrypted, wrapped in a <code>&lt;script&gt;</code>. Tufte CSS and GSAP are already loaded by the page shell, so this can use <code>gsap</code> straight away. A <code>DOMContentLoaded</code> listener works too &mdash; the page fires one for you after decrypting.</span>
+    <textarea id="js" rows="10" spellcheck="false"></textarea>
+  </div>
+
+  <h3>2. The passphrase</h3>
+
+  <div class="field">
+    <label for="pass">Passphrase</label>
+    <span class="help">Write it down somewhere safe before you leave this page. There is no way to recover it and no way to decrypt the poem without it.</span>
+    <input id="pass" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"/>
+    <p class="strength" id="strength">&nbsp;</p>
+  </div>
+
+  <div class="row">
+    <button type="button" class="secondary" id="gen">Generate a passphrase</button>
+    <label for="words" class="note">of</label>
+    <input id="words" type="number" min="3" max="12" value="7" style="width:5rem"/>
+    <span class="note">random words</span>
+  </div>
+
+  <h3>3. The page</h3>
+
+  <div class="row">
+    <button type="button" id="build">Build the page</button>
+    <button type="button" class="secondary hidden" id="copy">Copy</button>
+    <button type="button" class="secondary hidden" id="download">Download index.html</button>
+  </div>
+  <p id="status" role="status" aria-live="polite"></p>
+
+  <div class="field">
+    <label for="out">Result</label>
+    <span class="help">Save this as <code>&lt;poem-name&gt;/index.html</code> in the repo, then commit and push. Test it in a browser before you share the link.</span>
+    <textarea id="out" rows="20" spellcheck="false" readonly></textarea>
+  </div>
+
+  <p class="note">
+    Each build makes a fresh random salt and IV, so re-encrypting the same poem with the same
+    passphrase produces a different blob. That is expected.
+  </p>
+</article>
+
+<p style="margin:0.5rem 0 1rem"><a href="../">&larr; back to poems</a></p>
+
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var ITERATIONS = 600000;
+
+  /* ---------- helpers ---------- */
+
+  function toBase64(bytes) {
+    var out = '';
+    for (var i = 0; i < bytes.length; i += 0x8000) {
+      out += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    }
+    return btoa(out);
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function say(text, isError) {
+    var el = $('status');
+    el.textContent = text;
+    el.className = isError ? 'err' : '';
+  }
+
+  /* ---------- passphrase generation ---------- */
+
+  var WORDS = ('amber anchor apple arbour arrow ash aspen attic autumn axle badger balcony barley basalt beacon ' +
+    'beetle bellow birch bison blossom bluff bonfire bracken bramble brass breeze bridge brine bristle burrow ' +
+    'cabin cactus canvas cardinal cavern cedar chalk chapel cherry chimney cinder cistern clover cobble comet ' +
+    'compass copper coral cottage crane crater cricket crocus crow cypress daisy damson dapple dawn delta ' +
+    'dolmen donkey dove drift dune dusk eagle ember estuary falcon fathom fennel fern ferry fiddle finch ' +
+    'flint forge fossil foxglove fresco frost furrow gable gannet garnet gazelle ginger glacier gorse granite ' +
+    'gravel grotto gully gypsum hamlet harbour harrow hazel heather hedge heron hillock hollow honey hornet ' +
+    'ibis indigo inlet iris ivory jackdaw jasmine juniper kelp kestrel kettle lagoon lantern larch lattice ' +
+    'lavender ledge lichen lilac linden lintel lobster locket lupin lyre magpie mallow mangrove maple marble ' +
+    'marsh meadow mercury mica millet mimosa mineral minnow mistle moorland mortar moss mulberry mussel ' +
+    'nettle newt nutmeg oak oasis obsidian ochre olive orchard oriole osprey otter oyster paddock pageant ' +
+    'palisade pampas papyrus parapet parsley pasture peat pebble pelican pepper petal pewter pigeon pillar ' +
+    'pine pippin plover plum pollen pomegranate poplar porch prairie primrose puffin quarry quartz quiver ' +
+    'rafter ragwort rampart raven reed reef resin rhubarb ridge ripple rookery rosemary rowan rudder rushes ' +
+    'saffron sage salmon samphire sandbar sapling sedge shale shallow shingle sicamore silt siskin slate ' +
+    'sloe smelt sorrel sparrow spindle spire spruce squall starling steeple stipple stoat stork stubble ' +
+    'sumac swallow sycamore tallow tamarind tannin teasel tendril thistle thorn thrush thyme timber tinder ' +
+    'topaz torrent trellis trout tulip tundra turnip turret urchin valley vellum verbena vetch viola vireo ' +
+    'walnut warbler wattle weir wheat whelk willow windlass wisteria woodbine wren yarrow yew zinnia').split(' ');
+
+  var BITS_PER_WORD = Math.log2(WORDS.length);
+
+  /* Rejection sampling, so every word stays equally likely. */
+  function randomIndex(limit) {
+    var span = Math.floor(4294967296 / limit) * limit;
+    var buf = new Uint32Array(1);
+    do { crypto.getRandomValues(buf); } while (buf[0] >= span);
+    return buf[0] % limit;
+  }
+
+  function generate(count) {
+    var picked = [];
+    for (var i = 0; i < count; i++) picked.push(WORDS[randomIndex(WORDS.length)]);
+    return picked.join('-');
+  }
+
+  /* A deliberately rough estimate. It exists to catch "poems2025", not to grade good ones. */
+  function describeStrength(phrase) {
+    if (!phrase) return { text: ' ', cls: '' };
+
+    var parts = phrase.split(/[-\s_.]+/).filter(Boolean);
+    var allFromList = parts.length >= 3 && parts.every(function (w) { return WORDS.indexOf(w.toLowerCase()) !== -1; });
+    var bits;
+
+    if (allFromList) {
+      bits = parts.length * BITS_PER_WORD;
+    } else {
+      var pool = 0;
+      if (/[a-z]/.test(phrase)) pool += 26;
+      if (/[A-Z]/.test(phrase)) pool += 26;
+      if (/[0-9]/.test(phrase)) pool += 10;
+      if (/[^a-zA-Z0-9]/.test(phrase)) pool += 20;
+      /* Character-class counting flatters human-chosen phrases, so discount it hard. */
+      bits = Math.log2(pool || 1) * phrase.length * 0.5;
+    }
+
+    /* Thresholds are calibrated to this page's own KDF cost. At 600,000 PBKDF2-SHA256
+       iterations a guess costs ~1.2M SHA-256 compressions, so a ten-GPU rig manages on
+       the order of 10^5 guesses a second: ~45 bits is years of grinding, ~55 is beyond
+       reach. Below 45 bits is genuinely within someone's budget. */
+    var rounded = Math.round(bits);
+    if (bits < 45) return { text: 'Around ' + rounded + ' bits of entropy — too weak. Anyone who downloads the page can grind through this offline. Use the generator.', cls: 'weak' };
+    if (bits < 55) return { text: 'Around ' + rounded + ' bits of entropy — workable, but another word or two would cost you nothing.', cls: 'ok' };
+    return { text: 'Around ' + rounded + ' bits of entropy — strong. Guessing this is not feasible.', cls: 'good' };
+  }
+
+  /* ---------- encryption ---------- */
+
+  function encrypt(plaintext, passphrase) {
+    var salt = crypto.getRandomValues(new Uint8Array(16));
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+
+    return crypto.subtle
+      .importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey'])
+      .then(function (base) {
+        return crypto.subtle.deriveKey(
+          { name: 'PBKDF2', salt: salt, iterations: ITERATIONS, hash: 'SHA-256' },
+          base,
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['encrypt']
+        );
+      })
+      .then(function (key) {
+        return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(plaintext));
+      })
+      .then(function (buf) {
+        return {
+          v: 1,
+          kdf: 'PBKDF2-SHA256',
+          iter: ITERATIONS,
+          salt: toBase64(salt),
+          iv: toBase64(iv),
+          ct: toBase64(new Uint8Array(buf))
+        };
+      });
+  }
+
+  /* ---------- the page this tool writes ---------- */
+
+  /* Closing script tags are written as <\/script> so the HTML parser does not end
+     this block early. In a JS string literal, \/ is simply /. */
+  var TEMPLATE = [
+'<!doctype html>',
+'<html lang="en">',
+'<head>',
+'<meta charset="utf-8"/>',
+'<meta name="viewport" content="width=device-width,initial-scale=1"/>',
+'<meta name="robots" content="noindex, nofollow"/>',
+'<title>__TITLE__</title>',
+'',
+'<!-- Tufte CSS -->',
+'<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>',
+'',
+'<style>',
+'  .pi-tufte { max-width: 70ch; margin: 0 auto; }',
+'',
+'  /* Everything from here to the payload is public. The poem is not. */',
+'  .gate { margin-top: 4rem; }',
+'  .gate-title { font-size: 1.9rem; margin: 0 0 0.2rem; font-weight: 700; font-style: normal; }',
+'  .gate-blurb { font-size: 1.15rem; margin: 0 0 1.8rem; color: #666; font-style: italic; }',
+'  .gate-form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; }',
+'  .gate-label { display: block; font-size: 0.8rem; color: #666; margin-bottom: 0.25rem; }',
+'  .gate input { font-family: inherit; font-size: 1rem; padding: 0.45rem 0.6rem;',
+'    border: 1px solid #aaa; background: #fffff8; color: inherit; width: 26ch; max-width: 100%; }',
+'  .gate input:focus { outline: 2px solid #666; outline-offset: 1px; }',
+'  .gate button { font-family: inherit; font-size: 1rem; padding: 0.45rem 1.1rem;',
+'    border: 1px solid #111; background: #111; color: #fffff8; cursor: pointer; }',
+'  .gate button:hover:not(:disabled) { opacity: 0.85; }',
+'  .gate button:disabled { opacity: 0.45; cursor: default; }',
+'  .gate-msg { min-height: 1.4rem; margin: 0.9rem 0 0; font-size: 0.9rem; color: #a00; }',
+'  .gate-hint { font-size: 0.8rem; color: #666; margin-top: 1.8rem; font-style: italic; }',
+'</style>',
+'',
+'<!-- Loaded out here rather than inside the ciphertext: these give nothing away, and it',
+'     means the poem\'s own script can use gsap the moment it is decrypted. -->',
+'<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"><\/script>',
+'</head>',
+'<body>',
+'',
+'<main class="pi-tufte gate" id="gate">',
+'  <h2 class="gate-title">__TITLE__</h2>',
+'  <p class="gate-blurb">Locked. This poem is encrypted inside the page and needs a passphrase to read.</p>',
+'',
+'  <form class="gate-form" id="gate-form" autocomplete="off">',
+'    <div>',
+'      <label class="gate-label" for="pass">Passphrase</label>',
+'      <input id="pass" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required/>',
+'    </div>',
+'    <button id="unlock" type="submit">Read</button>',
+'  </form>',
+'',
+'  <p class="gate-msg" id="gate-msg" role="status" aria-live="polite"></p>',
+'  <p class="gate-hint">Nothing is sent anywhere. The poem is decrypted in your own browser.</p>',
+'</main>',
+'',
+'<div id="content" hidden></div>',
+'',
+'<script type="application/json" id="payload">__PAYLOAD__<\/script>',
+'',
+'<script>',
+'(function () {',
+'  \'use strict\';',
+'',
+'  var $ = function (id) { return document.getElementById(id); };',
+'  var gate = $(\'gate\'), form = $(\'gate-form\'), pass = $(\'pass\'),',
+'      btn = $(\'unlock\'), msg = $(\'gate-msg\'), content = $(\'content\');',
+'',
+'  if (!window.crypto || !window.crypto.subtle) {',
+'    form.hidden = true;',
+'    msg.textContent = \'This browser will not decrypt the poem: WebCrypto needs a secure context. \' +',
+'      \'Open the page over https rather than from a file path.\';',
+'    return;',
+'  }',
+'',
+'  var payload = JSON.parse($(\'payload\').textContent);',
+'  var iterations = Number(payload.iter) || 600000;',
+'',
+'  function fromBase64(str) {',
+'    var bin = atob(str), out = new Uint8Array(bin.length);',
+'    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);',
+'    return out;',
+'  }',
+'',
+'  function decrypt(passphrase) {',
+'    return crypto.subtle',
+'      .importKey(\'raw\', new TextEncoder().encode(passphrase), \'PBKDF2\', false, [\'deriveKey\'])',
+'      .then(function (base) {',
+'        return crypto.subtle.deriveKey(',
+'          { name: \'PBKDF2\', salt: fromBase64(payload.salt), iterations: iterations, hash: \'SHA-256\' },',
+'          base,',
+'          { name: \'AES-GCM\', length: 256 },',
+'          false,',
+'          [\'decrypt\']',
+'        );',
+'      })',
+'      .then(function (key) {',
+'        return crypto.subtle.decrypt(',
+'          { name: \'AES-GCM\', iv: fromBase64(payload.iv) },',
+'          key,',
+'          fromBase64(payload.ct)',
+'        );',
+'      })',
+'      .then(function (buf) { return new TextDecoder().decode(buf); });',
+'  }',
+'',
+'  function reveal(html) {',
+'    content.innerHTML = html;',
+'    gate.remove();',
+'    content.hidden = false;',
+'',
+'    /* Scripts inserted through innerHTML never run. Re-create each one so it does.',
+'       querySelectorAll returns a static list, so replacing while iterating is safe. */',
+'    var stale = content.querySelectorAll(\'script\');',
+'    for (var i = 0; i < stale.length; i++) {',
+'      var old = stale[i];',
+'      var fresh = document.createElement(\'script\');',
+'      for (var j = 0; j < old.attributes.length; j++) {',
+'        fresh.setAttribute(old.attributes[j].name, old.attributes[j].value);',
+'      }',
+'      fresh.textContent = old.textContent;',
+'      old.parentNode.replaceChild(fresh, old);',
+'    }',
+'',
+'    /* DOMContentLoaded fired long before anyone typed a passphrase, so a poem script',
+'       waiting on it would never run and every .reveal span would sit at opacity 0.',
+'       Listeners registered a moment ago still receive a dispatched event. */',
+'    document.dispatchEvent(new Event(\'DOMContentLoaded\'));',
+'  }',
+'',
+'  form.addEventListener(\'submit\', function (event) {',
+'    event.preventDefault();',
+'    if (!pass.value) return;',
+'',
+'    var phrase = pass.value;',
+'    pass.disabled = true;',
+'    btn.disabled = true;',
+'    btn.textContent = \'Unlocking\';',
+'    msg.textContent = \'\';',
+'',
+'    /* Let that state paint before the key derivation begins, so the one interaction',
+'       that matters does not look frozen for a second. */',
+'    requestAnimationFrame(function () {',
+'      requestAnimationFrame(function () {',
+'        decrypt(phrase).then(reveal).catch(function (err) {',
+'          if (err && err.name !== \'OperationError\') console.error(err);',
+'          pass.disabled = false;',
+'          btn.disabled = false;',
+'          btn.textContent = \'Read\';',
+'          msg.textContent = \'That passphrase did not unlock the poem. Check for typos, then try again.\';',
+'          pass.focus();',
+'          pass.select();',
+'        });',
+'      });',
+'    });',
+'  });',
+'',
+'  pass.focus();',
+'})();',
+'<\/script>',
+'',
+'<p style="margin:0.5rem 0 1rem"><a href="../">&larr; back to poems</a></p>',
+'</body>',
+'</html>',
+''
+  ].join('\n');
+
+  var SKELETON_HTML = [
+'<article class="pi-tufte">',
+'  <h2 class="pi-title">Title of the poem</h2>',
+'  <p class="pi-subtitle">a dedication, or nothing at all</p>',
+'',
+'  <div class="poem" id="poem">',
+'    <p>',
+'      <span class="reveal">first line</span><br>',
+'      <span class="reveal">second line</span><br><br>',
+'',
+'      <span class="reveal">and so on</span><br>',
+'    </p>',
+'  </div>',
+'</article>'
+  ].join('\n');
+
+  var SKELETON_CSS = [
+'.poem { font-size: 1.1rem; line-height: 1.6; }',
+'.poem p { margin: 0.15rem 0; }',
+'',
+'.pi-title { font-size: 1.9rem; margin: 2.5rem 0 0.2rem; font-weight: 700; font-style: normal; }',
+'.pi-subtitle { font-size: 1.15rem; margin: 0 0 1.8rem; color: #666; font-style: italic; }',
+'',
+'/* Scroll reveal initial state (the script animates these in) */',
+'.reveal { opacity: 0; transform: translateY(12px); }',
+'@media (prefers-reduced-motion: reduce) {',
+'  .reveal { opacity: 1; transform: none; }',
+'}'
+  ].join('\n');
+
+  var SKELETON_JS = [
+'document.addEventListener(\'DOMContentLoaded\', function () {',
+'  var reduce = window.matchMedia(\'(prefers-reduced-motion: reduce)\').matches;',
+'  var hasGSAP = typeof gsap !== \'undefined\';',
+'  var revealEls = Array.prototype.slice.call(document.querySelectorAll(\'.reveal\'));',
+'',
+'  if (!reduce && \'IntersectionObserver\' in window && hasGSAP) {',
+'    var io = new IntersectionObserver(function (entries) {',
+'      entries.forEach(function (entry) {',
+'        if (entry.isIntersecting) {',
+'          io.unobserve(entry.target);',
+'          gsap.to(entry.target, { opacity: 1, y: 0, duration: 0.6, ease: \'power1.out\' });',
+'        }',
+'      });',
+'    }, { root: null, rootMargin: \'0px 0px -10% 0px\', threshold: 0.1 });',
+'    revealEls.forEach(function (el) { io.observe(el); });',
+'  } else {',
+'    revealEls.forEach(function (el) { el.style.opacity = 1; el.style.transform = \'none\'; });',
+'  }',
+'});'
+  ].join('\n');
+
+  /* Assemble the part that gets encrypted. */
+  function buildSecret(html, css, js) {
+    var parts = [];
+    if (css.trim()) parts.push('<style>\n' + css.trim() + '\n</style>');
+    if (html.trim()) parts.push(html.trim());
+    if (js.trim()) parts.push('<script>\n' + js.trim() + '\n<' + '/script>');
+    return parts.join('\n\n') + '\n';
+  }
+
+  /* Function replacements, so a $ in the title or payload is never treated as a
+     replacement pattern such as $& or $'. */
+  function render(title, payload) {
+    return TEMPLATE
+      .replace(/__TITLE__/g, function () { return escapeHtml(title); })
+      .replace(/__PAYLOAD__/g, function () { return JSON.stringify(payload); });
+  }
+
+  /* ---------- wiring ---------- */
+
+  $('prefill').addEventListener('click', function () {
+    $('html').value = SKELETON_HTML;
+    $('css').value = SKELETON_CSS;
+    $('js').value = SKELETON_JS;
+    say('Filled in the house template. Replace the placeholder lines with the poem.');
+  });
+
+  $('gen').addEventListener('click', function () {
+    var count = Math.min(12, Math.max(3, Number($('words').value) || 7));
+    $('words').value = count;
+    $('pass').value = generate(count);
+    $('pass').dispatchEvent(new Event('input'));
+    say('Generated. Write it down before you leave this page.');
+  });
+
+  $('pass').addEventListener('input', function () {
+    var s = describeStrength($('pass').value.trim());
+    var el = $('strength');
+    el.textContent = s.text;
+    el.className = 'strength ' + s.cls;
+  });
+
+  $('build').addEventListener('click', function () {
+    var html = $('html').value;
+    var css = $('css').value;
+    var js = $('js').value;
+    var phrase = $('pass').value.trim();
+
+    if (!html.trim() && !js.trim()) { say('There is nothing to encrypt yet — add the poem HTML.', true); return; }
+    if (!phrase) { say('Set a passphrase first.', true); return; }
+
+    var btn = $('build');
+    btn.disabled = true;
+    btn.textContent = 'Encrypting';
+    say('Deriving the key. This takes a moment on purpose.');
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        encrypt(buildSecret(html, css, js), phrase)
+          .then(function (payload) {
+            $('out').value = render($('pubtitle').value.trim() || 'A locked poem', payload);
+            $('copy').classList.remove('hidden');
+            $('download').classList.remove('hidden');
+            say('Done. Save it as <poem-name>/index.html, then open it in a browser and check the passphrase works before you share it.');
+          })
+          .catch(function (err) {
+            console.error(err);
+            say('Encryption failed: ' + (err && err.message ? err.message : String(err)), true);
+          })
+          .then(function () {
+            btn.disabled = false;
+            btn.textContent = 'Build the page';
+          });
+      });
+    });
+  });
+
+  $('copy').addEventListener('click', function () {
+    var out = $('out');
+    out.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(out.value).then(
+        function () { say('Copied to the clipboard.'); },
+        function () { say('Could not reach the clipboard — the text is selected, so copy it by hand.', true); }
+      );
+    } else {
+      say('This browser will not copy for us — the text is selected, so copy it by hand.', true);
+    }
+  });
+
+  $('download').addEventListener('click', function () {
+    var blob = new Blob([$('out').value], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'index.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  });
+
+  /* Expose the internals so the page can be driven headlessly when testing. */
+  window.__encryptTool = {
+    encrypt: encrypt,
+    buildSecret: buildSecret,
+    render: render,
+    wordCount: WORDS.length,
+    bitsPerWord: BITS_PER_WORD
+  };
+})();
+</script>
+</body>
+</html>
