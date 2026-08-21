@@ -106,7 +106,7 @@
 
   <div class="field">
     <label for="pass">Passphrase</label>
-    <span class="help">Write it down somewhere safe before you leave this page. There is no way to recover it and no way to decrypt the poem without it.</span>
+    <span class="help">You can type your own, though the generator below is much safer. Either way, write it down somewhere safe before you leave this page: there is no way to recover it, and no way to decrypt the poem without it.</span>
     <input id="pass" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"/>
     <p class="strength" id="strength">&nbsp;</p>
   </div>
@@ -208,34 +208,41 @@
     return picked.join('-');
   }
 
-  /* A deliberately rough estimate. It exists to catch "poems2025", not to grade good ones. */
-  function describeStrength(phrase) {
+  /* Entropy can only be counted when we know how the passphrase was chosen. For the
+     generator's output we do: each word was drawn uniformly at random, so the arithmetic is
+     real. For anything typed by hand it is not, and a guessed number does more harm than
+     silence, because length and character variety measure the wrong thing. A cracker works
+     through likely candidates first, so "TheOldManRiverRunsQuiet" scores enormously under
+     any character-counting rule while being among the first things anyone who has read
+     these poems would try. Hence: a number for generated phrases, a caution for the rest,
+     and never a figure we cannot stand behind. */
+  function describeStrength(phrase, fromGenerator) {
     if (!phrase) return { text: ' ', cls: '' };
 
-    var parts = phrase.split(/[-\s_.]+/).filter(Boolean);
-    var allFromList = parts.length >= 3 && parts.every(function (w) { return WORDS.indexOf(w.toLowerCase()) !== -1; });
-    var bits;
+    if (fromGenerator) {
+      var words = phrase.split('-').length;
+      var bits = Math.round(words * BITS_PER_WORD);
 
-    if (allFromList) {
-      bits = parts.length * BITS_PER_WORD;
-    } else {
-      var pool = 0;
-      if (/[a-z]/.test(phrase)) pool += 26;
-      if (/[A-Z]/.test(phrase)) pool += 26;
-      if (/[0-9]/.test(phrase)) pool += 10;
-      if (/[^a-zA-Z0-9]/.test(phrase)) pool += 20;
-      /* Character-class counting flatters human-chosen phrases, so discount it hard. */
-      bits = Math.log2(pool || 1) * phrase.length * 0.5;
+      /* Thresholds are calibrated to this page's own KDF cost. At 600,000 PBKDF2-SHA256
+         iterations a guess costs ~1.2M SHA-256 compressions, so a ten-GPU rig manages on
+         the order of 10^5 guesses a second: ~45 bits is years of grinding, ~55 is beyond
+         reach. Below 45 bits is genuinely within someone's budget. */
+      if (bits < 45) return { text: words + ' random words, about ' + bits + ' bits of entropy — thin. Add a couple more.', cls: 'weak' };
+      if (bits < 55) return { text: words + ' random words, about ' + bits + ' bits of entropy — workable, though another word costs you nothing.', cls: 'ok' };
+      return { text: words + ' random words, about ' + bits + ' bits of entropy — strong. Guessing this is not feasible.', cls: 'good' };
     }
 
-    /* Thresholds are calibrated to this page's own KDF cost. At 600,000 PBKDF2-SHA256
-       iterations a guess costs ~1.2M SHA-256 compressions, so a ten-GPU rig manages on
-       the order of 10^5 guesses a second: ~45 bits is years of grinding, ~55 is beyond
-       reach. Below 45 bits is genuinely within someone's budget. */
-    var rounded = Math.round(bits);
-    if (bits < 45) return { text: 'Around ' + rounded + ' bits of entropy — too weak. Anyone who downloads the page can grind through this offline. Use the generator.', cls: 'weak' };
-    if (bits < 55) return { text: 'Around ' + rounded + ' bits of entropy — workable, but another word or two would cost you nothing.', cls: 'ok' };
-    return { text: 'Around ' + rounded + ' bits of entropy — strong. Guessing this is not feasible.', cls: 'good' };
+    if (phrase.length < 16) {
+      return { text: 'Chosen by hand, and short — this will not hold. Anyone who downloads the page can grind through it offline at their own pace.', cls: 'weak' };
+    }
+
+    return {
+      text: 'Chosen by hand, so there is no honest way to score it — and length is not the same as ' +
+            'unpredictability. A line from your own poems, a familiar quotation, or a name and a year ' +
+            'all read as long while being among the first things a cracker tries. If you want something ' +
+            'memorable, generate one and keep it in a password manager.',
+      cls: 'ok'
+    };
   }
 
   /* ---------- encryption ---------- */
@@ -517,20 +524,29 @@
     say('Filled in the house template. Replace the placeholder lines with the poem.');
   });
 
-  $('gen').addEventListener('click', function () {
-    var count = Math.min(12, Math.max(3, Number($('words').value) || 7));
-    $('words').value = count;
-    $('pass').value = generate(count);
-    $('pass').dispatchEvent(new Event('input'));
-    say('Generated. Write it down before you leave this page.');
-  });
+  /* The exact string the generator last produced. Comparing against it, rather than
+     keeping a boolean, means any edit at all — even deleting one character — drops the
+     passphrase back to being hand-chosen, which is what it now is. */
+  var generatedValue = null;
 
-  $('pass').addEventListener('input', function () {
-    var s = describeStrength($('pass').value.trim());
+  function refreshStrength() {
+    var phrase = $('pass').value.trim();
+    var s = describeStrength(phrase, phrase !== '' && phrase === generatedValue);
     var el = $('strength');
     el.textContent = s.text;
     el.className = 'strength ' + s.cls;
+  }
+
+  $('gen').addEventListener('click', function () {
+    var count = Math.min(12, Math.max(3, Number($('words').value) || 7));
+    $('words').value = count;
+    generatedValue = generate(count);
+    $('pass').value = generatedValue;
+    refreshStrength();
+    say('Generated. Write it down before you leave this page.');
   });
+
+  $('pass').addEventListener('input', refreshStrength);
 
   $('build').addEventListener('click', function () {
     var html = $('html').value;
