@@ -279,7 +279,22 @@
 
   /* ---------- the page this tool writes ---------- */
 
-  /* Closing script tags are written as <\/script> so the HTML parser does not end
+  /* The generated page keeps Tufte CSS and GSAP in the public shell: they give
+     nothing away, and it means the poem's own script can use gsap the moment it is
+     decrypted. Two things inside reveal() look redundant and are not — both fail
+     silently if removed, accepting the passphrase and then showing nothing:
+
+       1. Scripts inserted through innerHTML never execute, so each is re-created as
+          a fresh element. querySelectorAll returns a static list, so replacing while
+          iterating is safe.
+       2. DOMContentLoaded fired long before anyone typed a passphrase, so a poem
+          script waiting on it would never run and every .reveal span would sit at
+          opacity 0. Listeners registered a moment ago still receive a dispatched one.
+
+     The double requestAnimationFrame lets the "Unlocking" state paint before the key
+     derivation begins, so the one interaction that matters does not look frozen.
+
+     Closing script tags are written as <\/script> so the HTML parser does not end
      this block early. In a JS string literal, \/ is simply /. */
   var TEMPLATE = [
 '<!doctype html>',
@@ -313,15 +328,13 @@
 '  .gate-hint { font-size: 0.8rem; color: #666; margin-top: 1.8rem; font-style: italic; }',
 '</style>',
 '',
-'<!-- Loaded out here rather than inside the ciphertext: these give nothing away, and it',
-'     means the poem\'s own script can use gsap the moment it is decrypted. -->',
 '<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"><\/script>',
 '</head>',
 '<body>',
 '',
 '<main class="pi-tufte gate" id="gate">',
-'  <h2 class="gate-title">__TITLE__</h2>',
-'  <p class="gate-blurb">Locked. This poem is encrypted inside the page and needs a passphrase to read.</p>',
+'  <h2 class="gate-title"><i>__TITLE__</i></h2>',
+'  <p class="gate-blurb">Locked. This text is encrypted inside the page and needs a passphrase to be read.</p>',
 '',
 '  <form class="gate-form" id="gate-form" autocomplete="off">',
 '    <div>',
@@ -332,7 +345,7 @@
 '  </form>',
 '',
 '  <p class="gate-msg" id="gate-msg" role="status" aria-live="polite"></p>',
-'  <p class="gate-hint">Nothing is sent anywhere. The poem is decrypted in your own browser.</p>',
+'  <p class="gate-hint">No data is sent anywhere. The text is decrypted locally in your own browser.</p>',
 '</main>',
 '',
 '<div id="content" hidden></div>',
@@ -349,7 +362,7 @@
 '',
 '  if (!window.crypto || !window.crypto.subtle) {',
 '    form.hidden = true;',
-'    msg.textContent = \'This browser will not decrypt the poem: WebCrypto needs a secure context. \' +',
+'    msg.textContent = \'This browser will not decrypt the text: WebCrypto needs a secure context. \' +',
 '      \'Open the page over https rather than from a file path.\';',
 '    return;',
 '  }',
@@ -390,8 +403,6 @@
 '    gate.remove();',
 '    content.hidden = false;',
 '',
-'    /* Scripts inserted through innerHTML never run. Re-create each one so it does.',
-'       querySelectorAll returns a static list, so replacing while iterating is safe. */',
 '    var stale = content.querySelectorAll(\'script\');',
 '    for (var i = 0; i < stale.length; i++) {',
 '      var old = stale[i];',
@@ -403,9 +414,6 @@
 '      old.parentNode.replaceChild(fresh, old);',
 '    }',
 '',
-'    /* DOMContentLoaded fired long before anyone typed a passphrase, so a poem script',
-'       waiting on it would never run and every .reveal span would sit at opacity 0.',
-'       Listeners registered a moment ago still receive a dispatched event. */',
 '    document.dispatchEvent(new Event(\'DOMContentLoaded\'));',
 '  }',
 '',
@@ -419,8 +427,6 @@
 '    btn.textContent = \'Unlocking\';',
 '    msg.textContent = \'\';',
 '',
-'    /* Let that state paint before the key derivation begins, so the one interaction',
-'       that matters does not look frozen for a second. */',
 '    requestAnimationFrame(function () {',
 '      requestAnimationFrame(function () {',
 '        decrypt(phrase).then(reveal).catch(function (err) {',
@@ -428,7 +434,7 @@
 '          pass.disabled = false;',
 '          btn.disabled = false;',
 '          btn.textContent = \'Read\';',
-'          msg.textContent = \'That passphrase did not unlock the poem. Check for typos, then try again.\';',
+'          msg.textContent = \'That passphrase did not unlock the text. Check for typos, then try again.\';',
 '          pass.focus();',
 '          pass.select();',
 '        });',
