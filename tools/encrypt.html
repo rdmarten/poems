@@ -172,25 +172,25 @@
 
   /* ---------- passphrase generation ---------- */
 
-  var WORDS = ('amber anchor apple arbour arrow ash aspen attic autumn axle badger balcony barley basalt beacon ' +
+  var WORDS = ('amber anchor apple arrow ash aspen attic autumn axle badger balcony barley basalt beacon ' +
     'beetle bellow birch bison blossom bluff bonfire bracken bramble brass breeze bridge brine bristle burrow ' +
     'cabin cactus canvas cardinal cavern cedar chalk chapel cherry chimney cinder cistern clover cobble comet ' +
-    'compass copper coral cottage crane crater cricket crocus crow cypress daisy damson dapple dawn delta ' +
+    'compass copper coral cottage crane crater cricket crocus crow cypress daisy damson dawn delta ' +
     'dolmen donkey dove drift dune dusk eagle ember estuary falcon fathom fennel fern ferry fiddle finch ' +
     'flint forge fossil foxglove fresco frost furrow gable gannet garnet gazelle ginger glacier gorse granite ' +
-    'gravel grotto gully gypsum hamlet harbour harrow hazel heather hedge heron hillock hollow honey hornet ' +
+    'gravel grotto gully gypsum hamlet harbour hazel heather hedge heron hillock hollow honey hornet ' +
     'ibis indigo inlet iris ivory jackdaw jasmine juniper kelp kestrel kettle lagoon lantern larch lattice ' +
     'lavender ledge lichen lilac linden lintel lobster locket lupin lyre magpie mallow mangrove maple marble ' +
     'marsh meadow mercury mica millet mimosa mineral minnow mistle moorland mortar moss mulberry mussel ' +
     'nettle newt nutmeg oak oasis obsidian ochre olive orchard oriole osprey otter oyster paddock pageant ' +
     'palisade pampas papyrus parapet parsley pasture peat pebble pelican pepper petal pewter pigeon pillar ' +
     'pine pippin plover plum pollen pomegranate poplar porch prairie primrose puffin quarry quartz quiver ' +
-    'rafter ragwort rampart raven reed reef resin rhubarb ridge ripple rookery rosemary rowan rudder rushes ' +
-    'saffron sage salmon samphire sandbar sapling sedge shale shallow shingle sicamore silt siskin slate ' +
+    'rafter ragwort rampart raven reed reef resin rhubarb ripple rookery rosemary rowan rudder rushes ' +
+    'saffron sage salmon samphire sandbar sapling sedge shale shingle silt siskin slate ' +
     'sloe smelt sorrel sparrow spindle spire spruce squall starling steeple stipple stoat stork stubble ' +
     'sumac swallow sycamore tallow tamarind tannin teasel tendril thistle thorn thrush thyme timber tinder ' +
     'topaz torrent trellis trout tulip tundra turnip turret urchin valley vellum verbena vetch viola vireo ' +
-    'walnut warbler wattle weir wheat whelk willow windlass wisteria woodbine wren yarrow yew zinnia').split(' ');
+    'walnut warbler wattle weir wheat whelk willow windlass wisteria woodbine wren yew zinnia').split(' ');
 
   var BITS_PER_WORD = Math.log2(WORDS.length);
 
