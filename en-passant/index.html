@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex, nofollow"/>
-<title>A locked poem</title>
+<title><i>En passant</i></title>
 
 <!-- Tufte CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/tufte.min.css"/>
@@ -36,8 +36,8 @@
 <body>
 
 <main class="pi-tufte gate" id="gate">
-  <h2 class="gate-title">A locked poem</h2>
-  <p class="gate-blurb">Locked. This poem is encrypted inside the page and needs a passphrase to read.</p>
+  <h2 class="gate-title">En passant</h2>
+  <p class="gate-blurb">Locked. This text is encrypted inside the page and needs a passphrase to be read.</p>
 
   <form class="gate-form" id="gate-form" autocomplete="off">
     <div>
@@ -48,7 +48,7 @@
   </form>
 
   <p class="gate-msg" id="gate-msg" role="status" aria-live="polite"></p>
-  <p class="gate-hint">Nothing is sent anywhere. The poem is decrypted in your own browser.</p>
+  <p class="gate-hint">No data is sent anywhere. The text is decrypted locally in your own browser.</p>
 </main>
 
 <div id="content" hidden></div>
@@ -65,7 +65,7 @@
 
   if (!window.crypto || !window.crypto.subtle) {
     form.hidden = true;
-    msg.textContent = 'This browser will not decrypt the poem: WebCrypto needs a secure context. ' +
+    msg.textContent = 'This browser will not decrypt the text: WebCrypto needs a secure context. ' +
       'Open the page over https rather than from a file path.';
     return;
   }
@@ -106,8 +106,6 @@
     gate.remove();
     content.hidden = false;
 
-    /* Scripts inserted through innerHTML never run. Re-create each one so it does.
-       querySelectorAll returns a static list, so replacing while iterating is safe. */
     var stale = content.querySelectorAll('script');
     for (var i = 0; i < stale.length; i++) {
       var old = stale[i];
@@ -119,9 +117,6 @@
       old.parentNode.replaceChild(fresh, old);
     }
 
-    /* DOMContentLoaded fired long before anyone typed a passphrase, so a poem script
-       waiting on it would never run and every .reveal span would sit at opacity 0.
-       Listeners registered a moment ago still receive a dispatched event. */
     document.dispatchEvent(new Event('DOMContentLoaded'));
   }
 
@@ -135,8 +130,6 @@
     btn.textContent = 'Unlocking';
     msg.textContent = '';
 
-    /* Let that state paint before the key derivation begins, so the one interaction
-       that matters does not look frozen for a second. */
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         decrypt(phrase).then(reveal).catch(function (err) {
@@ -144,7 +137,7 @@
           pass.disabled = false;
           btn.disabled = false;
           btn.textContent = 'Read';
-          msg.textContent = 'That passphrase did not unlock the poem. Check for typos, then try again.';
+          msg.textContent = 'That passphrase did not unlock the text. Check for typos, then try again.';
           pass.focus();
           pass.select();
         });
